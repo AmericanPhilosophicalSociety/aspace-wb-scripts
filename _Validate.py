@@ -127,9 +127,6 @@ def ListIsSingleValueThenNaN(input):
                 ListIsIndeedSingleValueThenNan = False
             else:
                 nanCount += 1
-        # sorry
-        if nanCount == 4:
-            print("four nan, jeremy? FOUR?! that's insane.")
         # return the value
         return ListIsIndeedSingleValueThenNan
     else:
