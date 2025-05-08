@@ -303,8 +303,29 @@ if WBType == 'book':
 # completely ignored as we don't know what we're doing with them: "access_type", "access_note"
 
 print("... all fields populated.")
+
+'''
+rearrange WBDict to match preferred column order for checking
+'''
+print("Rearranging fields ...")
+# grab final order to list depending on WBType
+if WBType == 'single':
+    headers_WBFinalOrder = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_WBFinalOrderSingle.csv"), 0)
+elif WBType == 'book':
+    headers_WBFinalOrder = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_WBFinalOrderBook.csv"), 0)
+
+# if a Workbench field is not present in headers_WBFinalOrder, inform user and terminate
+missingWBFinalOrderFields = [key for key in WBDict if key not in headers_WBFinalOrder]
+if missingWBFinalOrderFields:
+    raise ValueError("The following fields are present in the output Workbench dictionary but not within the appropriate the WBFinalOrder csv file in " + HEADERS_DIR + ". This may be a new field. Check with colleagues. " + str(missingWBFinalOrderFields))
+
+# reorder
+WBDictOrdered = {key: WBDict[key] for key in headers_WBFinalOrder if key in WBDict}
+
+print("... fields rearranged.")
+
 '''
 export our WB csv
 '''
-_CSV.DictToCSV(WBDict, os.path.join(METADATA_DIR, WB_FILENAME))
+_CSV.DictToCSV(WBDictOrdered, os.path.join(METADATA_DIR, WB_FILENAME))
 print("Generated Workbench file. Check and make any other modifications before using: " + METADATA_DIR + "\\" + WB_FILENAME)
