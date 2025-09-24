@@ -199,29 +199,8 @@ def ConcatenateStringsInLists(input):
         individualString.rstrip()'''
     return output
 
-def DigLibNodeToASBulkImportTemplateDO(input):
-    # from a node, generates fields for ArchivesSpace's Bulk Import Template Digital Object creation:
-    # digital_object_id, digital_object_title, digital_object_link
-    nodePrefix = "islandora8_"
-    digital_object_id = nodePrefix + str(input)
-    digital_object_title = nodePrefix + str(input)
-    digital_object_link = "https://diglib.amphilsoc.org/node/" + str(input)
-    return digital_object_id, digital_object_title, digital_object_link
-
-def DigLibNodeToASBulkUpdateDO(input):
-    # from a node, generates fields for ArchivesSpace's Bulk Update Spreadsheet Digital Object creation:
-    # digital_object_id, digital_object_title, digital_object_publish, file_version_file_uri, file_version_caption, file_version_publish
-    nodePrefix = "islandora8_"
-    digital_object_id = nodePrefix + str(input)
-    digital_object_title = nodePrefix + str(input)
-    digital_object_publish = "true"
-    file_version_file_uri = "https://diglib.amphilsoc.org/node/" + str(input)
-    file_version_publish = "true"
-    return digital_object_id, digital_object_title, digital_object_publish, file_version_file_uri, file_version_publish
-
 def DigLibNodeToASDO(input):
-    # same as above (delete above sometime) but as a dictionary
-    # from a node, generates fields for AS Digital Object creation
+    # from a node number as input, generates fields for AS Digital Object creation
     nodePrefix = "islandora8_"
     digital_object_id = nodePrefix + str(input)
     digital_object_title = nodePrefix + str(input)

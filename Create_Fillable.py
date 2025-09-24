@@ -1,190 +1,182 @@
-'''
-WORKING
-creates a fillable spreadsheet for a specific type (book/single) and set of headers
-headers reads from the _headers folder, and headers will include a couple of WB-specific fields so we can extract them now
-'''
-
-
 import os
 import pandas
 import re
-import argparse
+from argparse import ArgumentParser
+import _Constants_and_Mappings as c
 import _ExtractDir, _ExtractFile, _ConvertData, _CSV, _Validate
 
-FILESTOUPLOAD_DIR = "files_to_upload" # to use a different directory, just change, doubling \
-METADATA_DIR = "metadata"
-HEADERS_DIR = "_headers"
-
-# extensions to create specific field_model values
-WB_field_model_extensions = {
-    'Audio': ['.wav', '.mp3'],
-    'Digital Document': ['.pdf'],
-    'Image': ['.tif', 'tiff', '.jpg', '.jpeg'],
-    'Video': ['.mp4', '.mov', '.mts']
-}
-# put all the above into a list for easy access
-allowedFileTypes = []
-for x in WB_field_model_extensions.values():
-    if len(x) > 1:
-        for y in x:
-            allowedFileTypes.append(y)
-    else:
-        allowedFileTypes.append(x[0])
-
 
 '''
-command line arguments
-required, positional: type (book/single), headers
-optional: AS file to aid in populating metadata
+Parse command line arguments
+    required, positional: Workbench upload type (book/single)
+    optional: name of fields file to use
+    optional: AS file to aid in populating metadata
+    optional: alternate file path
 '''
-print('Checking command line arguments - expected: [book/single] [headers] [optional: --AS ArchivesSpacefile.xlsx] ...')
+print('Checking command line arguments\nExpected: [book/single] [optional: --fields fields_file_to_use] [optional: --AS ArchivesSpacefile.xlsx] [optional: --filefolder alternate/file/directory/path] ...')
 
-headerCandidates = _ExtractDir.FileList(HEADERS_DIR, extensions=False)
-# argument parser
-CLParser = argparse.ArgumentParser()
-CLParser.add_argument('type', type=str, choices=('single', 'book'))
-CLParser.add_argument('headers', type=str, choices=headerCandidates)
-CLParser.add_argument('--AS', type=str)
-CLargs = CLParser.parse_args()
-# assign arguments
-WBType = CLargs.type
-HEADERS_NAME = CLargs.headers
-HEADERS_FILENAME = HEADERS_NAME + ".csv"
-if CLargs.AS:
-    AS_FILENAME = CLargs.AS
-    if AS_FILENAME not in _ExtractDir.FileList(METADATA_DIR, extensions=True):
-        raise OSError("Folder " + METADATA_DIR + " does not appear to contain " + AS_FILENAME + ", which is a renamed ArchivesSpace Bulk Update spreadsheet. Check.")
-    useAS = True
+# parse arguments - see above for listing
+
+cl_parser = ArgumentParser()
+cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
+cl_parser.add_argument('--fields', type=str, choices=_ExtractDir.FileList(c.FIELDS_DIR, EXTENSIONS=False))
+cl_parser.add_argument('--AS', type=str)
+cl_parser.add_argument('--filefolder', type=str)
+cl_args = cl_parser.parse_args()
+
+# assign arguments to variables:
+
+# WB_type from 'type'
+WB_type = cl_args.type
+
+# fields_in_use from 'fields'
+if cl_args.fields:
+    fields_in_use = _CSV.CSVColToList(os.path.join(c.FIELDS_DIR, cl_args.fields, ".csv"), 0)
+elif not cl_args.fields:
+    fields_in_use = c.WB_FIELDS_ALL
+
+# use_AS from 'AS'
+if cl_args.AS:
+    use_AS = True
+    AS_FILENAME = cl_args.AS
+    # confirm the file exists as stated
+    if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
+        raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + AS_FILENAME + ", which is a renamed ArchivesSpace Bulk Update spreadsheet. Check.")
 else:
-    useAS = False
-# make fillable filename based on AS or just headers
-if useAS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_FILLABLE.xlsx"
+    use_AS = False
+
+# FILES_DIR from filefolder if supplied, otherwise uses defaults
+if cl_args.filefolder:
+    FILES_DIR = cl_args.filefolder
+    # confirm the directory exists
+    if not os.path.exists(FILES_DIR):
+        raise OSError("Folder " + FILES_DIR + " does not appear to exist.")
+    if not os.path.isdir(FILES_DIR):
+        raise OSError("Path " + FILES_DIR + " is not a directory.")
 else:
-    FILLABLE_FILENAME = HEADERS_NAME + "_FILLABLE.xlsx"
+    FILES_DIR = c.FILESTOUPLOAD_DIR
 
 print('... command line arguments parsed ...')
+
 '''
-check files are okay
+Check our files and generate a listing of these as media_list, depending on WB_type
 '''
-if WBType == 'book':
-    _Validate.FilesAreOkay_Book(FILESTOUPLOAD_DIR, allowedFileTypes)
+print("Checking files ...")
+
+# may be convenient here to grab extension to a variable so we can call it later
+
+if WB_type == 'book':
+    _Validate.files_in_book(FILES_DIR)
     print("Book note: script does not check exact padding. Padding needs to be 3 digits if <1000, 4+ digits if >=1000 files.")
-elif WBType == 'single':
-    for filetype in _ExtractDir.FileTypes(FILESTOUPLOAD_DIR):
-        if filetype not in allowedFileTypes:
-            raise OSError("Folder " + str(FILESTOUPLOAD_DIR) + " contains unexpected files including type: " + str(filetype))
+    media_list = _ExtractDir.FileList(FILES_DIR, extensions=True)
+elif WB_type == 'single':
+    _Validate.files_in_single(FILES_DIR)
+    media_list = _ExtractDir.SubDirectoriesList(FILES_DIR)
+
 print("... files look okay ...")
 
 '''
-grab file or folder list
+If using ArchivesSpace file, check that this file looks okay by comparing to media_list
+Put number of records into records_count for easy access
 '''
-if WBType == 'single':
-    mediaList = _ExtractDir.FileList(FILESTOUPLOAD_DIR, extensions=True)
-elif WBType == 'book':
-    mediaList = _ExtractDir.SubDirectoriesList(FILESTOUPLOAD_DIR)
-if not mediaList:
-    raise OSError('No folders or files found in folder ' + FILESTOUPLOAD_DIR + ', put your folders or files here')
 
-print('... file/folder list created ...')
-
-'''
-if using AS: load ArchivesSpace xlsx to pandas DataFrame then to a dictionary
-'''
-if useAS:
-    ASDF = pandas.read_excel(os.path.join(METADATA_DIR, AS_FILENAME), header=1)
-    ASDict = ASDF.to_dict(orient="list")
+if use_AS:
+    AS_pd_dataframe = pandas.read_excel(os.path.join(c.METADATA_DIR, AS_FILENAME), header=1)
+    AS_dict = AS_pd_dataframe.to_dict(orient="list")
     # confirm that the list of media matches the number of records in AS
-    recordsCount = ASDF.shape[0]
-    if len(mediaList) != recordsCount:
-        raise OSError("ArchivesSpace file has " + str(recordsCount) + " records. " + FILESTOUPLOAD_DIR + " has " + str(len(mediaList)) + " directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
+    records_count = AS_pd_dataframe.shape[0]
+    if len(media_list) != records_count:
+        raise OSError("ArchivesSpace file has " + str(records_count) + " records. " + FILES_DIR + " has " + str(len(media_list)) + " directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
     print('... ArchivesSpace file loaded okay ...')
 else:
-    recordsCount = len(mediaList)
+    records_count = len(media_list)
+
 
 '''
-get headers into dataframe for dynamically populating
+Define functions to call for populating our dictionary
 '''
-headers = _CSV.CSVColToList(os.path.join(HEADERS_DIR, HEADERS_FILENAME), 0)
-# some header checks
-if 'WB_field_model' not in headers:
-    raise ValueError("Include 'WB_field_model' in your headers file as this gets filled now")
-if WBType == 'book':
-    if 'WB_total_scans' not in headers:
-        raise ValueError("A book needs to have 'WB_total_scans' field")
-outputPandasDF = pandas.DataFrame(columns=headers)
-prepopDict = {}
+prepop_dict = {}
 
-print('... headers put into a Pandas dataframe ...')
+def file_metadata_to_WB_fields_SINGLE():
+
+    # file
+    prepop_dict['file'] = media_list
+
+    # extent, field_model, field_access_terms, field_display_hints, field_resource_type
+    # all from c.extension_to_WB_field
+    # NEXT BIT - THIS IS NOT IT
+    _extent = []
+    for file in media_list:
+        extension = os.path.splitext(file)[1]
+        file = os.path.join(FILES_DIR, file)
+        if extension in WB_field_model_EXTENSIONS['Audio']:
+            extent = _ExtractFile.AudioDurationSeconds(file)
+            extent = _ConvertData.SecondsToHHMMSS(extent)
+        elif extension in WB_field_model_EXTENSIONS['Digital Document']:
+            extent = _ExtractFile.PDFPageCount(file)
+        elif extension in WB_field_model_EXTENSIONS['Image']:
+            extent = '1p.'
+        elif extension in WB_field_model_EXTENSIONS['Video']:
+            extent = _ExtractFile.VideoDurationSeconds(file)
+            extent = _ConvertData.SecondsToHHMMSS(extent)
+        _extent.append(extent)
+    prepop_dict['extent'] = _extent
+
+def file_metadata_to_WB_fields_BOOK():
+
+    # file
+    prepop_dict['file'] = media_list
+
+    # extent
+    # gets mapped to total_scans as-is, and the extent field which can be separately edited
+    _extent = [_ExtractDir.FileCount(os.path.join(FILES_DIR, directory)) for directory in media_list]
+    prepop_dict['total_scans'] = _extent
+    prepop_dict['extent'] = [str(e) + "p." for e in _extent]
+
+    # field_model
+    prepop_dict['WB_field_model'] = [c.DEFAULT_BOOK_field_model for i in range(records_count)]
+
+
+
 '''
 start the prepopulation process
 
 1. info from files
 '''
 print('prepopulating info from files ...')
-# file
-if 'file' in headers:
-    prepopDict['file'] = mediaList
 
-# extent
-if 'extent' in headers:
-    if WBType == 'book':
-        # if book, extent is just a file count
-        # extent gets mapped to total_scans as-is, and the extent field which can be separately edited
-        extent_prepop = [_ExtractDir.FileCount(os.path.join(FILESTOUPLOAD_DIR, directory)) for directory in mediaList]
-        prepopDict['WB_total_scans'] = extent_prepop
-        extent_prepop_paged = [str(e) + "p." for e in extent_prepop]
-        prepopDict['extent'] = extent_prepop_paged
-    elif WBType == 'single':
-        # if single, extent depends on the extension
-        extent_prepop = []
-        for file in mediaList:
-            extension = os.path.splitext(file)[1]
-            file = os.path.join(FILESTOUPLOAD_DIR, file)
-            if extension in WB_field_model_extensions['Audio']:
-                extent = _ExtractFile.AudioDurationSeconds(file)
-                extent = _ConvertData.SecondsToHHMMSS(extent)
-            elif extension in WB_field_model_extensions['Digital Document']:
-                extent = _ExtractFile.PDFPageCount(file)
-            elif extension in WB_field_model_extensions['Image']:
-                extent = '1p.'
-            elif extension in WB_field_model_extensions['Video']:
-                extent = _ExtractFile.VideoDurationSeconds(file)
-                extent = _ConvertData.SecondsToHHMMSS(extent)
-            extent_prepop.append(extent)
-        prepopDict['extent'] = extent_prepop
 
 # WB_field_model
-# identifies field_model based on type or the file extensions
-if 'WB_field_model' in headers:
-    if WBType == 'book':
-        prepopDict['WB_field_model'] = ['Paged Content' for i in range(recordsCount)]
-    elif WBType == 'single':
+# identifies field_model based on type or the file EXTENSIONS
+if 'WB_field_model' in fields_in_use:
+    if WB_type == 'book':
+        prepop_dict['WB_field_model'] = ['Paged Content' for i in range(records_count)]
+    elif WB_type == 'single':
         WB_field_model_prepop = []
-        for file in mediaList:
+        for file in media_list:
             extension = os.path.splitext(file)[1]
-            for key, value in WB_field_model_extensions.items():
+            for key, value in WB_field_model_EXTENSIONS.items():
                 if extension in value:
                     WB_field_model_prepop.append(key)
-        prepopDict['WB_field_model'] = WB_field_model_prepop
+        prepop_dict['WB_field_model'] = WB_field_model_prepop
 
 # datedigitized
 # a guess based on the date created as stored in the files
-if 'datedigitized' in headers:
-    if WBType == 'single':
-        datedigitized_prepop = [_ExtractFile.DateCreatedUnix(os.path.join(FILESTOUPLOAD_DIR, f)) for f in mediaList]
+if 'datedigitized' in fields_in_use:
+    if WB_type == 'single':
+        datedigitized_prepop = [_ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, f)) for f in media_list]
         datedigitized_prepop = [_ConvertData.UnixToEDTFYear(d) for d in datedigitized_prepop]
-        prepopDict['datedigitized'] = datedigitized_prepop
-    elif WBType == 'book':
+        prepop_dict['datedigitized'] = datedigitized_prepop
+    elif WB_type == 'book':
         datedigitized_prepop = []
-        for folder in mediaList:
+        for folder in media_list:
             candidates = []
-            for file in _ExtractDir.FileList(os.path.join(FILESTOUPLOAD_DIR, folder), extensions=True):
-                candidate = _ExtractFile.DateCreatedUnix(os.path.join(FILESTOUPLOAD_DIR, folder, file))
+            for file in _ExtractDir.FileList(os.path.join(c.FILESTOUPLOAD_DIR, folder), EXTENSIONS=True):
+                candidate = _ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, folder, file))
                 candidate = _ConvertData.UnixToEDTFYear(candidate)
                 candidates.append(candidate)
             datedigitized_prepop.append(min(candidates))
-        prepopDict['datedigitized'] = datedigitized_prepop
+        prepop_dict['datedigitized'] = datedigitized_prepop
 
 print('... prepopulation from files done ...')
 
@@ -192,36 +184,36 @@ print('... prepopulation from files done ...')
 2. ArchivesSpace data prepopulation (if using)
 '''
 
-if useAS:
+if use_AS:
     print('prepopulating info from ArchivesSpace file ...')
 
-    if 'cuid' in headers:
-        prepopDict['cuid'] = ASDict['component_id']
+    if 'cuid' in fields_in_use:
+        prepop_dict['cuid'] = AS_dict['component_id']
 
-    if 'title' in headers:
-        prepopDict['title'] = ASDict['title']
+    if 'title' in fields_in_use:
+        prepop_dict['title'] = AS_dict['title']
 
-    if 'related_note' in headers:
-        prepopDict['related_note'] = ASDict['note/relatedmaterial/0/content']
+    if 'related_note' in fields_in_use:
+        prepop_dict['related_note'] = AS_dict['note/relatedmaterial/0/content']
 
     # date created
-    if 'datecreated_edtf' or 'datecreated_text' in headers:
+    if 'datecreated_edtf' or 'datecreated_text' in fields_in_use:
         datecreatedTuple = [
-            _ConvertData.ASDateToWBDate(ASDict['dates/0/expression'][i], ASDict['dates/0/begin'][i], ASDict['dates/0/end'][i])
-            for i in range(recordsCount)
+            _ConvertData.ASDateToWBDate(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
+            for i in range(records_count)
         ]
 
-        if 'datecreated_edtf' in headers:
-            prepopDict['datecreated_edtf'] = [x[0] for x in datecreatedTuple]
+        if 'datecreated_edtf' in fields_in_use:
+            prepop_dict['datecreated_edtf'] = [x[0] for x in datecreatedTuple]
 
-        if 'datecreated_text' in headers:
-            prepopDict['datecreated_text'] = [x[1] for x in datecreatedTuple]
+        if 'datecreated_text' in fields_in_use:
+            prepop_dict['datecreated_text'] = [x[1] for x in datecreatedTuple]
 
     # scopecontents - concatenates scopecontent and abstract
-    if 'scopecontents' in headers:
+    if 'scopecontents' in fields_in_use:
         scopecontentsTypes = ('scopecontent', 'abstract')
         scopecontentsValues = []
-        for key, value in ASDict.items():
+        for key, value in AS_dict.items():
             for x in scopecontentsTypes:
                 regexMatch = r'^note\/' + x + r'(.*)content$'
                 if re.match(regexMatch, key):
@@ -230,14 +222,14 @@ if useAS:
         scopecontents_prepop = _ConvertData.ConcatenateStringsInLists(scopecontentsValues)
         # strip newlines
         scopecontents_prepop = [_ConvertData.RemoveLinebreaks(x) for x in scopecontents_prepop]
-        prepopDict['scopecontents'] = scopecontents_prepop
+        prepop_dict['scopecontents'] = scopecontents_prepop
 
     # othernotes - concatenates a longer list of other descriptions
-    if 'othernotes' in headers:
+    if 'othernotes' in fields_in_use:
         othernotesTypes = ('odd','bioghist','accruals','dimensions','altformavail','phystech','physdesc','processinfo','separatedmaterial')
         # create a list of lists of other value types
         othernotesValues = []
-        for key, value in ASDict.items():
+        for key, value in AS_dict.items():
             for x in othernotesTypes:
                 regexMatch = r'^note\/' + x + r'(.*)content$'
                 if re.match(regexMatch, key):
@@ -246,28 +238,28 @@ if useAS:
         othernotes_prepop = _ConvertData.ConcatenateStringsInLists(othernotesValues)
         # strip newlines
         othernotes_prepop = [_ConvertData.RemoveLinebreaks(x) for x in othernotes_prepop]
-        prepopDict['othernotes'] = othernotes_prepop
+        prepop_dict['othernotes'] = othernotes_prepop
 
-    if 'agent_name' in headers:
+    if 'agent_name' in fields_in_use:
         agents_prepop = []
-        for i in range(recordsCount):
+        for i in range(records_count):
             agents = '|'.join(
-                _ConvertData.AgentsFromASAO(ASDict['ref_id'][i], ASDict['title'][i])
+                _ConvertData.AgentsFromASAO(AS_dict['ref_id'][i], AS_dict['title'][i])
             )
             agents_prepop.append(agents)
-        prepopDict['agent_name'] = agents_prepop
+        prepop_dict['agent_name'] = agents_prepop
 
-    if 'access_type' or 'access_note' in headers:
+    if 'access_type' or 'access_note' in fields_in_use:
         # access_type, access_note - just makes a flag if anything exists in these fields
         # currently (2024/12) we don't know how we're dealing with access restrictions, so this just adds some warnings to be deleted
         # get all lists of values that match the key string
         accessrestrictValues = []
-        for key, value in ASDict.items():
+        for key, value in AS_dict.items():
             if re.match(r'^note\/accessrestrict', key):
                 accessrestrictValues.append(value)
         # fill warning or None depending on if there's a value
         accessrestrictValuesExist = []
-        for i in range(recordsCount):
+        for i in range(records_count):
             accessFlag = False
             # make the flag True if there's something in one of the note/accessrestrict fields for the record, otherwise maintain False
             for j in accessrestrictValues:
@@ -288,11 +280,11 @@ if useAS:
         if True in accessrestrictValuesExist:
             print(accessFlagNote)
         
-        if 'access_type' in headers:
-            prepopDict['access_type'] = access_type_prepop
+        if 'access_type' in fields_in_use:
+            prepop_dict['access_type'] = access_type_prepop
         
-        if 'access_note' in headers:
-            prepopDict['access_note'] = access_note_prepop
+        if 'access_note' in fields_in_use:
+            prepop_dict['access_note'] = access_note_prepop
 
     print('... prepopulating ArchivesSpace data done ...')
 
@@ -302,8 +294,8 @@ if useAS:
 '''
 
 # we assume 'Reformatted digital', user can change if necessary
-if 'WB_field_digital_origin' in headers:
-    prepopDict['WB_field_digital_origin'] = ['Reformatted digital' for i in range(recordsCount)]
+if 'WB_field_digital_origin' in fields_in_use:
+    prepop_dict['WB_field_digital_origin'] = ['Reformatted digital' for i in range(records_count)]
 
 '''
 output our fillable file
@@ -311,11 +303,16 @@ output our fillable file
 print('... creating output file ...')
 
 # populate then concatenate DataFrames
-prepopPandasDF = pandas.DataFrame(data=prepopDict)
-outputPandasDF = pandas.concat([outputPandasDF, prepopPandasDF], ignore_index=True)
+outputPandAS_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
+
+# make fillable filename based on AS or just fields_in_use
+if use_AS:
+    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_FILLABLE.xlsx"
+else:
+    FILLABLE_FILENAME = HEADERS_NAME + "_FILLABLE.xlsx"
 
 # export into metadataDirectory
 # index=False ensures not writing the index column
-outputPandasDF.to_excel(os.path.join(METADATA_DIR, FILLABLE_FILENAME), index=False)
+outputPandAS_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False)
 
-print('Done. Created file: ' + METADATA_DIR + '\\' + FILLABLE_FILENAME)
+print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)

@@ -14,6 +14,7 @@ CV_DIR = "_CVs"
 HEADERS_DIR = "_headers"
 ISO639_FILENAME = "iso639.csv"
 SINGLE_FILEABSOLUTEPREFIX = "/mnt/ingest/data/"
+URL_ALIAS_PREFIX = "/islandora/object/"
 
 '''
 mappings -
@@ -153,6 +154,10 @@ if "file" in headers:
         WBDict["file"] = inputDict["file"]
     elif WBType == 'single':
         WBDict["file"] = [SINGLE_FILEABSOLUTEPREFIX + file for file in inputDict["file"]]
+
+if "url_alias" in headers:
+    WBDict["url_alias"] = inputDict["url_alias"]
+    # figure out how to prefix URL_ALIAS_PREFIX conditionally. not if empty.
 
 if "WB_total_scans" in headers:
     WBDict["total_scans"] = inputDict["WB_total_scans"]

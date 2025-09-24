@@ -16,7 +16,7 @@ def FileCount(directorypath, fileextension=""):
 
 def FileList(directorypath, extensions=False):
     # returns a list of file names, with extension optional
-    files = [x for x in os.listdir(directorypath) if os.path.isfile(os.path.join(directorypath, x))]
+    files = sorted([x for x in os.listdir(directorypath) if os.path.isfile(os.path.join(directorypath, x))])
     # ignore Thumbs.db
     if 'Thumbs.db' in files:
         files.remove('Thumbs.db')
@@ -33,13 +33,13 @@ def FileTypes(directorypath):
     if 'Thumbs.db' in files:
         files.remove('Thumbs.db')
     # reduce to only the extension
-    files = [os.path.splitext(x)[1] for x in files]
+    extensions = [os.path.splitext(x)[1] for x in files]
     # get unique in list
-    files = _ConvertData.UniqueInList(files)
-    return files
+    extensions = _ConvertData.UniqueInList(extensions)
+    return extensions
     
 def SubDirectoriesList(directorypath):
-    return [x for x in os.listdir(directorypath) if os.path.isdir(os.path.join(directorypath, x))]
+    return sorted([x for x in os.listdir(directorypath) if os.path.isdir(os.path.join(directorypath, x))])
 
 def SubDirectoriesCount(directorypath):
     return len(SubDirectoriesList(directorypath))

@@ -54,6 +54,8 @@ for node in nodes:
     file_version_caption.append(ASDODict['file_version_caption'])
     file_version_publish.append(ASDODict['file_version_publish'])
 
+
+
 # create dictionary
 
 outputDict = {
@@ -66,6 +68,9 @@ outputDict = {
     'file_version_caption': file_version_caption,
     'file_version_publish': file_version_publish
 }
+
+if 'field_local_identifier' in nodesDict:
+    outputDict['field_local_identifier'] = nodesDict['field_local_identifier']
 
 # output to xlsx
 

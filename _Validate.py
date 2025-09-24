@@ -12,6 +12,7 @@ import re
 import math
 import pandas
 import os
+import _Constants_and_Mappings as c
 import _CSV, _ExtractDir, _ExtractFile
 
 def nan(input):
@@ -45,8 +46,9 @@ def EDTF(input):
     else:
         raise ValueError("EDTF not valid: " + str(input))
     
-def FilesAreOkay_Book(topDirectory, permittedFileTypes=()):
+def files_in_book(topDirectory):
     '''
+    CLEAN THIS UP. add extensions checking as separate function, add padding checking.
     confirm that the files to be uploaded for a Book upload follow correct formatting
     '''
     # files directory ...
@@ -63,9 +65,8 @@ def FilesAreOkay_Book(topDirectory, permittedFileTypes=()):
         directoryFiles = _ExtractDir.FileList(os.path.join(topDirectory, directory), extensions=True)
         for file in directoryFiles:
             # has a permitted file extension
-            if permittedFileTypes:
-                if _ExtractFile.FileType(file) not in permittedFileTypes:
-                    raise OSError("File " + topDirectory + "/" + directory + "/" + file + " is not in permitted types. Check all files. Check with CDS if more types need to be allowed.")
+            if _ExtractFile.FileType(file) not in c.EXTENSIONS:
+                raise OSError("File " + topDirectory + "/" + directory + "/" + file + " is not in permitted filetypes. Check all files. Check with CDS if more types need to be allowed.")
             # has a name composed of directory name + hyphen + numbers
             # (isolates just the file name, not extension, to hand to validator)
             file = os.path.splitext(file)[0]
@@ -73,6 +74,18 @@ def FilesAreOkay_Book(topDirectory, permittedFileTypes=()):
                 raise OSError("File " + topDirectory + "/" + directory + "/" + file + " does not follow the correct titling: directory + hyphen + numbers. Check all files.")
     # return True if this all worked out
     return True
+
+def files_in_single(directory):
+    # ADD check that the directory is not empty
+    extensions_to_check = _ExtractDir.FileTypes(directory)
+    # check we only have one extension
+    if len(extensions_to_check) != 1:
+        raise OSError("Only one extension allowed. Check that files all have the same extension.")
+    # all extensions are valid
+    for extension in extensions_to_check:
+        if extension not in c.EXTENSIONS:
+            raise OSError("Folder " + str(c.FILESTOUPLOAD_DIR) + " contains unexpected files including type: " + str(extension))
+
 
 def ISO8601Date(input):
     # taking assumed EDTF date, check if it's a level 0 date - YYYY, YYYY-MM, YYYY-MM-DD
@@ -127,6 +140,9 @@ def ListIsSingleValueThenNaN(input):
                 ListIsIndeedSingleValueThenNan = False
             else:
                 nanCount += 1
+        # sorry
+        if nanCount == 4:
+            print("four nan, jeremy? FOUR?! that's insane.")
         # return the value
         return ListIsIndeedSingleValueThenNan
     else:

@@ -10,7 +10,7 @@ def CSVToPandasDF(filepath, header=None):
         return pandas.read_csv(filepath)
     
 def CSVColToList(filepath, col):
-    fullCSV = pandas.read_csv(filepath, header=None)
+    fullCSV = pandas.read_csv(filepath, header=None, skip_blank_lines=False)
     colList = fullCSV[col].tolist()
     return colList
     
