@@ -1,7 +1,13 @@
+'''
+TEST ME
+TO ADD AT END: create extra row containing 'description' from c.WB_fields
+'''
+
 import os
 import pandas
 import re
 from argparse import ArgumentParser
+from datetime import datetime
 import _Constants_and_Mappings as c
 import _ExtractDir, _ExtractFile, _ConvertData, _CSV, _Validate
 
@@ -30,10 +36,13 @@ cl_args = cl_parser.parse_args()
 WB_type = cl_args.type
 
 # fields_in_use from 'fields'
+# make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
     fields_in_use = _CSV.CSVColToList(os.path.join(c.FIELDS_DIR, cl_args.fields, ".csv"), 0)
+    FIELDS_TITLE = cl_args.fields
 elif not cl_args.fields:
     fields_in_use = c.WB_FIELDS_ALL
+    FIELDS_TITLE = 'all_fields'
 
 # use_AS from 'AS'
 if cl_args.AS:
@@ -104,215 +113,175 @@ def file_metadata_to_WB_fields_SINGLE():
 
     # extent, field_model, field_access_terms, field_display_hints, field_resource_type
     # all from c.extension_to_WB_field
-    # NEXT BIT - THIS IS NOT IT
-    _extent = []
-    for file in media_list:
-        extension = os.path.splitext(file)[1]
-        file = os.path.join(FILES_DIR, file)
-        if extension in WB_field_model_EXTENSIONS['Audio']:
-            extent = _ExtractFile.AudioDurationSeconds(file)
-            extent = _ConvertData.SecondsToHHMMSS(extent)
-        elif extension in WB_field_model_EXTENSIONS['Digital Document']:
-            extent = _ExtractFile.PDFPageCount(file)
-        elif extension in WB_field_model_EXTENSIONS['Image']:
-            extent = '1p.'
-        elif extension in WB_field_model_EXTENSIONS['Video']:
-            extent = _ExtractFile.VideoDurationSeconds(file)
-            extent = _ConvertData.SecondsToHHMMSS(extent)
-        _extent.append(extent)
-    prepop_dict['extent'] = _extent
+    for d in c.extension_to_WB_field:
+        # find the dictionary containing the correct extension
+        if d['extension'] == os.path.splitext(media_list[0])[1]:
+            # from this dictionary, populate ...
+            # required fields
+            prepop_dict['field_model'] = [d['field_model'] for i in range(records_count)]
+            prepop_dict['field_resource_type'] = [d['field_resource_type'] for i in range(records_count)]
+            # optional fields dependent on extension
+            if d['field_access_terms']:
+                prepop_dict['field_access_terms'] = [d['field_access_terms'] for i in range(records_count)]
+            if d['field_display_hints']:
+                prepop_dict['field_display_hints'] = [d['field_display_hints'] for i in range(records_count)]
+            # mimetype is skipped for now pending field creation
+            # use field_model to calculate extent - Image not required, Digital Document (.pdf) not yet coded
+            if d['field_model'] == 'Audio':
+                # get audio duration in seconds, convert to hh:mm:ss representation
+                prepop_dict['field_extent'] = [
+                    _ConvertData.SecondsToHHMMSS(_ExtractFile.AudioDurationSeconds(os.path.join(FILES_DIR, file))) for file in media_list
+                ]
+            elif d['field_model'] == 'Video':
+                # get video duration in seconds, convert to hh:mm:ss representation
+                prepop_dict['field_extent'] = [
+                    _ConvertData.SecondsToHHMMSS(_ExtractFile.VideoDurationSeconds(os.path.join(FILES_DIR, file))) for file in media_list
+                ]
 
+    # field_date_digitized
+    # get date creation estimate, convert to year
+    prepop_dict['field_date_digitized'] = [
+        _ConvertData.UnixToEDTFYear(
+            _ExtractFile.DateCreatedUnix(os.path.join(FILES_DIR, file))
+            ) for file in media_list
+    ]
+
+    
 def file_metadata_to_WB_fields_BOOK():
 
     # file
     prepop_dict['file'] = media_list
 
+    # field_model
+    prepop_dict['field_model'] = [c.DEFAULT_BOOK_field_model for i in range(records_count)]
+
+    # field_resource_type
+    prepop_dict['field_resource_type'] = [c.DEFAULT_BOOK_field_resource_type for i in range(records_count)]
+
     # extent
     # gets mapped to total_scans as-is, and the extent field which can be separately edited
     _extent = [_ExtractDir.FileCount(os.path.join(FILES_DIR, directory)) for directory in media_list]
     prepop_dict['total_scans'] = _extent
-    prepop_dict['extent'] = [str(e) + "p." for e in _extent]
+    prepop_dict['field_extent'] = [str(e) + "p." for e in _extent]
 
-    # field_model
-    prepop_dict['WB_field_model'] = [c.DEFAULT_BOOK_field_model for i in range(records_count)]
+    # field_date_digitized
+    # get date creation estimate, convert to year, for every file in every folder and pick the lowest in each
+    _field_date_digitized = []
+    for folder in media_list:
+        candidates = []
+        for file in _ExtractDir.FileList(os.path.join(c.FILESTOUPLOAD_DIR, folder), EXTENSIONS=True):
+            candidate = _ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, folder, file))
+            candidate = _ConvertData.UnixToEDTFYear(candidate)
+            candidates.append(candidate)
+        _field_date_digitized.append(min(candidates))
+    prepop_dict['field_date_digitized'] = _field_date_digitized
 
 
+def AS_metadata_to_WB_fields():
 
-'''
-start the prepopulation process
-
-1. info from files
-'''
-print('prepopulating info from files ...')
-
-
-# WB_field_model
-# identifies field_model based on type or the file EXTENSIONS
-if 'WB_field_model' in fields_in_use:
-    if WB_type == 'book':
-        prepop_dict['WB_field_model'] = ['Paged Content' for i in range(records_count)]
-    elif WB_type == 'single':
-        WB_field_model_prepop = []
-        for file in media_list:
-            extension = os.path.splitext(file)[1]
-            for key, value in WB_field_model_EXTENSIONS.items():
-                if extension in value:
-                    WB_field_model_prepop.append(key)
-        prepop_dict['WB_field_model'] = WB_field_model_prepop
-
-# datedigitized
-# a guess based on the date created as stored in the files
-if 'datedigitized' in fields_in_use:
-    if WB_type == 'single':
-        datedigitized_prepop = [_ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, f)) for f in media_list]
-        datedigitized_prepop = [_ConvertData.UnixToEDTFYear(d) for d in datedigitized_prepop]
-        prepop_dict['datedigitized'] = datedigitized_prepop
-    elif WB_type == 'book':
-        datedigitized_prepop = []
-        for folder in media_list:
-            candidates = []
-            for file in _ExtractDir.FileList(os.path.join(c.FILESTOUPLOAD_DIR, folder), EXTENSIONS=True):
-                candidate = _ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, folder, file))
-                candidate = _ConvertData.UnixToEDTFYear(candidate)
-                candidates.append(candidate)
-            datedigitized_prepop.append(min(candidates))
-        prepop_dict['datedigitized'] = datedigitized_prepop
-
-print('... prepopulation from files done ...')
-
-'''
-2. ArchivesSpace data prepopulation (if using)
-'''
-
-if use_AS:
-    print('prepopulating info from ArchivesSpace file ...')
-
-    if 'cuid' in fields_in_use:
-        prepop_dict['cuid'] = AS_dict['component_id']
+    if 'field_local_identifier' in fields_in_use:
+        prepop_dict['field_local_identifier'] = AS_dict['component_id']
 
     if 'title' in fields_in_use:
         prepop_dict['title'] = AS_dict['title']
 
-    if 'related_note' in fields_in_use:
-        prepop_dict['related_note'] = AS_dict['note/relatedmaterial/0/content']
+    if 'field_related_materials_note' in fields_in_use:
+        prepop_dict['field_related_materials_note'] = AS_dict['note/relatedmaterial/0/content']
 
-    # date created
-    if 'datecreated_edtf' or 'datecreated_text' in fields_in_use:
+    if 'field_edtf_date_created' or 'field_date_created_text' in fields_in_use:
         datecreatedTuple = [
             _ConvertData.ASDateToWBDate(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
             for i in range(records_count)
         ]
+        prepop_dict['field_edtf_date_created'] = [x[0] for x in datecreatedTuple]
+        prepop_dict['field_date_created_text'] = [x[1] for x in datecreatedTuple]
 
-        if 'datecreated_edtf' in fields_in_use:
-            prepop_dict['datecreated_edtf'] = [x[0] for x in datecreatedTuple]
-
-        if 'datecreated_text' in fields_in_use:
-            prepop_dict['datecreated_text'] = [x[1] for x in datecreatedTuple]
-
-    # scopecontents - concatenates scopecontent and abstract
-    if 'scopecontents' in fields_in_use:
-        scopecontentsTypes = ('scopecontent', 'abstract')
-        scopecontentsValues = []
+    if 'field_description_long' in fields_in_use:
+        # should this instead be in _ConvertData? do i still need to give it all the data so run the regex? any significant advantage if that's the case?
+        description_values = []
+        # merge all the fields that match 'scopecontent' or 'abstract' in AS
         for key, value in AS_dict.items():
-            for x in scopecontentsTypes:
-                regexMatch = r'^note\/' + x + r'(.*)content$'
-                if re.match(regexMatch, key):
-                    scopecontentsValues.append(value)
+            for x in ('scopecontent', 'abstract'):
+                regex_match = r'^note\/' + x + r'(.*)content$'
+                if re.match(regex_match, key):
+                    description_values.append(value)
         # join string values at same indices within scopecontentsValues
-        scopecontents_prepop = _ConvertData.ConcatenateStringsInLists(scopecontentsValues)
+        _field_description_long = _ConvertData.ConcatenateStringsInLists(description_values)
         # strip newlines
-        scopecontents_prepop = [_ConvertData.RemoveLinebreaks(x) for x in scopecontents_prepop]
-        prepop_dict['scopecontents'] = scopecontents_prepop
+        _field_description_long = [_ConvertData.RemoveLinebreaks(x) for x in _field_description_long]
+        # place in dictionary
+        prepop_dict['field_description_long'] = _field_description_long
 
-    # othernotes - concatenates a longer list of other descriptions
-    if 'othernotes' in fields_in_use:
-        othernotesTypes = ('odd','bioghist','accruals','dimensions','altformavail','phystech','physdesc','processinfo','separatedmaterial')
-        # create a list of lists of other value types
-        othernotesValues = []
+    if 'field_note' in fields_in_use:
+        # as field_description_long - should this instead be in _ConvertData?
+        # merge all the other note types in AS
+        notes_values = []
         for key, value in AS_dict.items():
-            for x in othernotesTypes:
-                regexMatch = r'^note\/' + x + r'(.*)content$'
-                if re.match(regexMatch, key):
-                    othernotesValues.append(value)
+            for x in ('odd','bioghist','accruals','dimensions','altformavail','phystech','physdesc','processinfo','separatedmaterial'):
+                regex_match = r'^note\/' + x + r'(.*)content$'
+                if re.match(regex_match, key):
+                    notes_values.append(value)
         # join string values at same indices within scopecontentsValues
-        othernotes_prepop = _ConvertData.ConcatenateStringsInLists(othernotesValues)
+        _field_note = _ConvertData.ConcatenateStringsInLists(notes_values)
         # strip newlines
-        othernotes_prepop = [_ConvertData.RemoveLinebreaks(x) for x in othernotes_prepop]
-        prepop_dict['othernotes'] = othernotes_prepop
+        _field_note = [_ConvertData.RemoveLinebreaks(x) for x in _field_note]
+        # place in dictionary
+        prepop_dict['field_note'] = _field_note
 
-    if 'agent_name' in fields_in_use:
-        agents_prepop = []
+    if 'field_linked_agent' in fields_in_use:
+        # TESTING SCENARIO - user can include 'field_linked_agent'. this gets split into the three components in Fillable, then recombined at end before asserting order.
+        _field_linked_agent_NAME = []
         for i in range(records_count):
             agents = '|'.join(
                 _ConvertData.AgentsFromASAO(AS_dict['ref_id'][i], AS_dict['title'][i])
             )
-            agents_prepop.append(agents)
-        prepop_dict['agent_name'] = agents_prepop
+            _field_linked_agent_NAME.append(agents)
+        prepop_dict['field_linked_agent_NAME'] = _field_linked_agent_NAME
+        prepop_dict['field_linked_agent_ROLE'] = ['' for i in range(records_count)]
+        prepop_dict['field_linked_agent_TYPE'] = ['' for i in range(records_count)]
 
-    if 'access_type' or 'access_note' in fields_in_use:
-        # access_type, access_note - just makes a flag if anything exists in these fields
-        # currently (2024/12) we don't know how we're dealing with access restrictions, so this just adds some warnings to be deleted
-        # get all lists of values that match the key string
-        accessrestrictValues = []
-        for key, value in AS_dict.items():
-            if re.match(r'^note\/accessrestrict', key):
-                accessrestrictValues.append(value)
-        # fill warning or None depending on if there's a value
-        accessrestrictValuesExist = []
-        for i in range(records_count):
-            accessFlag = False
-            # make the flag True if there's something in one of the note/accessrestrict fields for the record, otherwise maintain False
-            for j in accessrestrictValues:
-                if not pandas.isna(j[i]):
-                    accessFlag = True
-            # append the True/False value
-            accessrestrictValuesExist.append(accessFlag)
-        # put the warning in every record
-        accessFlagNote = '!! Access condition exists that will not be copied over until setting access is resolved.'
-        access_type_prepop = []
-        for x in accessrestrictValuesExist:
-            if x == True:
-                access_type_prepop.append(accessFlagNote)
-            else:
-                access_type_prepop.append("")
-        access_note_prepop = access_type_prepop
-        # send user warning too
-        if True in accessrestrictValuesExist:
-            print(accessFlagNote)
-        
-        if 'access_type' in fields_in_use:
-            prepop_dict['access_type'] = access_type_prepop
-        
-        if 'access_note' in fields_in_use:
-            prepop_dict['access_note'] = access_note_prepop
-
-    print('... prepopulating ArchivesSpace data done ...')
-
+    # access restriction - flag to user if something exists
+    # previous version (very long and complicated) placed a warning in each record, but the user can be asked to look
+    access_values = []
+    for key, value in AS_dict.items():
+        if re.match(r'^note\/accessrestrict', key):
+            access_values.append(value)
+    if not _Validate.ListIsAllEmpty(access_values):
+        print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')
+    
 
 '''
-3. Other Workbench-specific
+Execute functions to fill out the dictionary
 '''
 
-# we assume 'Reformatted digital', user can change if necessary
-if 'WB_field_digital_origin' in fields_in_use:
-    prepop_dict['WB_field_digital_origin'] = ['Reformatted digital' for i in range(records_count)]
+print('Populating fields ...')
+
+if WB_type == 'single':
+    file_metadata_to_WB_fields_SINGLE()
+elif WB_type == 'book':
+    file_metadata_to_WB_fields_BOOK()
+if use_AS:
+    AS_metadata_to_WB_fields()
+prepop_dict['field_digital_origin'] = [c.field_digital_origin for i in range(records_count)] # almost always this
+
+print('... fields populated ...')
 
 '''
-output our fillable file
+Create output file from dictionary
 '''
-print('... creating output file ...')
+print('Creating output file ...')
+
+# make output filename based on AS or just fields_in_use
+if use_AS:
+    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_FILLABLE.xlsx"
+else:
+    FILLABLE_FILENAME = FIELDS_TITLE + "_" + datetime.now().strftime("%y-%m-%d_%H-%M-%S") + "_FILLABLE.xlsx"
 
 # populate then concatenate DataFrames
-outputPandAS_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
-
-# make fillable filename based on AS or just fields_in_use
-if use_AS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_FILLABLE.xlsx"
-else:
-    FILLABLE_FILENAME = HEADERS_NAME + "_FILLABLE.xlsx"
+output_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
 
 # export into metadataDirectory
 # index=False ensures not writing the index column
-outputPandAS_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False)
+output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False)
 
 print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)
