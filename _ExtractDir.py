@@ -4,8 +4,10 @@ metadata extraction from directory
 import os
 import _ConvertData
 
-def FileCount(directorypath, fileextension=""):
-    # returns a count of the number of files, with optional limitation for extension
+def file_count(directorypath, fileextension=""):
+    '''
+    returns a count of the number of files, with optional limitation for extension
+    '''
     files = [x for x in os.listdir(directorypath) if os.path.isfile(os.path.join(directorypath, x))]
     # ignore Thumbs.db
     if 'Thumbs.db' in files:
@@ -14,8 +16,10 @@ def FileCount(directorypath, fileextension=""):
         files = [x for x in files if os.path.splitext(x)[1] == fileextension]
     return len(files)
 
-def FileList(directorypath, extensions=False):
-    # returns a list of file names, with extension optional
+def file_list(directorypath, extensions=False):
+    '''
+    returns a list of file names, with extension optional
+    '''
     files = sorted([x for x in os.listdir(directorypath) if os.path.isfile(os.path.join(directorypath, x))])
     # ignore Thumbs.db
     if 'Thumbs.db' in files:
@@ -25,8 +29,10 @@ def FileList(directorypath, extensions=False):
     else:
         return [os.path.splitext(x)[0] for x in files]
     
-def FileTypes(directorypath):
-    # returns a list of filetypes within directory
+def unique_extensions(directorypath):
+    '''
+    returns a list of unique extensions within directory
+    '''
     # get list of files
     files = [x for x in os.listdir(directorypath) if os.path.isfile(os.path.join(directorypath, x))]
     # ignore Thumbs.db
@@ -35,11 +41,11 @@ def FileTypes(directorypath):
     # reduce to only the extension
     extensions = [os.path.splitext(x)[1] for x in files]
     # get unique in list
-    extensions = _ConvertData.UniqueInList(extensions)
+    extensions = _ConvertData.unique_in_list(extensions)
     return extensions
     
-def SubDirectoriesList(directorypath):
+def subdirectories_list(directorypath):
     return sorted([x for x in os.listdir(directorypath) if os.path.isdir(os.path.join(directorypath, x))])
 
-def SubDirectoriesCount(directorypath):
-    return len(SubDirectoriesList(directorypath))
+def subdirectories_count(directorypath):
+    return len(subdirectories_list(directorypath))

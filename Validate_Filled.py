@@ -23,7 +23,7 @@ CLParser.add_argument('filled_file', type=str)
 CLargs = CLParser.parse_args()
 # assign arguments
 FILLED_FILENAME = CLargs.filled_file
-if FILLED_FILENAME not in _ExtractDir.FileList(METADATA_DIR, extensions=True):
+if FILLED_FILENAME not in _ExtractDir.file_list(METADATA_DIR, extensions=True):
     raise OSError("Folder " + METADATA_DIR + " does not appear to contain " + FILLED_FILENAME + ". Check.")
 
 
@@ -44,7 +44,7 @@ print("Checking headers ...")
 # grab headers to a list
 headers = list(inputDict.keys())
 # import valid headers from csv
-headers_allValid = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_allValid.csv"), 0)
+headers_allValid = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_allValid.csv"), 0)
 # check that the headers are valid
 for header in headers:
     if header not in headers_allValid:
@@ -62,7 +62,7 @@ if "agent_role" and "agent_name" and "agent_type" in headers:
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.RelatorCode(y)
+                    _Validate.relator_code(y)
                 except Exception as e:
                     print(str(e))
 
@@ -70,7 +70,7 @@ if "agent_role" and "agent_name" and "agent_type" in headers:
     for i in range(inputRows):
         if not _Validate.nan(inputDict["agent_name"][i]):
             try:
-                _Validate.PipedFieldsSameLength(inputDict["agent_name"][i], inputDict["agent_role"][i])
+                _Validate.piped_fields_same_length(inputDict["agent_name"][i], inputDict["agent_role"][i])
             except Exception as e:
                 print(str(e))
 
@@ -78,7 +78,7 @@ if "agent_role" and "agent_name" and "agent_type" in headers:
     for i in range(inputRows):
         if not _Validate.nan(inputDict["agent_type"][i]):
             try:
-                _Validate.PipedFieldsSameLength(inputDict["agent_name"][i], inputDict["agent_type"][i])
+                _Validate.piped_fields_same_length(inputDict["agent_name"][i], inputDict["agent_type"][i])
             except Exception as e:
                 print(str(e))
 
@@ -88,7 +88,7 @@ if "agent_role" and "agent_name" and "agent_type" in headers:
         if not _Validate.nan(ts):
             for t in ts.split('|'):
                 try:
-                    _Validate.AgentType(t)
+                    _Validate.agent_type(t)
                 except Exception as e:
                     print(str(e))
 
@@ -110,7 +110,7 @@ if "cnairsubject" in headers:
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.CNAIR_Culture(y)
+                    _Validate.CNAIR_culture(y)
                 except Exception as e:
                     print(str(e))
 

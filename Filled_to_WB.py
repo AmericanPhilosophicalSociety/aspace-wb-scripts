@@ -52,7 +52,7 @@ CLargs = CLParser.parse_args()
 # assign arguments
 WBType = CLargs.type
 FILLED_FILENAME = CLargs.filled_file
-if FILLED_FILENAME not in _ExtractDir.FileList(METADATA_DIR, extensions=True):
+if FILLED_FILENAME not in _ExtractDir.file_list(METADATA_DIR, extensions=True):
     raise OSError("Folder " + METADATA_DIR + " does not appear to contain " + FILLED_FILENAME + ". Check.")
 WB_FILENAME = os.path.splitext(FILLED_FILENAME)[0] + "_WB-OUTPUT.csv"
 
@@ -80,13 +80,13 @@ check headers against required fields
 # grab input headers to list
 headers = list(inputDict.keys())
 # grab csvs to lists
-headers_allValid = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_allValid.csv"), 0)
-headers_downfilling = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_downfilling.csv"), 0)
+headers_allValid = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_allValid.csv"), 0)
+headers_downfilling = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_downfilling.csv"), 0)
 # required headers depend on single vs book
 if WBType == 'single':
-    headers_required = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_requiredSingle.csv"), 0)
+    headers_required = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_requiredSingle.csv"), 0)
 elif WBType == 'book':
-    headers_required = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_requiredBook.csv"), 0)
+    headers_required = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_requiredBook.csv"), 0)
 
 # check that the headers are valid
 for header in headers:
@@ -228,12 +228,12 @@ if "WB_field_digital_origin" in headers:
 if "iso639_code" in headers:
     WBDict["field_language"] = []
     # create dictionary of iso639 csv, swap so code comes first
-    ISO639Dict = _CSV.TwoColumnCSVToDict(os.path.join(CV_DIR, ISO639_FILENAME))
+    ISO639Dict = _CSV.two_col_CSV_to_dict(os.path.join(CV_DIR, ISO639_FILENAME))
     ISO639Dict = {value: key for key, value in ISO639Dict.items()}
     for i in range(inputRows):
         if inputDict["iso639_code"][i]:
             WBDict["field_language"].append(
-                "|".join([_ConvertData.LanguageAndISO639CodeToWBLanguage(ISO639Dict[j], j) for j in str(inputDict["iso639_code"][i]).split("|")])
+                "|".join([_ConvertData.language_and_ISO639_code_to_WB_language(ISO639Dict[j], j) for j in str(inputDict["iso639_code"][i]).split("|")])
             )
         else:
             WBDict["field_language"].append("")
@@ -248,15 +248,15 @@ if "agent_name" and "agent_role" and "agent_type" in headers:
             # if agent_type contains things, split and convert as normal, otherwise make all "person":
             if inputDict["agent_type"][i]:
                 agent_type = str(inputDict["agent_type"][i]).split("|")
-                agent_type = [_ConvertData.AgentTypeAbbreviationToFull(x) for x in agent_type]
+                agent_type = [_ConvertData.agent_type_abbreviation_to_full(x) for x in agent_type]
             else:
                 agent_type = ["person" for k in range(len(agent_name))]
             WBDict["field_linked_agent"].append(
                 "|".join(
-                    [_ConvertData.AgentRelatorAndTypeToWBAgent(
-                        agent = agent_name[j],
-                        relatorCode = agent_role[j],
-                        agentType = agent_type[j]
+                    [_ConvertData.agent_info_to_WB_agent(
+                        agent_name = agent_name[j],
+                        relator_code = agent_role[j],
+                        agent_type = agent_type[j]
                         ) for j in range(len(agent_name))
                         ]
                     )
@@ -268,7 +268,7 @@ if "agent_name" and "agent_role" and "agent_type" in headers:
 # exception added for parent_id since we want it to show early but it's necessary
 blankColumns = []
 for key, value in WBDict.items():
-    if _Validate.ListIsAllEmpty(value):
+    if _Validate.list_is_all_empty(value):
         if key != "parent_id":
             blankColumns.append(key)
 if len(blankColumns) > 0:
@@ -299,7 +299,7 @@ elif WBType == 'single':
             WBDict["field_display_hints"].append(displayHint)
         else:
             WBDict["field_display_hints"].append("")
-    if _Validate.ListIsAllEmpty(WBDict["field_display_hints"]):
+    if _Validate.list_is_all_empty(WBDict["field_display_hints"]):
         WBDict.pop("field_display_hints")
 # field_weight - blank, book only
 if WBType == 'book':
@@ -315,9 +315,9 @@ rearrange WBDict to match preferred column order for checking
 print("Rearranging fields ...")
 # grab final order to list depending on WBType
 if WBType == 'single':
-    headers_WBFinalOrder = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_WBFinalOrderSingle.csv"), 0)
+    headers_WBFinalOrder = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_WBFinalOrderSingle.csv"), 0)
 elif WBType == 'book':
-    headers_WBFinalOrder = _CSV.CSVColToList(os.path.join(HEADERS_DIR, "_WBFinalOrderBook.csv"), 0)
+    headers_WBFinalOrder = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_WBFinalOrderBook.csv"), 0)
 
 # if a Workbench field is not present in headers_WBFinalOrder, inform user and terminate
 missingWBFinalOrderFields = [key for key in WBDict if key not in headers_WBFinalOrder]
@@ -332,5 +332,5 @@ print("... fields rearranged.")
 '''
 export our WB csv
 '''
-_CSV.DictToCSV(WBDictOrdered, os.path.join(METADATA_DIR, WB_FILENAME))
+_CSV.dict_to_CSV(WBDictOrdered, os.path.join(METADATA_DIR, WB_FILENAME))
 print("Generated Workbench file. Check and make any other modifications before using: " + METADATA_DIR + "\\" + WB_FILENAME)

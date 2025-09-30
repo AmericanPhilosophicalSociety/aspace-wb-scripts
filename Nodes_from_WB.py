@@ -19,7 +19,7 @@ CLParser.add_argument('nodes_file', type=str)
 CLargs = CLParser.parse_args()
 NODESFILE = CLargs.nodes_file
 
-metadataFiles = _ExtractDir.FileList(METADATA_DIR, extensions=True)
+metadataFiles = _ExtractDir.file_list(METADATA_DIR, extensions=True)
 if NODESFILE not in metadataFiles:
     raise OSError("Nodes file " + str(NODESFILE) + " not found in directory " + str(METADATA_DIR))
 
@@ -30,7 +30,7 @@ print("Loading nodes ...")
 
 # load node file to a dictionary
 
-nodesPandasDF = _CSV.CSVToPandasDF(os.path.join(METADATA_DIR, NODESFILE), header=True)
+nodesPandasDF = _CSV.CSV_to_pandas_dataframe(os.path.join(METADATA_DIR, NODESFILE), header=True)
 nodesDict = nodesPandasDF.to_dict(orient="list")
 nodes = nodesDict['node_id']
 
@@ -46,7 +46,7 @@ file_version_caption = []
 file_version_publish = []
 
 for node in nodes:
-    ASDODict = _ConvertData.DigLibNodeToASDO(node)
+    ASDODict = _ConvertData.diglib_node_to_AS_DO(node)
     digital_object_id.append(ASDODict['digital_object_id'])
     digital_object_title.append(ASDODict['digital_object_title'])
     digital_object_publish.append(ASDODict['digital_object_publish'])

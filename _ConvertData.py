@@ -1,16 +1,18 @@
 from datetime import datetime
 import re
 import pandas
+import os
+import _Constants_and_Mappings as c
 import _Validate, _CSV
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called
 '''
 # agents_in_csv has 3 columns: agent, title (of the archival object), refid
-agents_path = "_CVs/agents_in_AS.csv"
-agents_agent = _CSV.CSVColToList(agents_path, 0)
-agents_titles = _CSV.CSVColToList(agents_path, 1)
-agents_refids = _CSV.CSVColToList(agents_path, 2)
+AGENTS_PATH = os.path.join(c.CV_DIR, c.AS_AGENTS_FILENAME)
+agents_agent = _CSV.CSV_col_to_list(AGENTS_PATH, 0)
+agents_titles = _CSV.CSV_col_to_list(AGENTS_PATH, 1)
+agents_refids = _CSV.CSV_col_to_list(AGENTS_PATH, 2)
 
 '''
 time/date functions
@@ -18,19 +20,19 @@ time/date functions
 first few are Unix to date conversion - for precise dates (implied if there is a Unix Epoch time)
 '''
 
-def UnixToEDTFDay(unix):
+def unix_time_to_EDTF_day(unix):
     # returns YYYY-MM-DD of a Unix input
     return datetime.fromtimestamp(unix).strftime('%Y-%m-%d')
     
-def UnixToEDTFMonth(unix):
+def unix_time_to_EDTF_month(unix):
     # returns YYYY-MM
     return datetime.fromtimestamp(unix).strftime('%Y-%m')
     
-def UnixToEDTFYear(unix):
+def unix_time_to_EDTF_year(unix):
     # returns YYYY
     return datetime.fromtimestamp(unix).strftime('%Y')
 
-def EDTFIntervalToBeginEnd(edtf):
+def EDTF_interval_to_begin_end(edtf):
     # takes EDTF interval, returns first and last
     # simple split around /
     edtf = str(edtf)
@@ -39,14 +41,17 @@ def EDTFIntervalToBeginEnd(edtf):
     else:
         return str(edtf).split('/')
     
-def BeginEndToEDTFInterval(begin, end):
+def begin_end_to_EDTF_interval(begin, end):
     # takes a begin and end date (assuming correctly EDTF formatted individually), returns around /
     return str(begin) + "/" + str(end)
     
-def SecondsToHHMMSS(seconds):
+def seconds_to_HHMMSS(seconds):
+    '''
+    returns hh:mm:ss representation of int seconds, under 100 hours
+    '''
     # if i accidentally receive a float, this gets very messed up
     seconds = int(seconds)
-    # returns hh:mm:ss of seconds
+    # limit to under 100 hours so hh:mm:ss works
     longest = int(100*60*60)
     if seconds >= longest:
         raise ValueError("something is wrong, the seconds supplied - " + str(seconds) + " - is over 100 hours. too many seconds to represent as hh:mm:ss")
@@ -60,13 +65,11 @@ def SecondsToHHMMSS(seconds):
     return h + ":" + m + ":" + s
 
 
-def TextDateToISO8601(input):
+def text_date_to_ISO8601(input):
     '''
-    incomplete
+    incomplete, not used. consider using an external library if this is to be expanded.
     convert some common text dates that we use into ISO 8601 dates, which can be plugged directly into AS's date field
     outputs successful ISO 8601 (YYYY-MM-DD) or None
-    currently handles only:
-        1849 Aug. 15
     '''
     MONTHS = {
         '01': ['jan', 'jan.', 'january'],
@@ -87,7 +90,7 @@ def TextDateToISO8601(input):
     input = re.sub('[\[\]]', '', input)
     print(input)
     # check it's not already an ISO8601 date. this eliminates well-formed YYYY, YYYY-MM, YYYY-MM-DD
-    if _Validate.ISO8601Date(input):
+    if _Validate.ISO8601_date(input):
         return input
     # discard if there's date uncertainty represented as '?'
     if '?' in input:
@@ -97,7 +100,7 @@ def TextDateToISO8601(input):
     #if re.fullmatch(YMDmatch, input):
 
 
-def ASDateToWBDate(expression, begin, end):
+def AS_date_to_WB_date(expression, begin, end):
     '''
     ! potential for bugs. lots of info in here.
     takes three dates in the format expression, begin, end
@@ -146,61 +149,71 @@ def ASDateToWBDate(expression, begin, end):
             return (begin, "")
         elif begin and end:
             # if there's both beginning and end, return EDTF of the range to EDTF date
-            return (BeginEndToEDTFInterval(begin, end), "")
+            return (begin_end_to_EDTF_interval(begin, end), "")
 
 
 '''
 other - a big messy list, alphabetized
 '''
 
-def AgentRelatorAndTypeToWBAgent(agent, relatorCode, agentType):
-    # return the string as needed by Workbench
-    # provided documentation is: relators:[relationship type abbreviation]:[type of name]:[authorized or local name]
-    return "relators:" + str(relatorCode) + ":" + str(agentType) + ":" + str(agent)
+def agent_info_to_WB_agent(agent_name, relator_code, agent_type):
+    '''
+    return the string as needed by Workbench
+    format returned: relators:[relationship type abbreviation]:[type of name]:[authorized or local name]
+    '''
+    return "relators:" + str(relator_code) + ":" + str(agent_type) + ":" + str(agent_name)
 
-def AgentTypeAbbreviationToFull(agentType):
-    if agentType in ("person", "corporate_body", "family"):
-        return agentType
-    elif agentType == "p":
+def agent_type_abbreviation_to_full(agent_type):
+    '''
+    expands an abbreviated agent type to a full one
+    '''
+    if agent_type in ("person", "corporate_body", "family"):
+        return agent_type
+    elif agent_type == "p":
         return "person"
-    elif agentType == "c":
+    elif agent_type == "c":
         return "corporate_body"
-    elif agentType == "f":
+    elif agent_type == "f":
         return "family"
 
-def AgentsFromASAO(refidToFind, titleToFind):
-    # takes a refid and title and tries to find matches in the agents_in_AS.csv file
+def agents_from_AS_AO(refid_to_find, title_to_find):
+    '''
+    takes a refid and title and tries to find matches in the agents_in_AS csv file
+    the accuracy relies on agents_in_AS being current, and does not work if there is no title (which occurs in some records, they only have dates)
+    '''
     # match instances of refid
-    refidIndices = [i for i, e in enumerate(agents_refids) if e == refidToFind]
+    refid_indices = [i for i, e in enumerate(agents_refids) if e == refid_to_find]
     # narrow to ones that match title. this isn't foolproof but it's the closest we can do.
-    refidIndices = [i for i in refidIndices if agents_titles[i] == titleToFind]
+    refid_indices = [i for i in refid_indices if agents_titles[i] == title_to_find]
     # return all agents as a list
-    agents = [agents_agent[i] for i in refidIndices]
+    agents = [agents_agent[i] for i in refid_indices]
     return agents
 
-def CNAIRAudioCUIDToCarrierID(input):
+def CNAIR_audio_CUID_to_carrier_id(input):
+    '''
+    chop off the end hyphen. probably has no use.
+    '''
     # uses regex \w to return everything before a hyphen, because a hyphen stops a word
     return re.match("^\w+", input).group(0)
 
-def ConcatenateStringsInLists(input):
-    # from a list of equal-length lists, outputs concatenation of each index across lists
-    # used for combining ArchivesSpace's various notes into one long note
-    # expected input: list of lists, each containing string or None
-    # does *not* check if the lists are the same length
+def concatenate_strings_in_lists(input):
+    '''
+    from a list of equal-length lists, outputs concatenation of each index across lists
+    used for combining ArchivesSpace's various notes into one long note
+    expected input: list of lists, each containing string or None
+    does *not* check if the lists are the same length
+    '''
     output = []
     for i in range(len(input[0])):
         individualString = ' '.join(j[i] for j in input if isinstance(j[i], str))
         output.append(individualString)
-        '''that replaced: individualString = ""
-        for j in input:
-            if isinstance(j[i], str):
-                individualString += j[i]
-                individualString += " "
-        individualString.rstrip()'''
     return output
 
-def DigLibNodeToASDO(input):
-    # from a node number as input, generates fields for AS Digital Object creation
+def diglib_node_to_AS_DO(input):
+    '''
+    from a node number as input, generates fields for AS Digital Object creation
+    actual implemented use skips this definition of 'title' in favor of WB title
+    '''
     nodePrefix = "islandora8_"
     digital_object_id = nodePrefix + str(input)
     digital_object_title = nodePrefix + str(input)
@@ -218,27 +231,33 @@ def DigLibNodeToASDO(input):
     }
     return DigitalObject
 
-
-def IntToPageExtent(input):
-    return str(input) + "p."
-
-def LanguageAndISO639CodeToWBLanguage(languageName, code):
+def language_and_ISO639_code_to_WB_language(languageName, code):
+    '''
+    takes language name and ISO639 code and returns WB format: language (code)
+    '''
     return str(languageName + " (" + code + ")")
 
-def PipeToSemicolon(input):
-    # from a string that is pipe-separated, make a string that is semi-colon-separated with spaces
+def pipe_to_semicolon(input):
+    '''
+    from a string that is pipe-separated, returns a string that is semi-colon-separated with spaces
+    '''
     return input.replace('|', '; ')
 
-def RelatorCodeToRelatorTitle(input):
-    # code is in relator.csv column 0, title is in 1
-    return _CSV.NeighborFromValueInCSVCol("_CVs/relator.csv", input, 0, 1)
+def relator_code_to_relator_title(input):
+    '''
+    unused - code is in relator.csv column 0, title is in 1
+    '''
+    return _CSV.neighbor_from_value_in_CSV_col(os.path.join(c.CV_DIR, c.RELATOR_CODES_FILENAME), input, 0, 1)
 
-def RemoveLinebreaks(input):
-    # from a string, remove all linebreaks
+def remove_linebreaks(input):
+    '''
+    from a string, remove all linebreaks
+    '''
     return ' '.join(input.splitlines())
 
-def UniqueInList(input):
-    # from a list, returns a list of unique values in the order they first appear
-    # using this to create list of carriers for audio collection processing
-    # this is really hacky - dictionary order preserves insertion order. so keep trying to add it to a dictionary and it'll ignore the duplicates.
+def unique_in_list(input):
+    '''
+    from a list, returns a list of unique values in the order they first appear
+    this is really hacky - dictionary order preserves insertion order. so keep trying to add it to a dictionary and it'll ignore the duplicates.
+    '''
     return list(dict.fromkeys(input))

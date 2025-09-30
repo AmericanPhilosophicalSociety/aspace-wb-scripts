@@ -30,6 +30,6 @@ for k, v in namesDict.items():
 
 if len(ISO639) == len(namesDict.items()):
     # export to csv using my CSV utility
-    _CSV.TuplesToCSV(ISO639, "iso639.csv")
+    _CSV.tuples_to_CSV(ISO639, "iso639.csv")
 else:
     print("It looks like there are some languages that are not exclusively ISO639-3 or ISO639-5, so are not caught by this process. investigate.")

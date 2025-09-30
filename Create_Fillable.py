@@ -1,6 +1,7 @@
 '''
-TEST ME
-TO ADD AT END: create extra row containing 'description' from c.WB_fields
+WORKING :)
+TO ADD AT END: create extra row containing 'description' from c.WB_fields, then format these
+add more helper text
 '''
 
 import os
@@ -25,7 +26,7 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
-cl_parser.add_argument('--fields', type=str, choices=_ExtractDir.FileList(c.FIELDS_DIR, EXTENSIONS=False))
+cl_parser.add_argument('--fields', type=str, choices=_ExtractDir.file_list(c.FIELDS_DIR, extensions=False))
 cl_parser.add_argument('--AS', type=str)
 cl_parser.add_argument('--filefolder', type=str)
 cl_args = cl_parser.parse_args()
@@ -38,7 +39,7 @@ WB_type = cl_args.type
 # fields_in_use from 'fields'
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
-    fields_in_use = _CSV.CSVColToList(os.path.join(c.FIELDS_DIR, cl_args.fields, ".csv"), 0)
+    fields_in_use = _CSV.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
     FIELDS_TITLE = cl_args.fields
 elif not cl_args.fields:
     fields_in_use = c.WB_FIELDS_ALL
@@ -65,6 +66,7 @@ if cl_args.filefolder:
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
 
+
 print('... command line arguments parsed ...')
 
 '''
@@ -77,11 +79,12 @@ print("Checking files ...")
 if WB_type == 'book':
     _Validate.files_in_book(FILES_DIR)
     print("Book note: script does not check exact padding. Padding needs to be 3 digits if <1000, 4+ digits if >=1000 files.")
-    media_list = _ExtractDir.FileList(FILES_DIR, extensions=True)
+    media_list = _ExtractDir.subdirectories_list(FILES_DIR)
 elif WB_type == 'single':
     _Validate.files_in_single(FILES_DIR)
-    media_list = _ExtractDir.SubDirectoriesList(FILES_DIR)
+    media_list = _ExtractDir.file_list(FILES_DIR, extensions=True)
 
+print(media_list)
 print("... files look okay ...")
 
 '''
@@ -130,19 +133,19 @@ def file_metadata_to_WB_fields_SINGLE():
             if d['field_model'] == 'Audio':
                 # get audio duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
-                    _ConvertData.SecondsToHHMMSS(_ExtractFile.AudioDurationSeconds(os.path.join(FILES_DIR, file))) for file in media_list
+                    _ConvertData.seconds_to_HHMMSS(_ExtractFile.audio_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
             elif d['field_model'] == 'Video':
                 # get video duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
-                    _ConvertData.SecondsToHHMMSS(_ExtractFile.VideoDurationSeconds(os.path.join(FILES_DIR, file))) for file in media_list
+                    _ConvertData.seconds_to_HHMMSS(_ExtractFile.video_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
 
     # field_date_digitized
     # get date creation estimate, convert to year
     prepop_dict['field_date_digitized'] = [
-        _ConvertData.UnixToEDTFYear(
-            _ExtractFile.DateCreatedUnix(os.path.join(FILES_DIR, file))
+        _ConvertData.unix_time_to_EDTF_year(
+            _ExtractFile.unix_time_created(os.path.join(FILES_DIR, file))
             ) for file in media_list
     ]
 
@@ -153,14 +156,14 @@ def file_metadata_to_WB_fields_BOOK():
     prepop_dict['file'] = media_list
 
     # field_model
-    prepop_dict['field_model'] = [c.DEFAULT_BOOK_field_model for i in range(records_count)]
+    prepop_dict['field_model'] = [c.field_model_BOOK for i in range(records_count)]
 
     # field_resource_type
-    prepop_dict['field_resource_type'] = [c.DEFAULT_BOOK_field_resource_type for i in range(records_count)]
+    prepop_dict['field_resource_type'] = [c.field_resource_type_BOOK for i in range(records_count)]
 
     # extent
     # gets mapped to total_scans as-is, and the extent field which can be separately edited
-    _extent = [_ExtractDir.FileCount(os.path.join(FILES_DIR, directory)) for directory in media_list]
+    _extent = [_ExtractDir.file_count(os.path.join(FILES_DIR, directory)) for directory in media_list]
     prepop_dict['total_scans'] = _extent
     prepop_dict['field_extent'] = [str(e) + "p." for e in _extent]
 
@@ -169,9 +172,9 @@ def file_metadata_to_WB_fields_BOOK():
     _field_date_digitized = []
     for folder in media_list:
         candidates = []
-        for file in _ExtractDir.FileList(os.path.join(c.FILESTOUPLOAD_DIR, folder), EXTENSIONS=True):
-            candidate = _ExtractFile.DateCreatedUnix(os.path.join(c.FILESTOUPLOAD_DIR, folder, file))
-            candidate = _ConvertData.UnixToEDTFYear(candidate)
+        for file in _ExtractDir.file_list(os.path.join(FILES_DIR, folder), extensions=True):
+            candidate = _ExtractFile.unix_time_created(os.path.join(FILES_DIR, folder, file))
+            candidate = _ConvertData.unix_time_to_EDTF_year(candidate)
             candidates.append(candidate)
         _field_date_digitized.append(min(candidates))
     prepop_dict['field_date_digitized'] = _field_date_digitized
@@ -190,7 +193,7 @@ def AS_metadata_to_WB_fields():
 
     if 'field_edtf_date_created' or 'field_date_created_text' in fields_in_use:
         datecreatedTuple = [
-            _ConvertData.ASDateToWBDate(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
+            _ConvertData.AS_date_to_WB_date(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
             for i in range(records_count)
         ]
         prepop_dict['field_edtf_date_created'] = [x[0] for x in datecreatedTuple]
@@ -206,9 +209,9 @@ def AS_metadata_to_WB_fields():
                 if re.match(regex_match, key):
                     description_values.append(value)
         # join string values at same indices within scopecontentsValues
-        _field_description_long = _ConvertData.ConcatenateStringsInLists(description_values)
+        _field_description_long = _ConvertData.concatenate_strings_in_lists(description_values)
         # strip newlines
-        _field_description_long = [_ConvertData.RemoveLinebreaks(x) for x in _field_description_long]
+        _field_description_long = [_ConvertData.remove_linebreaks(x) for x in _field_description_long]
         # place in dictionary
         prepop_dict['field_description_long'] = _field_description_long
 
@@ -222,9 +225,9 @@ def AS_metadata_to_WB_fields():
                 if re.match(regex_match, key):
                     notes_values.append(value)
         # join string values at same indices within scopecontentsValues
-        _field_note = _ConvertData.ConcatenateStringsInLists(notes_values)
+        _field_note = _ConvertData.concatenate_strings_in_lists(notes_values)
         # strip newlines
-        _field_note = [_ConvertData.RemoveLinebreaks(x) for x in _field_note]
+        _field_note = [_ConvertData.remove_linebreaks(x) for x in _field_note]
         # place in dictionary
         prepop_dict['field_note'] = _field_note
 
@@ -233,7 +236,7 @@ def AS_metadata_to_WB_fields():
         _field_linked_agent_NAME = []
         for i in range(records_count):
             agents = '|'.join(
-                _ConvertData.AgentsFromASAO(AS_dict['ref_id'][i], AS_dict['title'][i])
+                _ConvertData.agents_from_AS_AO(AS_dict['ref_id'][i], AS_dict['title'][i])
             )
             _field_linked_agent_NAME.append(agents)
         prepop_dict['field_linked_agent_NAME'] = _field_linked_agent_NAME
@@ -243,10 +246,16 @@ def AS_metadata_to_WB_fields():
     # access restriction - flag to user if something exists
     # previous version (very long and complicated) placed a warning in each record, but the user can be asked to look
     access_values = []
+    # populate lists of access notes
     for key, value in AS_dict.items():
         if re.match(r'^note\/accessrestrict', key):
             access_values.append(value)
-    if not _Validate.ListIsAllEmpty(access_values):
+    # if any are not empty, raise warning
+    access_issue_flag = False
+    for a in access_values:
+        if not _Validate.list_is_all_empty(a):
+            access_issue_flag = True
+    if access_issue_flag:
         print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')
     
 
@@ -272,16 +281,65 @@ Create output file from dictionary
 print('Creating output file ...')
 
 # make output filename based on AS or just fields_in_use
+TIME = datetime.now().strftime("%Y%m%d_%H-%M-%S")
 if use_AS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_FILLABLE.xlsx"
+    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
 else:
-    FILLABLE_FILENAME = FIELDS_TITLE + "_" + datetime.now().strftime("%y-%m-%d_%H-%M-%S") + "_FILLABLE.xlsx"
+    FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
 
 # populate then concatenate DataFrames
 output_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
 
-# export into metadataDirectory
-# index=False ensures not writing the index column
-output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False)
+'''
+Create and decorate the output file
 
+This line works to just create our output file but it doesn't look nice
+output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False) # index=False means no index column created
+
+Instead, we do ... too much
+This is mostly explained in here and we don't need to understand it all
+https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
+
+'''
+pd_ExcelWriter = pandas.ExcelWriter(
+    os.path.join(c.METADATA_DIR, FILLABLE_FILENAME),
+    engine="xlsxwriter"
+)
+output_pd_dataframe.to_excel(
+    pd_ExcelWriter, sheet_name="Workbench",
+    startrow=2,
+    header=False,
+    index=False
+)
+pd_ExcelWriter_book = pd_ExcelWriter.book
+pd_ExcelWriter_sheet = pd_ExcelWriter.sheets["Workbench"]
+pd_header_format = pd_ExcelWriter_book.add_format(
+    {
+        # here is where we add our formatting for the headers
+        # we can use any defined in here: https://xlsxwriter.readthedocs.io/format.html#format-methods-and-format-properties
+        'bold': True,
+        'border': 2,
+        'center_across': True,
+        'bg_color': "#D4EEBF"
+    }
+)
+pd_description_format = pd_ExcelWriter_book.add_format(
+    {
+        # we can add formatting for our description row here
+        'italic': True,
+        'text_wrap': True,
+        'border': 1
+    }
+)
+# write the formatting
+for col_num, value in enumerate(output_pd_dataframe.columns.values):
+    pd_ExcelWriter_sheet.write(0, col_num, value, pd_header_format)
+    pd_ExcelWriter_sheet.write(1, col_num, value, pd_description_format) # nothing here yet. also writes the header into row 1 - how to skip?
+# expanding all columns to fit headers, broadly. autofit all columns is not a thing.
+pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,25) # 25 is our width
+# close to write the file
+pd_ExcelWriter.close()
+'''
+End
+'''
 print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)
