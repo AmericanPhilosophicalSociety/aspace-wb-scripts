@@ -110,6 +110,10 @@ Define functions to call for populating our dictionary
 prepop_dict = {}
 
 def file_metadata_to_WB_fields_SINGLE():
+    '''
+    fills the following fields from file metadata:
+    file, field_model, field_resource_type, field_access_terms, field_display_hints, field_extent, field_date_digitized
+    '''
 
     # file
     prepop_dict['file'] = media_list
@@ -151,6 +155,10 @@ def file_metadata_to_WB_fields_SINGLE():
 
     
 def file_metadata_to_WB_fields_BOOK():
+    '''
+    fills the following fields from file metadata:
+    file, field_model, field_resource_type, total_scans, field_extent, field_date_digitized
+    '''
 
     # file
     prepop_dict['file'] = media_list
@@ -181,6 +189,10 @@ def file_metadata_to_WB_fields_BOOK():
 
 
 def AS_metadata_to_WB_fields():
+    '''
+    fills the following fields from ArchivesSpace metadata:
+    field_local_identifier, title, field_related_materials_note, field_edtf_date_created, field_date_created_text, field_description_long, field_note, field_linked_agent
+    '''
 
     if 'field_local_identifier' in fields_in_use:
         prepop_dict['field_local_identifier'] = AS_dict['component_id']
@@ -287,6 +299,8 @@ if use_AS:
 else:
     FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
 
+# TO ADD: include description row
+
 # populate then concatenate DataFrames
 output_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
 
@@ -307,7 +321,7 @@ pd_ExcelWriter = pandas.ExcelWriter(
 )
 output_pd_dataframe.to_excel(
     pd_ExcelWriter, sheet_name="Workbench",
-    startrow=2,
+    startrow=1,
     header=False,
     index=False
 )
@@ -334,9 +348,10 @@ pd_description_format = pd_ExcelWriter_book.add_format(
 # write the formatting
 for col_num, value in enumerate(output_pd_dataframe.columns.values):
     pd_ExcelWriter_sheet.write(0, col_num, value, pd_header_format)
-    pd_ExcelWriter_sheet.write(1, col_num, value, pd_description_format) # nothing here yet. also writes the header into row 1 - how to skip?
+    #pd_ExcelWriter_sheet.write(1, col_num, value, pd_description_format) # nothing here yet. also writes the header into row 1 - how to skip?
 # expanding all columns to fit headers, broadly. autofit all columns is not a thing.
-pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,25) # 25 is our width
+CELL_WIDTH = 25
+pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,CELL_WIDTH)
 # close to write the file
 pd_ExcelWriter.close()
 '''
