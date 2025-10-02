@@ -130,7 +130,7 @@ Define functions to call for populating our dictionary
 '''
 prepop_dict = {}
 
-def file_metadata_to_WB_fields_SINGLE():
+def _file_metadata_to_WB_fields_SINGLE():
     '''
     fills the following fields from file metadata:
     file, field_model, field_resource_type, field_access_terms, field_display_hints, field_extent, field_date_digitized
@@ -175,7 +175,7 @@ def file_metadata_to_WB_fields_SINGLE():
     ]
 
     
-def file_metadata_to_WB_fields_BOOK():
+def _file_metadata_to_WB_fields_BOOK():
     '''
     fills the following fields from file metadata:
     file, field_model, field_resource_type, total_scans, field_extent, field_date_digitized
@@ -209,7 +209,7 @@ def file_metadata_to_WB_fields_BOOK():
     prepop_dict['field_date_digitized'] = _field_date_digitized
 
 
-def AS_metadata_to_WB_fields():
+def _AS_metadata_to_WB_fields():
     '''
     fills the following fields from ArchivesSpace metadata:
     field_local_identifier, title, field_related_materials_note, field_edtf_date_created, field_date_created_text, field_description_long, field_note, field_linked_agent
@@ -290,7 +290,19 @@ def AS_metadata_to_WB_fields():
             access_issue_flag = True
     if access_issue_flag:
         print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')
-    
+
+def _WB_uniform_fields():
+    '''
+    fills the following fields from uniform values:
+    field_digital_origin, field_reformatting_quality
+    '''
+
+    if 'field_digital_origin' in fields_in_use:
+        prepop_dict['field_digital_origin'] = [c.field_digital_origin for i in range(records_count)]
+
+    if 'field_reformatting_quality' in fields_in_use:
+        prepop_dict['field_reformatting_quality'] = [c.field_reformatting_quality for i in range(records_count)]
+
 
 '''
 Execute functions to fill out the dictionary
@@ -300,13 +312,12 @@ results in filled prepop_dict
 print('Populating fields ...')
 
 if WB_type == 'single':
-    file_metadata_to_WB_fields_SINGLE()
+    _file_metadata_to_WB_fields_SINGLE()
 elif WB_type == 'book':
-    file_metadata_to_WB_fields_BOOK()
+    _file_metadata_to_WB_fields_BOOK()
 if use_AS:
-    AS_metadata_to_WB_fields()
-# add field_digital_origin
-prepop_dict['field_digital_origin'] = [c.field_digital_origin for i in range(records_count)]
+    _AS_metadata_to_WB_fields()
+_WB_uniform_fields()
 
 print('... fields populated ...')
 

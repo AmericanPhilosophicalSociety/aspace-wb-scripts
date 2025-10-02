@@ -64,6 +64,10 @@ WB_FIELDS_DOWNFILLING = (
     'field_collection_url',
 )
 
+WB_FIELDS_MUST_CONTAIN_DATA_SINGLE = (
+    
+)
+
 WB_FIELDS_EXPORT_KEEP_EMPTY_SINGLE = (
     'field_member_of',
     'parent_id'
@@ -168,6 +172,7 @@ WB_FIELDS_ALL = [x[0] for x in WB_FIELDS_ORDERED_WITH_DESCRIPTION]
 
 # Workbench field defaults - ones with _BOOK are for book only
 field_digital_origin = 'Reformatted digital'
+field_reformatting_quality = 'Preservation'
 field_model_BOOK = 'Paged Content'
 field_resource_type_BOOK = 'Collection'
 '''

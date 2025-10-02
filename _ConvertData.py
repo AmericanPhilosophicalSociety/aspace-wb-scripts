@@ -14,6 +14,12 @@ agents_agent = _CSV.CSV_col_to_list(AGENTS_PATH, 0)
 agents_titles = _CSV.CSV_col_to_list(AGENTS_PATH, 1)
 agents_refids = _CSV.CSV_col_to_list(AGENTS_PATH, 2)
 
+# language
+# CSV is formatted language name, code. get two options for easy lookup.
+LANGUAGES_PATH = os.path.join(c.CV_DIR, c.ISO639_FILENAME)
+languages_name_first = _CSV.two_col_CSV_to_dict(LANGUAGES_PATH)
+languages_code_first = {value: key for key, value in languages_name_first.items()}
+
 '''
 time/date functions
 
@@ -156,12 +162,37 @@ def AS_date_to_WB_date(expression, begin, end):
 other - a big messy list, alphabetized
 '''
 
-def agent_info_to_WB_agent(agent_name, relator_code, agent_type):
+def agents_info_to_WB_agent(agent_names, agent_relators, agent_types):
     '''
-    return the string as needed by Workbench
+    return the full WB agents piped list from piped components
+    '''
+    # split all values
+    ns = str(agent_names).split("|")
+    rs = str(agent_relators).split("|")
+    # if type exists, use and convert, otherwise fill 'person'
+    if agent_types:
+        ts = str(agent_types).split("|")
+        ts = [agent_type_abbreviation_to_full(t) for t in ts]
+    else:
+        ts = ["person" for name in ns]
+    # return re-joined agents
+    return ".".join(
+        [
+            agent_info_to_WB_agent_string(
+            agent_name = ns[i],
+            agent_relator = rs[i],
+            agent_type = ts[i]
+            )
+            for i in range(len(agent_names))
+        ]
+    )
+
+def agent_info_to_WB_agent_string(agent_name, agent_relator, agent_type):
+    '''
+    return the string as needed by Workbench for a single agent
     format returned: relators:[relationship type abbreviation]:[type of name]:[authorized or local name]
     '''
-    return "relators:" + str(relator_code) + ":" + str(agent_type) + ":" + str(agent_name)
+    return "relators:" + str(agent_relator) + ":" + str(agent_type) + ":" + str(agent_name)
 
 def agent_type_abbreviation_to_full(agent_type):
     '''
@@ -231,11 +262,22 @@ def diglib_node_to_AS_DO(input):
     }
     return DigitalObject
 
-def language_and_ISO639_code_to_WB_language(languageName, code):
+def language_info_to_WB_language_string(language_name, code):
     '''
     takes language name and ISO639 code and returns WB format: language (code)
     '''
-    return str(languageName + " (" + code + ")")
+    return str(language_name + " (" + code + ")")
+
+def language_name_or_ISO639_code_to_WB_language(input):
+    '''
+    takes a language name OR an ISO639 code and returns a WB language string
+    optionally allow wrong case too?
+    '''
+    if input in languages_name_first.keys():
+        return language_info_to_WB_language_string(input, languages_name_first[input])
+    elif input in languages_code_first.values():
+        return language_info_to_WB_language_string(languages_code_first[input], input)
+
 
 def pipe_to_semicolon(input):
     '''
