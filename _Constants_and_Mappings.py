@@ -106,7 +106,7 @@ WB_FIELDS_ORDERED_WITH_DESCRIPTION = (
     ('field_linked_agent',''),
     ('field_linked_agent_NAME','Name part of linked agent. Pipe-separate.'),
     ('field_linked_agent_ROLE','Role (relator code) part of linked agent. Pipe-separate, one for each of NAME'),
-    ('field_linked_agent_TYPE','Type part of linked agent. Leave blank if all are type \'person\'. Otherwise pipe-separate abbreviations (p|c|f) or full (person|corporate_body|family), one for each NAME')
+    ('field_linked_agent_TYPE','Type part of linked agent. Leave blank if all are type \'person\'. Otherwise pipe-separate abbreviations (p|c|f) or full (person|corporate_body|family), one for each NAME'),
     ('field_speaker_affiliation',''),
     ('field_family',''),
     ('field_description_long','Scope and Contents-style description'),
@@ -152,7 +152,7 @@ WB_FIELDS_ORDERED_WITH_DESCRIPTION = (
     ('field_mods_relateditem_titleinfo',''),
     ('field_related_materials_note',''),
     ('field_related_resource_url',''),
-    ('field_related_object','DigLib node to relate to this object.')
+    ('field_related_object','DigLib node to relate to this object.'),
     ('field_access_restricted',''),
     ('field_mods_subject_displaylabel',''),
     ('field_administrative_notes','Internal (non-public) note'),
@@ -161,6 +161,7 @@ WB_FIELDS_ORDERED_WITH_DESCRIPTION = (
     ('url_alias','An alternate URL, for long/repeated titles. Prefix will be filled.'),
     ('field_local_identifier','')
 )
+
 
 WB_FIELDS_ALL = [x[0] for x in WB_FIELDS_ORDERED_WITH_DESCRIPTION]
 

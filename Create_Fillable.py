@@ -1,7 +1,6 @@
 '''
 WORKING :)
-TO ADD AT END: create extra row containing 'description' from c.WB_fields, then format these
-add more helper text
+add more helper text?
 '''
 
 import os
@@ -39,11 +38,27 @@ WB_type = cl_args.type
 # fields_in_use from 'fields'
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
-    fields_in_use = _CSV.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
     FIELDS_TITLE = cl_args.fields
+    fields_in_use = _CSV.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
+    # validate fields - could move to _Validate function
+    # validate fields following type
+    if WB_type == 'single':
+        for x in c.WB_FIELDS_REQUIRED_AT_INPUT_SINGLE:
+            if x not in fields_in_use:
+                raise ValueError("Fix your fields file. Missing required field: " + str(x))
+    elif WB_type == 'book':
+        for x in c.WB_FIELDS_REQUIRED_AT_INPUT_BOOK:
+            if x not in fields_in_use:
+                raise ValueError("Fix your fields file. Missing required field: " + str(x))
+    # validate fields against all fields
+    for x in fields_in_use:
+        if x not in c.WB_FIELDS_ALL:
+            raise ValueError("Fix your fields file. Contains erroneous field: " + str(x))
 elif not cl_args.fields:
-    fields_in_use = c.WB_FIELDS_ALL
+    # give all fields if no --fields argument
     FIELDS_TITLE = 'all_fields'
+    fields_in_use = c.WB_FIELDS_ALL
+    
 
 # use_AS from 'AS'
 if cl_args.AS:
@@ -66,6 +81,13 @@ if cl_args.filefolder:
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
 
+# make output filename based on AS or just fields_in_use
+TIME = datetime.now().strftime("%Y%m%d_%H-%M-%S")
+if use_AS:
+    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
+else:
+    FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
+
 
 print('... command line arguments parsed ...')
 
@@ -84,7 +106,6 @@ elif WB_type == 'single':
     _Validate.files_in_single(FILES_DIR)
     media_list = _ExtractDir.file_list(FILES_DIR, extensions=True)
 
-print(media_list)
 print("... files look okay ...")
 
 '''
@@ -273,6 +294,7 @@ def AS_metadata_to_WB_fields():
 
 '''
 Execute functions to fill out the dictionary
+results in filled prepop_dict
 '''
 
 print('Populating fields ...')
@@ -283,36 +305,48 @@ elif WB_type == 'book':
     file_metadata_to_WB_fields_BOOK()
 if use_AS:
     AS_metadata_to_WB_fields()
-prepop_dict['field_digital_origin'] = [c.field_digital_origin for i in range(records_count)] # almost always this
+# add field_digital_origin
+prepop_dict['field_digital_origin'] = [c.field_digital_origin for i in range(records_count)]
 
 print('... fields populated ...')
 
 '''
-Create output file from dictionary
+Expand prepop_dict to include all fields, and adding description row, resulting in final_dict
+'''
+
+# create a dictionary of all fields from fields_in_use, copying the structure of prepop_dict, with appropriate number of records
+final_dict = {
+    key: ['' for i in range(records_count)] for key in fields_in_use
+}
+# merge this with prepop_dict, keeping prepop_dict values
+final_dict.update(prepop_dict)
+# now that we have a merged dictionary, add definitions row
+# first, get our field:description tuples as a dictionary
+fields_descriptions_dict = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
+# then for each key in prepop_dict, insert the description into the value list
+for k, v in final_dict.items():
+    v.insert(0, fields_descriptions_dict[k])
+
+'''
+Create Pandas dataframe from final_dict
 '''
 print('Creating output file ...')
 
-# make output filename based on AS or just fields_in_use
-TIME = datetime.now().strftime("%Y%m%d_%H-%M-%S")
-if use_AS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
-else:
-    FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
-
-# TO ADD: include description row
-
-# populate then concatenate DataFrames
-output_pd_dataframe = pandas.concat([pandas.DataFrame(columns=fields_in_use), pandas.DataFrame(data=prepop_dict)], ignore_index=True)
+# create the Pandas dataframe
+output_pd_dataframe = pandas.DataFrame(final_dict)
 
 '''
-Create and decorate the output file
+Decorate and export the output file
 
 This line works to just create our output file but it doesn't look nice
 output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False) # index=False means no index column created
 
 Instead, we do ... too much
-This is mostly explained in here and we don't need to understand it all
+
+Tried to implement this but could not get it to format both header and description row nicely:
 https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
+
+Instead, opted to just format the description row
 
 '''
 pd_ExcelWriter = pandas.ExcelWriter(
@@ -321,36 +355,30 @@ pd_ExcelWriter = pandas.ExcelWriter(
 )
 output_pd_dataframe.to_excel(
     pd_ExcelWriter, sheet_name="Workbench",
-    startrow=1,
-    header=False,
+    startrow=0,
+    header=True,
     index=False
 )
 pd_ExcelWriter_book = pd_ExcelWriter.book
 pd_ExcelWriter_sheet = pd_ExcelWriter.sheets["Workbench"]
-pd_header_format = pd_ExcelWriter_book.add_format(
-    {
-        # here is where we add our formatting for the headers
-        # we can use any defined in here: https://xlsxwriter.readthedocs.io/format.html#format-methods-and-format-properties
-        'bold': True,
-        'border': 2,
-        'center_across': True,
-        'bg_color': "#D4EEBF"
-    }
-)
 pd_description_format = pd_ExcelWriter_book.add_format(
     {
         # we can add formatting for our description row here
+        # use anything defined in here: https://xlsxwriter.readthedocs.io/format.html#format-methods-and-format-properties
         'italic': True,
         'text_wrap': True,
-        'border': 1
+        'valign': 'vcenter',
+        'center_across': True,
+        'border': 1,
+        'bg_color': "#ECEBD8"
     }
 )
 # write the formatting
-for col_num, value in enumerate(output_pd_dataframe.columns.values):
-    pd_ExcelWriter_sheet.write(0, col_num, value, pd_header_format)
-    #pd_ExcelWriter_sheet.write(1, col_num, value, pd_description_format) # nothing here yet. also writes the header into row 1 - how to skip?
-# expanding all columns to fit headers, broadly. autofit all columns is not a thing.
-CELL_WIDTH = 25
+# set description row to use pd_description_format
+CELL_HEIGHT_DESCRIPTION = 40
+pd_ExcelWriter_sheet.set_row(1, CELL_HEIGHT_DESCRIPTION, pd_description_format)
+# set cell width to something reasonable. there is no such thing as autofit all cells.
+CELL_WIDTH = 30
 pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,CELL_WIDTH)
 # close to write the file
 pd_ExcelWriter.close()
