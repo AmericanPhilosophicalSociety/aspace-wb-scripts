@@ -7,16 +7,14 @@ import os
 import pandas
 from argparse import ArgumentParser
 import _Constants_and_Mappings as c
-import _ExtractDir, _ConvertData, _CSV, _Validate
-
-HEADERS_DIR = "_headers"
+import _ConvertData, _CSV, _Validate
 
 '''
 Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-print('(Make sure you ran "Validate_Filled.py" before performing this)')
+print("(Make sure you ran Validate_Filled.py before performing this. Go back and run that if you didn't.)")
 print('Checking command line arguments - expected: [single/book] [filled file.xlsx]...')
 
 # parse arguments
@@ -67,6 +65,7 @@ Define functions to fill WB_dict from input_dict
 '''
 # create the dictionary to fill
 WB_dict = dict()
+
 
 def _prefill_downfilling_fields():
     '''
@@ -150,133 +149,63 @@ def _delete_empty_fields():
     '''
     delete any field that is empty
     '''
-    pass
+    empty_fields = []
+    # create the list of empty fields
+    for key, value in WB_dict.items():
+        if _Validate.list_is_all_empty(value):
+            empty_fields.append(key)
+    # if there are empty fields, delete them and flag this to the user
+    if len(empty_fields) > 0:
+        for key in empty_fields:
+            WB_dict.pop(key)
+        print("The following columns were empty and have been deleted. Rerun this script if this was an error:" + empty_fields)
 
 def _add_required_empty_fields():
     '''
-    dependent on 
+    add empty fields depending on the WB_type
     '''
-    pass
+    # select empty fields based on WB_type
+    if WB_type == 'single':
+        empty_to_add = c.WB_FIELDS_EXPORT_KEEP_EMPTY_SINGLE
+    elif WB_type == 'book':
+        empty_to_add = c.WB_FIELDS_EXPORT_KEEP_EMPTY_BOOK
+    # add these, if not already present, and flag this to user
+    empty_added = []
+    for f in empty_to_add:
+        if f not in WB_dict.keys():
+            WB_dict[f] = ["" for i in range(INPUT_ROW_COUNT)]
+            empty_added.append(f)
+    if empty_added:
+        print("The following columns were added to be purposefully blank for upload: " + empty_added)
 
 
 '''
-make an output dictionary to use, filling it in by checking the presence of each field from headers
-as we've already established we have all the required headers, this should now be smoothe
+Execute the functions to fill WB_dict in the correct order
 '''
 
+print("Populating fields from spreadsheet file ...")
 
+_prefill_downfilling_fields()
+_add_complex_fields()
+_add_unchanging_fields()
+_delete_empty_fields()
+_add_required_empty_fields()
 
-# id, parent id, member of (for easy reading)
-WB_dict["parent_id"] = ["" for i in range(INPUT_ROW_COUNT)]
-if "coll_node" in INPUT_FIELDS:
-    WB_dict["field_member_of"] = [str(x) for x in input_dict["coll_node"]]
-
-# everything that gets singularly copied over
-
-if "WB_total_scans" in INPUT_FIELDS:
-    WB_dict["total_scans"] = input_dict["WB_total_scans"]
-
-if "coll_title" in INPUT_FIELDS:
-    WB_dict["field_collection2"] = input_dict["coll_title"]
-
-if "coll_callno" in INPUT_FIELDS:
-    WB_dict["field_parent_collection_call_num"] = input_dict["coll_callno"]
-
-if "coll_url" in INPUT_FIELDS:
-    WB_dict["field_collection_url"] = input_dict["coll_url"]
-
-if "cuid" in INPUT_FIELDS:
-    WB_dict["field_local_identifier"] = input_dict["cuid"]
-
-if "title" in INPUT_FIELDS:
-    WB_dict["title"] = input_dict["title"]
-    WB_dict["field_metadata_title"] = input_dict["title"]
-
-if "datecreated_edtf" in INPUT_FIELDS:
-    WB_dict["field_edtf_date_created"] = input_dict["datecreated_edtf"]
-
-if "datecreated_text" in INPUT_FIELDS:
-    WB_dict["field_date_created_text"] = input_dict["datecreated_text"]
-
-if "scopecontents" in INPUT_FIELDS:
-    WB_dict["field_description_long"] = input_dict["scopecontents"]
-
-if "othernotes" in INPUT_FIELDS:
-    WB_dict["field_note"] = input_dict["othernotes"]
-
-if "medium" in INPUT_FIELDS:
-    WB_dict["field_original_format"] = input_dict["medium"]
-
-if "extent" in INPUT_FIELDS:
-    WB_dict["field_extent"] = input_dict["extent"]
-    
-if "datedigitized" in INPUT_FIELDS:
-    WB_dict["field_date_digitized"] = input_dict["datedigitized"]
-
-if "cnairsubject" in INPUT_FIELDS:
-    WB_dict["field_cnair_subject"] = input_dict["cnairsubject"]
-
-if "location_name" in INPUT_FIELDS:
-    WB_dict["field_geographic_subject"] = input_dict["location_name"]
-
-if "related_note" in INPUT_FIELDS:
-    WB_dict["field_related_materials_note"] = input_dict["related_note"]
-
-if "related_title" in INPUT_FIELDS:
-    WB_dict["field_mods_relateditem_titleinfo"] = input_dict["related_title"]
-
-if "related_url" in INPUT_FIELDS:
-    WB_dict["field_related_resource_url"] = input_dict["related_url"]
-
-if "WB_field_model" in INPUT_FIELDS:
-    WB_dict["field_model"] = input_dict["WB_field_model"]
-
-if "WB_field_digital_origin" in INPUT_FIELDS:
-    WB_dict["field_digital_origin"] = input_dict["WB_field_digital_origin"]
-
-
-# delete any blank columns and send these to the user in case this was an error
-# exception added for parent_id since we want it to show early but it's necessary
-blankColumns = []
-for key, value in WB_dict.items():
-    if _Validate.list_is_all_empty(value):
-        if key != "parent_id":
-            blankColumns.append(key)
-if len(blankColumns) > 0:
-    for key in blankColumns:
-        WB_dict.pop(key)
-    print("The following columns were empty and have been deleted, to conform work Workbench requirements of no empty columns. Rerun this script if this was an error.")
-    print(blankColumns)
-
-print("... all fields populated.")
+print("... fields populated.")
 
 '''
-TO DO - add BLANKS
+Rearrange WB_dict to match column order as preferred by Center for Digital Scholarship
 '''
 
-'''
-rearrange WBDict to match preferred column order for checking
-'''
-print("Rearranging fields ...")
-# grab final order to list depending on WBType
-###BS
-if WB_type == 'single':
-    headers_WBFinalOrder = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_WBFinalOrderSingle.csv"), 0)
-elif WB_type == 'book':
-    headers_WBFinalOrder = _CSV.CSV_col_to_list(os.path.join(HEADERS_DIR, "_WBFinalOrderBook.csv"), 0)
+print("Rearranging fields to match preferred output order ...")
 
-# if a Workbench field is not present in headers_WBFinalOrder, inform user and terminate
-missingWBFinalOrderFields = [key for key in WB_dict if key not in headers_WBFinalOrder]
-if missingWBFinalOrderFields:
-    raise ValueError("The following fields are present in the output Workbench dictionary but not within the appropriate the WBFinalOrder csv file in " + HEADERS_DIR + ". This may be a new field. Check with colleagues. " + str(missingWBFinalOrderFields))
-
-# reorder
-WBDictOrdered = {key: WB_dict[key] for key in headers_WBFinalOrder if key in WB_dict}
+WB_dict_ordered = {key: WB_dict[key] for key in c.WB_FIELDS_ALL if key in WB_dict}
 
 print("... fields rearranged.")
 
 '''
-export our WB csv
+Export our WB csv
 '''
-_CSV.dict_to_CSV(WBDictOrdered, os.path.join(c.METADATA_DIR, WB_FILENAME))
-print("Generated Workbench file. Check and make any other modifications before using: " + c.METADATA_DIR + "\\" + WB_FILENAME)
+
+_CSV.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
+print("SUCCESS. Generated Workbench file. Check and make any other modifications before using. If using Excel/Libreoffice, import all fields as type 'text': " + os.path.join(c.METADATA_DIR, WB_FILENAME))
