@@ -26,8 +26,8 @@ def nan(input):
     return hiimnan
 
 def agent_type(input):
-    agentTypes = ('p', 'c', 'f', 'person', 'corporate_body', 'family')
-    if input in agentTypes:
+    agent_types = ('p', 'c', 'f', 'person', 'corporate_body', 'family')
+    if input in agent_types:
         return True
     else:
         raise ValueError("agent_type not valid: " + str(input))
@@ -46,32 +46,32 @@ def EDTF(input):
     else:
         raise ValueError("EDTF not valid: " + str(input))
     
-def files_in_book(topDirectory):
+def files_in_book(top_directory):
     '''
     CLEAN THIS UP. add extensions checking as separate function, add padding checking.
     confirm that the files to be uploaded for a Book upload follow correct formatting
     '''
     # files directory ...
-    directoriesList = _ExtractDir.subdirectories_list(topDirectory)
+    directories_list = _ExtractDir.subdirectories_list(top_directory)
     # is not empty
-    if len(directoriesList) == 0:
-        raise OSError("Folder " + str(topDirectory) + " contains no directories. Please put your directories with their files in.")
+    if len(directories_list) == 0:
+        raise OSError("Folder " + str(top_directory) + " contains no directories. Please put your directories with their files in.")
     # has directories named with just alphanumeric and underscore
-    for directory in directoriesList:
+    for directory in directories_list:
         if not string_is_alphanumeric_and_underscore(directory):
-            raise OSError("Directory " + topDirectory + "/" + directory + " is not just alphanumeric with underscores. Check all directories.")
+            raise OSError("Directory " + os.path.join(top_directory, directory) + " is not just alphanumeric with underscores. Check all directories.")
     # each directory's files ...
-    for directory in directoriesList:
-        directoryFiles = _ExtractDir.file_list(os.path.join(topDirectory, directory), extensions=True)
-        for file in directoryFiles:
+    for directory in directories_list:
+        directory_files = _ExtractDir.file_list(os.path.join(top_directory, directory), extensions=True)
+        for file in directory_files:
             # has a permitted file extension
             if _ExtractFile.file_extension(file) not in c.EXTENSIONS:
-                raise OSError("File " + topDirectory + "/" + directory + "/" + file + " is not in permitted filetypes. Check all files. Check with CDS if more types need to be allowed.")
+                raise OSError("File " + os.path.join(top_directory, directory, file) + " is not in permitted filetypes. Check all files. Check with CDS if more types need to be allowed.")
             # has a name composed of directory name + hyphen + numbers
             # (isolates just the file name, not extension, to hand to validator)
             file = os.path.splitext(file)[0]
             if not string_is_match_then_hyphen_then_numbers(file, directory):
-                raise OSError("File " + topDirectory + "/" + directory + "/" + file + " does not follow the correct titling: directory + hyphen + numbers. Check all files.")
+                raise OSError("File " + os.path.join(top_directory, directory, file) + " does not follow the correct titling: directory + hyphen + numbers. Check all files.")
     # return True if this all worked out
     return True
 
@@ -92,12 +92,12 @@ def ISO8601_date(input):
     # (this also would work for any arbitrary string)
     # this is the only value for a date string allowed by ArchivesSpace's date representation in Begin or End field
     input = str(input)
-    dateMatches = ["^\d\d\d\d$", "^\d\d\d\d-\d\d$", "^\d\d\d\d-\d\d-\d\d$"]
-    datesMatch = False
-    for match in dateMatches:
+    date_matches = ["^\d\d\d\d$", "^\d\d\d\d-\d\d$", "^\d\d\d\d-\d\d-\d\d$"]
+    dates_match = False
+    for match in date_matches:
         if re.match(match, input):
-            datesMatch = True
-    if datesMatch:
+            dates_match = True
+    if dates_match:
         return True
     else:
         raise ValueError(input + " is not an ISO 8601 date (= EDTF level 0 'Date') (= YYYY, YYYY-MM, YYYY-MM-DD)")
@@ -129,16 +129,16 @@ def list_is_single_value_then_NaN(input):
     # this doesn't really fit into this file but couldn't think where else to put it.
     #
     # we assume it's true
-    ListIsIndeedSingleValueThenNan = True
+    list_is_indeed_single_value_then_NaN = True
     # if there's something other than NaN in the first value ...
     if not pandas.isna(input[0]):
         # and all the rest of the values are nothing ...
         for x in input[1:]:
             # update if we get a non-NaN value
             if not pandas.isna(x):
-                ListIsIndeedSingleValueThenNan = False
+                list_is_indeed_single_value_then_NaN = False
         # return the value
-        return ListIsIndeedSingleValueThenNan
+        return list_is_indeed_single_value_then_NaN
     else:
         return False
     
@@ -179,15 +179,17 @@ def string_is_alphanumeric_and_underscore(input):
     else:
         return False
     
-def string_is_match_then_hyphen_then_numbers(fullString, beginningToMatch):
-    # for validating files in a Book Object
-    # returns True if fullString = beginningToMatch-numbers
-    splitString = fullString.split('-')
-    if len(splitString) != 2:
+def string_is_match_then_hyphen_then_numbers(full_string, beginning_to_match):
+    '''
+    validate files in a book object
+    returns True if full_string = beginning_to_match-numbers
+    '''
+    split_string = full_string.split('-')
+    if len(split_string) != 2:
         return False
-    if splitString[0] != beginningToMatch:
+    if split_string[0] != beginning_to_match:
         return False
-    if not string_is_numeric(splitString[1]):
+    if not string_is_numeric(split_string[1]):
         return False
     return True
                 

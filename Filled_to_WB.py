@@ -155,7 +155,7 @@ def _delete_empty_fields():
         if _Validate.list_is_all_empty(value):
             empty_fields.append(key)
     # if there are empty fields, delete them and flag this to the user
-    if len(empty_fields) > 0:
+    if empty_fields:
         for key in empty_fields:
             WB_dict.pop(key)
         print("The following columns were empty and have been deleted. Rerun this script if this was an error:" + empty_fields)
