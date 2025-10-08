@@ -15,17 +15,14 @@ TO ADD: validate that DOWNFILLING are valid. warn if empty.
             # raise error if any of the rows are empty
             if "" in input_dict[header]:
                 raise ValueError("Column " + header + " in input spreadsheet needs to be completely filled.")
-            
-
-
-TEST on real data
 '''
 
 import os
 import pandas
 from argparse import ArgumentParser
-import _Constants_and_Mappings as c
-import _ExtractDir, _Validate
+import default_specs as c
+import utilities.extract_dir as extract_dir
+import utilities.validate as validate
 
 '''
 Parse command line arguments
@@ -46,7 +43,7 @@ WB_type = cl_args.type
 
 # FILLED_FILENAME from filled_file
 FILLED_FILENAME = cl_args.filled_file
-if FILLED_FILENAME not in _ExtractDir.file_list(c.METADATA_DIR, extensions=True):
+if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
     raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + FILLED_FILENAME + ". Check.")
 
 print("... command line arguments okay.")
@@ -103,7 +100,7 @@ print("Validating some fields ...")
 
 if "title" in INPUT_FIELDS:
     titles = input_dict["title"]
-    if _Validate.list_is_all_empty(titles):
+    if validate.list_is_all_empty(titles):
         print(c.VALIDATE_ERROR_PREFIX + "Titles appear to be empty")
     else:
         print("Checking that all titles are unique...")
@@ -123,37 +120,37 @@ if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_age
 
     print("... checking role codes ...")
     for x in input_dict["field_linked_agent_ROLE"]:
-        if not _Validate.nan(x):
+        if not validate.nan(x):
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.relator_code(y)
+                    validate.relator_code(y)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
     print("... checking that name and role are same lengths ...")
     for i in range(INPUT_ROW_COUNT):
-        if not _Validate.nan(input_dict["field_linked_agent_NAME"][i]):
+        if not validate.nan(input_dict["field_linked_agent_NAME"][i]):
             try:
-                _Validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_ROLE"][i])
+                validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_ROLE"][i])
             except Exception as e:
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
 
     print("... checking that type is always empty or same length as name ...")
     for i in range(INPUT_ROW_COUNT):
-        if not _Validate.nan(input_dict["field_linked_agent_TYPE"][i]):
+        if not validate.nan(input_dict["field_linked_agent_TYPE"][i]):
             try:
-                _Validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_TYPE"][i])
+                validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_TYPE"][i])
             except Exception as e:
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
 
     print("... checking type ...")
     for i in range(INPUT_ROW_COUNT):
         ts = input_dict["field_linked_agent_TYPE"][i]
-        if not _Validate.nan(ts):
+        if not validate.nan(ts):
             for t in ts.split('|'):
                 try:
-                    _Validate.agent_type(t)
+                    validate.agent_type(t)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -164,11 +161,11 @@ if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_age
 if "field_edtf_date_created" in INPUT_FIELDS:
     print("Checking field_edtf_date_created for valid EDTF dates ...")
     for x in input_dict["field_edtf_date_created"]:
-        if not _Validate.nan(x):
+        if not validate.nan(x):
             # multiple options possible. split: (NEWLY ADDED)
             for y in x.split('|'):
                 try:
-                    _Validate.EDTF(y)
+                    validate.EDTF(y)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -177,11 +174,11 @@ if "field_edtf_date_created" in INPUT_FIELDS:
 if "field_cnair_subject" in INPUT_FIELDS:
     print("Checking field_cnair_subject...")
     for x in input_dict["field_cnair_subject"]:
-        if not _Validate.nan(x):
+        if not validate.nan(x):
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.CNAIR_culture(y)
+                    validate.CNAIR_culture(y)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -190,11 +187,11 @@ if "field_cnair_subject" in INPUT_FIELDS:
 if "field_language" in INPUT_FIELDS:
     print("Checking field_language...")
     for x in input_dict["field_language"]:
-        if not _Validate.nan(x):
+        if not validate.nan(x):
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.language(y)
+                    validate.language(y)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 

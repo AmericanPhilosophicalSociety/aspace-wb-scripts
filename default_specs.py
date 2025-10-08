@@ -2,7 +2,7 @@
 File defining constants, Workbench fields, and mappings between different fields
 '''
 import os
-import CSV
+import utilities.use_CSVs as use_CSVs
 
 '''
 Locations of files & directories; controlled vocabularies; misc
@@ -19,13 +19,15 @@ CNAIR_SUBJECTS_FILENAME = "cnair_subject.csv"
 RELATOR_CODES_FILENAME = "relator.csv"
 
 # controlled vocabularies, from the above
-LANGUAGE_NAMES = CSV.CSV_col_to_list(os.path.join(CV_DIR, ISO639_FILENAME), 0)
-LANGUAGE_CODES = CSV.CSV_col_to_list(os.path.join(CV_DIR, ISO639_FILENAME), 1)
-CNAIR_SUBJECTS = CSV.CSV_col_to_list(os.path.join(CV_DIR, CNAIR_SUBJECTS_FILENAME), 0)
-RELATOR_CODES = CSV.CSV_col_to_list(os.path.join(CV_DIR, RELATOR_CODES_FILENAME), 0)
+LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, ISO639_FILENAME), 0)
+LANGUAGE_CODES = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, ISO639_FILENAME), 1)
+CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, CNAIR_SUBJECTS_FILENAME), 0)
+RELATOR_CODES = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, RELATOR_CODES_FILENAME), 0)
 
 # other
 VALIDATE_ERROR_PREFIX = "!! ERROR - "
+AS_DIGITAL_OBJECT_NODE_PREFIX = "islandora8_"
+AS_DIGITAL_OBJECT_FILE_URI_PREFIX = "https://diglib.amphilsoc.org/node/"
 BOOK_TITLE_URL_ALIAS_LENGTH = 92
 
 '''

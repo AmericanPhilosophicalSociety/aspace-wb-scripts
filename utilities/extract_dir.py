@@ -2,7 +2,7 @@
 metadata extraction from directory
 '''
 import os
-import _ConvertData
+import utilities.convert_data as convert_data
 
 def file_count(directorypath, fileextension=""):
     '''
@@ -41,7 +41,7 @@ def unique_extensions(directorypath):
     # reduce to only the extension
     extensions = [os.path.splitext(x)[1] for x in files]
     # get unique in list
-    extensions = _ConvertData.unique_in_list(extensions)
+    extensions = convert_data.unique_in_list(extensions)
     return extensions
     
 def subdirectories_list(directorypath):

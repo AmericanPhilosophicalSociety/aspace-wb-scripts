@@ -6,8 +6,10 @@ Assumes a fully valid, checked against Validate_Filled.py, spreadsheet
 import os
 import pandas
 from argparse import ArgumentParser
-import _Constants_and_Mappings as c
-import _ConvertData, _CSV, _Validate
+import default_specs as c
+import utilities.convert_data as convert_data
+import utilities.use_CSVs as use_CSVs
+import utilities.validate as validate
 
 '''
 Parse command line arguments
@@ -115,7 +117,7 @@ def _add_complex_fields():
             if input_dict["field_language"][i]:
                 #languages = input_dict["field_language"][i].split("|")
                 WB_dict["field_language"].append(
-                    "|".join([_ConvertData.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
+                    "|".join([convert_data.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
                 )
             else:
                 WB_dict["field_language"].append("")
@@ -127,7 +129,7 @@ def _add_complex_fields():
         for i in range(INPUT_ROW_COUNT):
             if input_dict["field_linked_agent_NAME"][i]:
                 # supply the converted name, role, type
-                WB_dict["field_linked_agent"].append(_ConvertData.agents_info_to_WB_agent(
+                WB_dict["field_linked_agent"].append(convert_data.agents_info_to_WB_agent(
                     input_dict["field_linked_agent_NAME"][i],
                     input_dict["field_linked_agent_ROLE"][i],
                     input_dict["field_linked_agent_TYPE"][i]
@@ -156,7 +158,7 @@ def _delete_empty_fields():
     empty_fields = []
     # create the list of empty fields
     for key, value in WB_dict.items():
-        if _Validate.list_is_all_empty(value):
+        if validate.list_is_all_empty(value):
             empty_fields.append(key)
     # if there are empty fields, delete them and flag this to the user
     if empty_fields:
@@ -211,5 +213,5 @@ print("... fields rearranged.")
 Export our WB csv
 '''
 
-_CSV.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
+use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
 print("SUCCESS. Generated Workbench file. Check and make any other modifications before using. If using Excel/Libreoffice, import all fields as type 'text': " + os.path.join(c.METADATA_DIR, WB_FILENAME))

@@ -1,4 +1,7 @@
-# utilities for manipulating CSV files
+'''
+utilities for manipulating CSV files
+some of these might be unused
+'''
 
 import pandas
 

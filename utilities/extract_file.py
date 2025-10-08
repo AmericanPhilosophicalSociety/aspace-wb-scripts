@@ -1,4 +1,6 @@
-# metadata extraction from files
+'''
+Metadata extraction from files
+'''
 
 import os
 import re

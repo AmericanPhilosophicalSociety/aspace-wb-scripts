@@ -8,8 +8,12 @@ import pandas
 import re
 from argparse import ArgumentParser
 from datetime import datetime
-import _Constants_and_Mappings as c
-import _ExtractDir, _ExtractFile, _ConvertData, _CSV, _Validate
+import default_specs as c
+import utilities.extract_dir as extract_dir
+import utilities.extract_file as extract_file
+import utilities.convert_data as convert_data
+import utilities.use_CSVs as use_CSVs
+import utilities.validate as validate
 
 
 '''
@@ -25,7 +29,7 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
-cl_parser.add_argument('--fields', type=str, choices=_ExtractDir.file_list(c.FIELDS_DIR, extensions=False))
+cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False))
 cl_parser.add_argument('--AS', type=str)
 cl_parser.add_argument('--filefolder', type=str)
 cl_args = cl_parser.parse_args()
@@ -39,7 +43,7 @@ WB_type = cl_args.type
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
     FIELDS_TITLE = cl_args.fields
-    fields_in_use = _CSV.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
+    fields_in_use = use_CSVs.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
     # validate fields - could move to _Validate function
     # validate fields following type
     if WB_type == 'single':
@@ -109,12 +113,12 @@ print("Checking files ...")
 # may be convenient here to grab extension to a variable so we can call it later
 
 if WB_type == 'book':
-    _Validate.files_in_book(FILES_DIR)
+    validate.files_in_book(FILES_DIR)
     print("Book note: script does not check exact padding. Padding needs to be 3 digits if <1000, 4+ digits if >=1000 files.")
-    media_list = _ExtractDir.subdirectories_list(FILES_DIR)
+    media_list = extract_dir.subdirectories_list(FILES_DIR)
 elif WB_type == 'single':
-    _Validate.files_in_single(FILES_DIR)
-    media_list = _ExtractDir.file_list(FILES_DIR, extensions=True)
+    validate.files_in_single(FILES_DIR)
+    media_list = extract_dir.file_list(FILES_DIR, extensions=True)
 
 print("... files look okay ...")
 
@@ -168,19 +172,19 @@ def _file_metadata_to_WB_fields_SINGLE():
             if d['field_model'] == 'Audio':
                 # get audio duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
-                    _ConvertData.seconds_to_HHMMSS(_ExtractFile.audio_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
+                    convert_data.seconds_to_HHMMSS(extract_file.audio_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
             elif d['field_model'] == 'Video':
                 # get video duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
-                    _ConvertData.seconds_to_HHMMSS(_ExtractFile.video_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
+                    convert_data.seconds_to_HHMMSS(extract_file.video_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
 
     # field_date_digitized
     # get date creation estimate, convert to year
     prepop_dict['field_date_digitized'] = [
-        _ConvertData.unix_time_to_EDTF_year(
-            _ExtractFile.unix_time_created(os.path.join(FILES_DIR, file))
+        convert_data.unix_time_to_EDTF_year(
+            extract_file.unix_time_created(os.path.join(FILES_DIR, file))
             ) for file in media_list
     ]
 
@@ -202,7 +206,7 @@ def _file_metadata_to_WB_fields_BOOK():
 
     # extent
     # gets mapped to total_scans as-is, and the extent field which can be separately edited
-    _extent = [_ExtractDir.file_count(os.path.join(FILES_DIR, directory)) for directory in media_list]
+    _extent = [extract_dir.file_count(os.path.join(FILES_DIR, directory)) for directory in media_list]
     prepop_dict['total_scans'] = _extent
     prepop_dict['field_extent'] = [str(e) + "p." for e in _extent]
 
@@ -211,9 +215,9 @@ def _file_metadata_to_WB_fields_BOOK():
     _field_date_digitized = []
     for folder in media_list:
         candidates = []
-        for file in _ExtractDir.file_list(os.path.join(FILES_DIR, folder), extensions=True):
-            candidate = _ExtractFile.unix_time_created(os.path.join(FILES_DIR, folder, file))
-            candidate = _ConvertData.unix_time_to_EDTF_year(candidate)
+        for file in extract_dir.file_list(os.path.join(FILES_DIR, folder), extensions=True):
+            candidate = extract_file.unix_time_created(os.path.join(FILES_DIR, folder, file))
+            candidate = convert_data.unix_time_to_EDTF_year(candidate)
             candidates.append(candidate)
         _field_date_digitized.append(min(candidates))
     prepop_dict['field_date_digitized'] = _field_date_digitized
@@ -236,7 +240,7 @@ def _AS_metadata_to_WB_fields():
 
     if 'field_edtf_date_created' or 'field_date_created_text' in fields_in_use:
         datecreatedTuple = [
-            _ConvertData.AS_date_to_WB_date(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
+            convert_data.AS_date_to_WB_date(AS_dict['dates/0/expression'][i], AS_dict['dates/0/begin'][i], AS_dict['dates/0/end'][i])
             for i in range(records_count)
         ]
         prepop_dict['field_edtf_date_created'] = [x[0] for x in datecreatedTuple]
@@ -252,9 +256,9 @@ def _AS_metadata_to_WB_fields():
                 if re.match(regex_match, key):
                     description_values.append(value)
         # join string values at same indices within scopecontentsValues
-        _field_description_long = _ConvertData.concatenate_strings_in_lists(description_values)
+        _field_description_long = convert_data.concatenate_strings_in_lists(description_values)
         # strip newlines
-        _field_description_long = [_ConvertData.remove_linebreaks(x) for x in _field_description_long]
+        _field_description_long = [convert_data.remove_linebreaks(x) for x in _field_description_long]
         # place in dictionary
         prepop_dict['field_description_long'] = _field_description_long
 
@@ -268,9 +272,9 @@ def _AS_metadata_to_WB_fields():
                 if re.match(regex_match, key):
                     notes_values.append(value)
         # join string values at same indices within scopecontentsValues
-        _field_note = _ConvertData.concatenate_strings_in_lists(notes_values)
+        _field_note = convert_data.concatenate_strings_in_lists(notes_values)
         # strip newlines
-        _field_note = [_ConvertData.remove_linebreaks(x) for x in _field_note]
+        _field_note = [convert_data.remove_linebreaks(x) for x in _field_note]
         # place in dictionary
         prepop_dict['field_note'] = _field_note
 
@@ -280,7 +284,7 @@ def _AS_metadata_to_WB_fields():
         _field_linked_agent_NAME = []
         for i in range(records_count):
             agents = '|'.join(
-                _ConvertData.agents_from_AS_AO(AS_dict['ref_id'][i], AS_dict['title'][i])
+                convert_data.agents_from_AS_AO(AS_dict['ref_id'][i], AS_dict['title'][i])
             )
             _field_linked_agent_NAME.append(agents)
         prepop_dict['field_linked_agent_NAME'] = _field_linked_agent_NAME
@@ -297,7 +301,7 @@ def _AS_metadata_to_WB_fields():
     # if any are not empty, raise warning
     access_issue_flag = False
     for a in access_values:
-        if not _Validate.list_is_all_empty(a):
+        if not validate.list_is_all_empty(a):
             access_issue_flag = True
     if access_issue_flag:
         print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')

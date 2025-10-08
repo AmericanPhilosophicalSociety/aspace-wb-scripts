@@ -10,7 +10,7 @@ This could be improved to use argparse
 
 import sys
 import json
-import CSV
+import utilities.use_CSVs as use_CSVs
 
 filepath = sys.argv[1]
 
@@ -34,6 +34,6 @@ for k, v in names_dict.items():
 
 if len(ISO639) == len(names_dict.items()):
     # export to csv using my CSV utility
-    CSV.tuples_to_CSV(ISO639, "iso639.csv")
+    use_CSVs.tuples_to_CSV(ISO639, "iso639.csv")
 else:
     print("It looks like there are some languages that are not exclusively ISO639-3 or ISO639-5, so are not caught by this process. investigate.")

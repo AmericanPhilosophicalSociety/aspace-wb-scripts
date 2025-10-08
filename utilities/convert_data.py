@@ -1,23 +1,27 @@
+
+
 from datetime import datetime
 import re
 import pandas
 import os
-import _Constants_and_Mappings as c
-import _Validate, _CSV
+import default_specs as c
+import utilities.validate as validate
+import utilities.use_CSVs as use_CSVs
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called
+this could be in default_specs, but it's okay
 '''
 # agents_in_csv has 3 columns: agent, title (of the archival object), refid
 AGENTS_PATH = os.path.join(c.CV_DIR, c.AS_AGENTS_FILENAME)
-agents_agent = _CSV.CSV_col_to_list(AGENTS_PATH, 0)
-agents_titles = _CSV.CSV_col_to_list(AGENTS_PATH, 1)
-agents_refids = _CSV.CSV_col_to_list(AGENTS_PATH, 2)
+AGENTS_AGENTS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 0)
+AGENTS_TITLES = use_CSVs.CSV_col_to_list(AGENTS_PATH, 1)
+AGENTS_REFIDS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 2)
 
 # language
 # CSV is formatted language name, code. get two options for easy lookup.
 LANGUAGES_PATH = os.path.join(c.CV_DIR, c.ISO639_FILENAME)
-languages_name_first = _CSV.two_col_CSV_to_dict(LANGUAGES_PATH)
+languages_name_first = use_CSVs.two_col_CSV_to_dict(LANGUAGES_PATH)
 languages_code_first = {value: key for key, value in languages_name_first.items()}
 
 '''
@@ -70,7 +74,6 @@ def seconds_to_HHMMSS(seconds):
     s = str(s).zfill(2)
     return h + ":" + m + ":" + s
 
-
 def text_date_to_ISO8601(input):
     '''
     incomplete, not used. consider using an external library if this is to be expanded.
@@ -96,7 +99,7 @@ def text_date_to_ISO8601(input):
     input = re.sub('[\[\]]', '', input)
     print(input)
     # check it's not already an ISO8601 date. this eliminates well-formed YYYY, YYYY-MM, YYYY-MM-DD
-    if _Validate.ISO8601_date(input):
+    if validate.ISO8601_date(input):
         return input
     # discard if there's date uncertainty represented as '?'
     if '?' in input:
@@ -133,7 +136,7 @@ def AS_date_to_WB_date(expression, begin, end):
     # often 'expression, begin, end' are all the same due to an old migration
     # # if there's an expression, see if it's EDTF-valid and return it
     try:
-        _Validate.EDTF(expression)
+        validate.EDTF(expression)
         return (expression, "")
     except:
         if not begin and not end:
@@ -213,19 +216,13 @@ def agents_from_AS_AO(refid_to_find, title_to_find):
     the accuracy relies on agents_in_AS being current, and does not work if there is no title (which occurs in some records, they only have dates)
     '''
     # match instances of refid
-    refid_indices = [i for i, e in enumerate(agents_refids) if e == refid_to_find]
+    refid_indices = [i for i, e in enumerate(AGENTS_REFIDS) if e == refid_to_find]
     # narrow to ones that match title. this isn't foolproof but it's the closest we can do.
-    refid_indices = [i for i in refid_indices if agents_titles[i] == title_to_find]
+    refid_indices = [i for i in refid_indices if AGENTS_TITLES[i] == title_to_find]
     # return all agents as a list
-    agents = [agents_agent[i] for i in refid_indices]
+    agents = [AGENTS_AGENTS[i] for i in refid_indices]
     return agents
 
-def CNAIR_audio_CUID_to_carrier_id(input):
-    '''
-    chop off the end hyphen. probably has no use.
-    '''
-    # uses regex \w to return everything before a hyphen, because a hyphen stops a word
-    return re.match("^\w+", input).group(0)
 
 def concatenate_strings_in_lists(input):
     '''
@@ -236,8 +233,8 @@ def concatenate_strings_in_lists(input):
     '''
     output = []
     for i in range(len(input[0])):
-        individualString = ' '.join(j[i] for j in input if isinstance(j[i], str))
-        output.append(individualString)
+        individual_string = ' '.join(j[i] for j in input if isinstance(j[i], str))
+        output.append(individual_string)
     return output
 
 def diglib_node_to_AS_DO(input):
@@ -245,14 +242,13 @@ def diglib_node_to_AS_DO(input):
     from a node number as input, generates fields for AS Digital Object creation
     actual implemented use skips this definition of 'title' in favor of WB title
     '''
-    nodePrefix = "islandora8_"
-    digital_object_id = nodePrefix + str(input)
-    digital_object_title = nodePrefix + str(input)
+    digital_object_id = c.AS_DIGITAL_OBJECT_NODE_PREFIX + str(input)
+    digital_object_title = c.AS_DIGITAL_OBJECT_NODE_PREFIX + str(input)
     digital_object_publish = "true"
-    file_version_file_uri = "https://diglib.amphilsoc.org/node/" + str(input)
+    file_version_file_uri = c.AS_DIGITAL_OBJECT_FILE_URI_PREFIX + str(input)
     file_version_caption = ""
     file_version_publish = "true"
-    DigitalObject = {
+    digital_object = {
         'digital_object_id': digital_object_id,
         'digital_object_title': digital_object_title,
         'digital_object_publish': digital_object_publish,
@@ -260,7 +256,7 @@ def diglib_node_to_AS_DO(input):
         'file_version_caption': file_version_caption,
         'file_version_publish': file_version_publish
     }
-    return DigitalObject
+    return digital_object
 
 def language_info_to_WB_language_string(language_name, code):
     '''
@@ -289,7 +285,7 @@ def relator_code_to_relator_title(input):
     '''
     unused - code is in relator.csv column 0, title is in 1
     '''
-    return _CSV.neighbor_from_value_in_CSV_col(os.path.join(c.CV_DIR, c.RELATOR_CODES_FILENAME), input, 0, 1)
+    return use_CSVs.neighbor_from_value_in_CSV_col(os.path.join(c.CV_DIR, c.RELATOR_CODES_FILENAME), input, 0, 1)
 
 def remove_linebreaks(input):
     '''

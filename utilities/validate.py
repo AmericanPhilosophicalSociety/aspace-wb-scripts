@@ -9,8 +9,8 @@ import re
 import math
 import pandas
 import os
-import constants_and_mappings as c
-import extract_dir, extract_file
+import default_specs as c
+import utilities.extract_dir as extract_dir, utilities.extract_file as extract_file
 
 '''
 Functions
