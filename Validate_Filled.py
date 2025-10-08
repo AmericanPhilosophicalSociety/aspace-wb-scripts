@@ -118,7 +118,8 @@ if "title" in INPUT_FIELDS:
 if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
     print("Checking field_linked_agent fields ...")
 
-    print("... checking role codes ...")
+    print("... checking role (relator) codes ...")
+    # TO DO? could we allow title entry of relators too?
     for x in input_dict["field_linked_agent_ROLE"]:
         if not validate.nan(x):
             # multiple options possible. split:

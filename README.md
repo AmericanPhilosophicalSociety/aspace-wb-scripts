@@ -68,7 +68,7 @@ Any new Workbench fields should be added to default_specs.py:
 
 There are a few controlled vocabularies within /CVs/ that require occasional updates, in decreasing order of frequency:
 - agents_in_AS.csv contains a row for every single ArchivesSpace Archival Object that uses an Agent. This is formatted as: name, archival_object_title, archival_object_ref_id. This can be exported using a custom report in ArchivesSpace. Update frequency: approximately monthly, to reflect new/updated finding aid data.
-- cnair_subject.csv is a list of CNAIR subjects (subject terms only). The main vocabulary is at [Airtable](https://airtable.com/apph1jZcKY5ZIa42M/shrmPmyg5ZOOtyTWt) and CNAIR staff can export a .csv. Update frequency: whenever CNAIR changes its subjects.
+- cnair_subject.csv is a list of CNAIR subjects (subject terms only). The main vocabulary is at [Airtable](https://airtable.com/apph1jZcKY5ZIa42M/shrmPmyg5ZOOtyTWt) and CNAIR staff can export a .csv. Individual changes could also be hand-edited. Update frequency: whenever CNAIR changes its subjects.
 - iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. This file can be generated using /utilities/ISO639json_to_CSV.py (see instructions within that file)
 - relator.csv contains relator names and codes from the Library of Congress's controlled vocabulary. Update frequency: infrequent (if ever), given the unlikelihood of significant changes. LOC provides a .tsv file [here](https://id.loc.gov/vocabulary/relators.html) that can be adapted.
 
