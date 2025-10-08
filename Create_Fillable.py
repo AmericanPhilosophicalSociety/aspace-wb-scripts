@@ -1,6 +1,5 @@
 '''
-WORKING :)
-add more helper text?
+Creates a fillable xlsx file
 '''
 
 import os

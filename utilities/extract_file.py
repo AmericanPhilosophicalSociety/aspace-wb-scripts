@@ -3,7 +3,6 @@ Metadata extraction from files
 '''
 
 import os
-import re
 import mutagen
 import mutagen.id3
 import moviepy.editor as mv

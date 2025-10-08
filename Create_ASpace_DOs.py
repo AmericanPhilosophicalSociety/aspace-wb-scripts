@@ -6,7 +6,6 @@ import os
 import pandas
 import argparse
 import default_specs as c
-import utilities.extract_dir as extract_dir
 import utilities.convert_data as convert_data
 import utilities.use_CSVs as use_CSVs
 

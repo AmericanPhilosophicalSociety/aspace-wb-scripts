@@ -16,9 +16,8 @@ filepath = sys.argv[1]
 
 # get the json file
 
-file = open(filepath)
-all_dict = json.load(file)
-file.close()
+with open(filepath) as file:
+    all_dict = json.load(file)
 
 # get just the names dict
 names_dict = all_dict["name"]
