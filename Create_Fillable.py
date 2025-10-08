@@ -15,9 +15,9 @@ import _ExtractDir, _ExtractFile, _ConvertData, _CSV, _Validate
 '''
 Parse command line arguments
     required, positional: Workbench upload type (book/single)
-    optional: name of fields file to use
-    optional: AS file to aid in populating metadata
-    optional: alternate file path
+    optional: --fields name of fields file to use
+    optional: --AS AS file to aid in populating metadata
+    optional: --filefolder alternate file path
 '''
 print('Checking command line arguments\nExpected: [book/single] [optional: --fields fields_file_to_use] [optional: --AS ArchivesSpacefile.xlsx] [optional: --filefolder alternate/file/directory/path] ...')
 
@@ -58,6 +58,16 @@ elif not cl_args.fields:
     # give all fields if no --fields argument
     FIELDS_TITLE = 'all_fields'
     fields_in_use = c.WB_FIELDS_ALL
+# modify fields_in_use so that, if present, field_linked_agent gets split into its components
+# by adding the fields, then removing 'field_linked_agent'
+# if we did not do this now, when inserting these fields into the dictionary later they'd get added to the end
+# and the dictionary would require reconstructing to keep the user's requested field order
+if 'field_linked_agent' in fields_in_use:
+    insert_index = fields_in_use.index('field_linked_agent')
+    fields_in_use.insert(insert_index, 'field_linked_agent_NAME')
+    fields_in_use.insert(insert_index + 1, 'field_linked_agent_ROLE')
+    fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
+    fields_in_use.remove('field_linked_agent')
     
 
 # use_AS from 'AS'
@@ -264,8 +274,9 @@ def _AS_metadata_to_WB_fields():
         # place in dictionary
         prepop_dict['field_note'] = _field_note
 
-    if 'field_linked_agent' in fields_in_use:
-        # TESTING SCENARIO - user can include 'field_linked_agent'. this gets split into the three components in Fillable, then recombined at end before asserting order.
+    if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_agent_TYPE' in fields_in_use:
+        # created earlier from user-supplied 'field_linked_agent'
+        # create names list from ArchivesSpace's AO-Agents report
         _field_linked_agent_NAME = []
         for i in range(records_count):
             agents = '|'.join(

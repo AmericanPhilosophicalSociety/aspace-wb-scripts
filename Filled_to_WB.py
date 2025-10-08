@@ -81,11 +81,11 @@ def _prefill_downfilling_fields():
         # give this list back to the dictionary
         input_dict[f] = values
 
+
 def _add_complex_fields():
 
     # id
-    if 'id' in INPUT_FIELDS:
-        WB_dict["id"] = [i + 1 for i in range(INPUT_ROW_COUNT)]
+    WB_dict["id"] = [i + 1 for i in range(INPUT_ROW_COUNT)]
 
     # file - book/single distinction
     if 'file' in INPUT_FIELDS:
@@ -93,6 +93,11 @@ def _add_complex_fields():
             WB_dict["file"] = input_dict["file"]
         elif WB_type == 'single':
             WB_dict["file"] = [c.file_SINGLE_PREFIX + file for file in input_dict["file"]]
+
+    # title, field_metadata_title
+    if 'title' in INPUT_FIELDS:
+        WB_dict["title"] = input_dict["title"]
+        WB_dict["field_metadata_title"] = input_dict["title"]
 
     # url_alias
     if "url_alias" in INPUT_FIELDS:
@@ -103,16 +108,14 @@ def _add_complex_fields():
                 url_alias = c.url_alias_PREFIX + str(url_alias)
 
     # field_language
-    # if present, convert either language name or code name to string
+    # convert either language name or code name to string
     if "field_language" in INPUT_FIELDS:
         WB_dict["field_language"] = []
         for i in range(INPUT_ROW_COUNT):
             if input_dict["field_language"][i]:
-                languages = input_dict["field_language"][i].split("|")
+                #languages = input_dict["field_language"][i].split("|")
                 WB_dict["field_language"].append(
-                    "|".join(
-                        [_ConvertData.language_name_or_ISO639_code_to_WB_language(language) for language in languages]
-                        )
+                    "|".join([_ConvertData.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
                 )
             else:
                 WB_dict["field_language"].append("")
@@ -122,14 +125,15 @@ def _add_complex_fields():
     if "field_linked_agent_NAME" and "field_linked_agent_ROLE" and "field_linked_agent_TYPE" in INPUT_FIELDS:
         WB_dict["field_linked_agent"] = []
         for i in range(INPUT_ROW_COUNT):
-            if input_dict["agent_name"][i]:
-                # get the full
-                WB_dict.append(_ConvertData.agents_info_to_WB_agent(
+            if input_dict["field_linked_agent_NAME"][i]:
+                # supply the converted name, role, type
+                WB_dict["field_linked_agent"].append(_ConvertData.agents_info_to_WB_agent(
                     input_dict["field_linked_agent_NAME"][i],
                     input_dict["field_linked_agent_ROLE"][i],
                     input_dict["field_linked_agent_TYPE"][i]
                     ))
             else:
+                # supply nothing
                 WB_dict["field_linked_agent"].append("")
         # a miserable thing to do: delete these fields so they don't confuse us when we try to add other fields
         del input_dict['field_linked_agent_NAME']
@@ -158,7 +162,7 @@ def _delete_empty_fields():
     if empty_fields:
         for key in empty_fields:
             WB_dict.pop(key)
-        print("The following columns were empty and have been deleted. Rerun this script if this was an error:" + empty_fields)
+        print("The following columns were empty and have been deleted. Rerun this script if this was an error:" + str(empty_fields))
 
 def _add_required_empty_fields():
     '''
@@ -176,7 +180,7 @@ def _add_required_empty_fields():
             WB_dict[f] = ["" for i in range(INPUT_ROW_COUNT)]
             empty_added.append(f)
     if empty_added:
-        print("The following columns were added to be purposefully blank for upload: " + empty_added)
+        print("The following columns were added to be purposefully blank for upload: " + str(empty_added))
 
 
 '''

@@ -2,5 +2,4 @@
 __pycache__
 files_to_upload
 metadata
-OLDFIELDNAMES_fields
-.delete_thumbsdb
+files_uploaded

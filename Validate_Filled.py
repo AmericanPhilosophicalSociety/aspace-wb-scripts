@@ -194,7 +194,7 @@ if "field_language" in INPUT_FIELDS:
             # multiple options possible. split:
             for y in x.split('|'):
                 try:
-                    _Validate.ISO639_code(y)
+                    _Validate.language(y)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
