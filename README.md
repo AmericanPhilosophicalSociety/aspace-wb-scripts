@@ -85,3 +85,7 @@ Testing/sample data is currently lacking. This should include sample media for v
 - There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in Validate_Filled.py calling a function in validate.py)
 - mimetype is a future Workbench field, with a placeholder in default_specs.py variable extension_to_WB_field, and would need to be added to Create_Fillable.py
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
+
+# To do
+
+- Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change.
