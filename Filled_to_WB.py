@@ -103,11 +103,14 @@ def _add_complex_fields():
 
     # url_alias
     if "url_alias" in INPUT_FIELDS:
-        WB_dict["url_alias"] = input_dict["url_alias"]
-        for url_alias in WB_dict["url_alias"]:
-            # if url_alias is present, i.e. not an empty string, prefix to it
+        url_aliases_with_prefixes = []
+        for url_alias in input_dict["url_alias"]:
+            # if url_alias is present, i.e. not an empty string, prefix to it, otherwise just place empty string
             if url_alias:
-                url_alias = c.url_alias_PREFIX + str(url_alias)
+                url_aliases_with_prefixes.append(c.url_alias_PREFIX + str(url_alias))
+            else:
+                url_aliases_with_prefixes.append("")
+        WB_dict["url_alias"] = url_aliases_with_prefixes
 
     # field_language
     # convert either language name or code name to string
