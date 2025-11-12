@@ -12,7 +12,6 @@ field_original_format
 field_extent
 field_description_long
 field_note
-field_date_digitized
 field_cnair_subject
 field_language
 field_geographic_subject
@@ -20,6 +19,7 @@ field_linked_agent
 field_related_materials_note
 field_mods_relateditem_titleinfo
 field_related_resource_url
+field_date_digitized
 field_resource_type
 field_model
 field_digital_origin
