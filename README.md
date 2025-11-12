@@ -8,11 +8,11 @@ THIS BRANCH IS AN ALPHA VERSION, NOT FULLY TESTED.
 
 # Installation
 
-to be written. In short:
+(to be written! In short:
 - clone from Github
 - create Python virtual environment using Python3.7 or higher (which version exactly? we need dictionaries to maintain order, hence 3.7. this was written using Python3.11)
 - install requirements.txt into this venv
-- create empty directories 'files_to_upload' and 'metadata'
+- create empty directories 'files_to_upload' and 'metadata')
 
 # Usage
 
@@ -20,19 +20,21 @@ There are four files reflecting a typical order of usage:
 - Create_Fillable.py creates a .xlsx file containing Workbench field names, derived from files that are to be uploaded. Optional flags:
     - --fields, recommended: name (no .csv extension) of fields file to use. These lists are customizable.
     - --AS, recommended: name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file.
-    - --filefolder: alternate directory for the location of media files to upload. This is usually only necessary when the files are too big to copy over into the local /files_to_upload/ directory, so may instead be on an external harddrive or alternate server.
-- Validate_Filled.py validates a few of the fields in the filled .xlsx file
+    - --filefolder: alternate directory for the location of media files to upload. This is usually only necessary when the files are too big to copy over into the local /files_to_upload/ directory, so may instead be on an external harddrive or alternate server. Use forwardslashes, e.g.: E:/bigbookfiles
+- Validate_Filled.py validates a few of the fields in the filled .xlsx file.
 - Filled_to_WB.py exports the .csv file for use by Workbench from the filled .xlsx file
 - Create_ASpace_DOs.py creates information to populate ArchivesSpace Digital Objects from Workbench's output .csv
 
+The argument 'book' or 'single' refers to the Workbench upload type and is a required argument (after the name of the Python file) in Create_Fillable.py, Validate_Filled.py and Filled_to_WB.py.
+
 Example:
 1. Put correctly-named files into /files_to_upload/.
-2. If using ArchivesSpace Bulk Update Spreadsheet, download and rename it (TO ADD: download instructions), put this into /metadata/, removing all but the first two rows (field names and field machine names), then ONE row for each object to be uploaded. Make sure the order in the ArchivesSpace sheet reflects the order of your files in /files_to_upload/.
+2. If using ArchivesSpace Bulk Update Spreadsheet: First, download the sheet by going to the collection node on the staff side and clicking "More" -> "Bulk Update Spreadsheet". Download the series you need, and include all fields. Next put this into /metadata/, unprotect the sheet, and remove all rows except the first two rows (field names and field machine names) and ONE row for each object to be uploaded. Make sure the order in the ArchivesSpace sheet reflects the order of your files in /files_to_upload/.
 3. Run Create_Fillable.py with appropriate flags:
 ```
-python Create_Fillable.py book --fields fields --AS archivesspace_file.xlsx --filefolder "C:/Users/user/Documents/book_files"
+python Create_Fillable.py book --fields fields --AS archivesspace_file.xlsx
 ```
-4. Check the file that was generated in /metadata/, and fill in remaining fields. At this point you can copy your media files across to the upload server.
+4. Check the file that was generated in /metadata/, and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point you can copy your media files across to the upload server.
 5. Run Validate_Filled.py, editing the file and running again if any errors were raised:
 ```
 python Validate_Filled.py book filled_file.xlsx
@@ -46,8 +48,6 @@ python Filled_to_WB.py book filled_file.xlsx
 ```
 python Create_ASpace_DOs.py workbench_output.csv
 ```
-
-The argument 'book' or 'single' refers to the Workbench upload type and is a required positional argument in Create_Fillable.py, Validate_Filled.py and Filled_to_WB.py.
 
 # User customization
 
@@ -80,7 +80,7 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # Omissions/assumptions
 
-- This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after this process.
+- This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after this process, and filling in the fields: field_resource_type ("Collection"), field_model ("Collection"), title, field_metadata_title. Then move ids up, and use parent_id to reference appropriate parents. Ask CDS for guidance on this.
 - Validate_Filled.py currently does not check for appropriate degree of padding of book page numbers (3 digits 1-999, 4 digits 1000-9999, etc).
 - There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in Validate_Filled.py calling a function in validate.py)
 - mimetype is a future Workbench field, with a placeholder in default_specs.py variable extension_to_WB_field, and would need to be added to Create_Fillable.py
@@ -89,3 +89,7 @@ Testing/sample data is currently lacking. This should include sample media for v
 # To do
 
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change.
+- Find a way to make simpler the process of making a new fields list. Perhaps a dedicated script that could generate a new csv from required fields?
+- Add warning to user to make new rows in output of Filled_to_WB.py if any field_member_of is empty.
+- Validate_Filled.py check for padding amount.
+- After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
