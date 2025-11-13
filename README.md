@@ -28,13 +28,13 @@ There are four files reflecting a typical order of usage:
 The argument 'book' or 'single' refers to the Workbench upload type and is a required argument (after the name of the Python file) in Create_Fillable.py, Validate_Filled.py and Filled_to_WB.py.
 
 Example:
-1. Put correctly-named files into /files_to_upload/.
-2. If using ArchivesSpace Bulk Update Spreadsheet: First, download the sheet by going to the collection node on the staff side and clicking "More" -> "Bulk Update Spreadsheet". Download the series you need, and include all fields. Next put this into /metadata/, unprotect the sheet, and remove all rows except the first two rows (field names and field machine names) and ONE row for each object to be uploaded. Make sure the order in the ArchivesSpace sheet reflects the order of your files in /files_to_upload/.
+1. If using ArchivesSpace Bulk Update Spreadsheet to get metadata: First, download the sheet by going to the collection node on the staff side and clicking "More" -> "Bulk Update Spreadsheet". Download the series you need, and include all fields. Next put this into /metadata/, unprotect the sheet, and remove all rows except the first two rows (field names and field machine names) and ONE row for each object to be uploaded.
+2. Copy your files into /files_to_upload/, and rename them following CDS guidelines. If using the Bulk Update Spreadsheet, name them in such a way that the file order is identical to the row order in the ArchivesSpace spreadsheet.
 3. Run Create_Fillable.py with appropriate flags:
 ```
 python Create_Fillable.py book --fields fields --AS archivesspace_file.xlsx
 ```
-4. Check the file that was generated in /metadata/, and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point you can copy your media files across to the upload server.
+4. Check the file that was generated in /metadata/ (including that the ArchivesSpace metadata matches correctly), and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point, you can copy your media files across to the upload server.
 5. Run Validate_Filled.py, editing the file and running again if any errors were raised:
 ```
 python Validate_Filled.py book filled_file.xlsx
