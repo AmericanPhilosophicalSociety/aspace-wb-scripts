@@ -146,13 +146,13 @@ prepop_dict = {}
 def _file_metadata_to_WB_fields_SINGLE():
     '''
     fills the following fields from file metadata:
-    file, field_model, field_resource_type, field_access_terms, field_display_hints, field_extent, field_date_digitized
+    file, field_model, field_resource_type, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
     '''
 
     # file
     prepop_dict['file'] = media_list
 
-    # extent, field_model, field_access_terms, field_display_hints, field_resource_type
+    # extent, field_model, field_access_terms, field_display_hints, field_resource_type, field_internet_media_type
     # all from c.extension_to_WB_field
     for d in c.extension_to_WB_field:
         # find the dictionary containing the correct extension
@@ -166,7 +166,8 @@ def _file_metadata_to_WB_fields_SINGLE():
                 prepop_dict['field_access_terms'] = [d['field_access_terms'] for i in range(records_count)]
             if d['field_display_hints']:
                 prepop_dict['field_display_hints'] = [d['field_display_hints'] for i in range(records_count)]
-            # mimetype is skipped for now pending field creation
+            if d['field_internet_media_type']:
+                prepop_dict['field_internet_media_type'] = [d['field_internet_media_type'] for i in range(records_count)]
             # use field_model to calculate extent - Image not required, Digital Document (.pdf) not yet coded
             if d['field_model'] == 'Audio':
                 # get audio duration in seconds, convert to hh:mm:ss representation
@@ -190,8 +191,9 @@ def _file_metadata_to_WB_fields_SINGLE():
     
 def _file_metadata_to_WB_fields_BOOK():
     '''
+    TO DO: add extension-based fields (from default_specs.extension_to_WB_field).
     fills the following fields from file metadata:
-    file, field_model, field_resource_type, total_scans, field_extent, field_date_digitized
+    file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
     '''
 
     # file

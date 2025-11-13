@@ -88,8 +88,10 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # To do
 
+- Incorporate field_internet_media_type in Book objects. This requires modification to Create_Fillable._file_metadata_to_WB_fields_BOOK, and first to get an extensions list that both book and single can use.
+- Simultaneously: Validate_Filled.py more robust extension checking (book AND single must check for single file type)
+- Validate_Filled.py check for padding amount.
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change.
 - Find a way to make simpler the process of making a new fields list. Perhaps a dedicated script that could generate a new csv from required fields?
 - Add warning to user to make new rows in output of Filled_to_WB.py if any field_member_of is empty.
-- Validate_Filled.py check for padding amount.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
