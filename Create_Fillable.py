@@ -105,19 +105,77 @@ else:
 print('... command line arguments parsed ...')
 
 '''
-Check our files and generate a listing of these as media_list, depending on WB_type
+Check our files and generate a listing of these as media_list, depending on WB_type, and EXTENSION variable
 '''
 print("Checking files ...")
 
-# may be convenient here to grab extension to a variable so we can call it later
+if WB_type == 'book':
 
+    # get media_list
+    media_list = extract_dir.subdirectories_list(FILES_DIR)
+
+    # prep extensions_to_check, which gets populated
+    extensions_to_check = []
+
+    # perform directory checks:
+    # only subdirectories within FILES_DIR
+    validate.directory_contains_only_subdirectories(FILES_DIR)    
+    for subdirectory in media_list:
+        # each subdirectory contains files
+        validate.directory_contains_only_files(os.path.join(FILES_DIR, subdirectory))
+        # each subdirectory name is valid
+        validate.directory_name_for_book(subdirectory)
+        # prep for next bit
+        subdirectory_files = extract_dir.file_list(os.path.join(FILES_DIR, subdirectory), extensions=True)
+        subdirectory_filecount = len(subdirectory_files)
+        for file in subdirectory_files:
+            # file names conform to book requirements
+            validate.filename_for_book(subdirectory, os.path.splitext(file)[0])
+            # file names have correct padding
+            validate.filename_padding_amount(os.path.splitext(file)[0], subdirectory_filecount)
+            # add file extension to extension_to_check
+            extensions_to_check.append(os.path.splitext(file)[1])
+
+    # check extensions
+    extensions_to_check = convert_data.unique_in_list(extensions_to_check)
+    if len(extensions_to_check) != 1:
+        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
+    EXTENSION = extensions_to_check[0]
+    if EXTENSION not in c.EXTENSIONS:
+        raise OSError("Invalid extension found: " + str(EXTENSION))
+
+elif WB_type == 'single':
+
+    # get media_list
+    media_list = extract_dir.file_list(FILES_DIR, extensions=True)
+
+    # perform directory checks:
+    # only files within FILES_DIR
+    validate.directory_contains_only_files(FILES_DIR)
+    for file in media_list:
+        file = os.path.splitext(file)[0]
+        # and each file has a valid filename
+        validate.filename_for_single(file)
+
+    # get and check extension - single extension, is allowed
+    extensions_to_check = extract_dir.unique_extensions(FILES_DIR)
+    if len(extensions_to_check) != 1:
+        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
+    EXTENSION = extensions_to_check[0]
+    if EXTENSION not in c.EXTENSIONS:
+        raise OSError("Invalid extension found: " + str(EXTENSION))
+
+print(media_list)
+print(EXTENSION)
+
+'''
 if WB_type == 'book':
     validate.files_in_book(FILES_DIR)
     print("Book note: script does not check exact padding. Padding needs to be 3 digits if <1000, 4+ digits if >=1000 files.")
     media_list = extract_dir.subdirectories_list(FILES_DIR)
 elif WB_type == 'single':
     validate.files_in_single(FILES_DIR)
-    media_list = extract_dir.file_list(FILES_DIR, extensions=True)
+    media_list = extract_dir.file_list(FILES_DIR, extensions=True)'''
 
 print("... files look okay ...")
 
@@ -156,7 +214,7 @@ def _file_metadata_to_WB_fields_SINGLE():
     # all from c.extension_to_WB_field
     for d in c.extension_to_WB_field:
         # find the dictionary containing the correct extension
-        if d['extension'] == os.path.splitext(media_list[0])[1]:
+        if d['extension'] == EXTENSION:
             # from this dictionary, populate ...
             # required fields
             prepop_dict['field_model'] = [d['field_model'] for i in range(records_count)]
@@ -191,7 +249,7 @@ def _file_metadata_to_WB_fields_SINGLE():
     
 def _file_metadata_to_WB_fields_BOOK():
     '''
-    TO DO: add extension-based fields (from default_specs.extension_to_WB_field).
+    TO DO: check we don't need any more extension-based fields than field_internet_media_type
     fills the following fields from file metadata:
     file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
     '''
@@ -204,6 +262,12 @@ def _file_metadata_to_WB_fields_BOOK():
 
     # field_resource_type
     prepop_dict['field_resource_type'] = [c.field_resource_type_BOOK for i in range(records_count)]
+
+    # field_internet_media_type
+    for d in c.extension_to_WB_field:
+        # find the dictionary containing the correct extension
+        if d['extension'] == EXTENSION:
+            prepop_dict['field_internet_media_type'] = [d['field_internet_media_type'] for i in range(records_count)]
 
     # extent
     # gets mapped to total_scans as-is, and the extent field which can be separately edited

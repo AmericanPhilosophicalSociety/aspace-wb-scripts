@@ -1,5 +1,6 @@
 '''
 Functions for validating fields
+These all take a single instance of something
 
 EDTF standard defined here: https://www.loc.gov/standards/datetime/
 '''
@@ -47,11 +48,81 @@ def EDTF(input):
     else:
         raise ValueError("EDTF date not valid: " + str(input))
     
+def directory_contains_only_subdirectories(directory_path):
+    '''
+    Returns True if directory contains only subdirectories, and is not empty
+    '''
+    if extract_dir.subdirectories_count(directory_path) == 0:
+        raise OSError("Folder " + str(directory_path) + " contains no directories. Please put your directories with their files in.")
+    elif extract_dir.file_count(directory_path):
+        raise OSError("Folder " + str(directory_path) + " contains files, not just folders. Move files into book subfolders.")
+    else:
+        return True
+
+def directory_contains_only_files(directory_path):
+    '''
+    Returns True if directory contains only files, and is not empty
+    '''
+    if extract_dir.file_count(directory_path) == 0:
+        raise OSError("Folder " + str(directory_path) + " contains no files. Please place files there.")
+    elif extract_dir.subdirectories_count(directory_path):
+        raise OSError("Folder " + str(directory_path) + " contains folders. It should only contain files.")
+    else:
+        return True
+    
+def directory_name_for_book(directory_name):
+    '''
+    Returns True if directory name in book is only alphanumeric and underscore
+    '''
+    if re.match(r'^\w+$', directory_name):
+        return True
+    else:
+        raise OSError("Folder " + str(directory_name) + " is not just alphanumeric and underscores. Please revise.")
+
+def filename_for_book(directory_name, filename_noext):
+    '''
+    Given a directory name and filename, returns True if filename is only directory + hyphen + numbers
+    '''
+    if not string_is_match_then_hyphen_then_numbers(filename_noext, directory_name):
+        raise OSError("File " + str(filename_noext) + " does not match expected: parent directory + hyphen + numbers. Check all files.")
+    else:
+        return True
+    
+def filename_for_single(filename_noext):
+    '''
+    Returns True if filename matches rules for single uploads
+    '''
+    if re.match(r'^[a-zA-Z0-9-_]+$', filename_noext):
+        return True
+    else:
+        raise OSError("File " + str(filename_noext) + " is not just alphanumeric, underscore, hyphen.")
+
+def filename_padding_amount(filename_noext, number_of_files):
+    '''
+    Given a filename and the number of files, return True if the padding is correct
+    padding is 3 digits for under 1000, 4+ digits for over
+    This is implemented assuming having already passed filename_for_book
+    '''
+    filename_suffix = filename_noext.split('-')[1]
+    if number_of_files < 1000:
+        if len(filename_suffix) == 3:
+            return True
+    elif number_of_files < 10000:
+        if len(filename_suffix) == 4:
+            return True
+    elif number_of_files < 100000:
+        if len(filename_suffix) == 5:
+            return True
+    elif number_of_files < 1000000: # is this enough
+        if len(filename_suffix) == 6:
+            return True
+    raise OSError("File " + str(filename_noext) + " has wrong padding for a directory of " + str(number_of_files) + " files.")
+
+
+
+'''
+    
 def files_in_book(top_directory):
-    '''
-    Checks that files within a book are all valid
-    CLEAN THIS UP. add extensions checking as separate function, add padding checking.
-    '''
     # files directory ...
     directories_list = extract_dir.subdirectories_list(top_directory)
     # is not empty
@@ -77,10 +148,6 @@ def files_in_book(top_directory):
     return True
 
 def files_in_single(directory):
-    '''
-    Checks that the files within single are all valid
-    ADD check that the directory is not empty
-    '''
     extensions_to_check = extract_dir.unique_extensions(directory)
     # check we only have one extension
     if len(extensions_to_check) != 1:
@@ -89,7 +156,7 @@ def files_in_single(directory):
     for extension in extensions_to_check:
         if extension not in c.EXTENSIONS:
             raise OSError("Folder " + str(c.FILESTOUPLOAD_DIR) + " contains unexpected files including type: " + str(extension))
-
+'''
 
 def ISO8601_date(input):
     # taking assumed EDTF date, check if it's a level 0 date - YYYY, YYYY-MM, YYYY-MM-DD
@@ -174,13 +241,6 @@ def relator_code(input):
         return True
     else:
         raise ValueError("Relator code " + str(input) + " not in relators csv.")
-
-def string_is_alphanumeric_and_underscore(input):
-    # returns True if the input string is only alphanumeric and underscore characters
-    if re.match(r'^\w+$', input):
-        return True
-    else:
-        return False
     
 def string_is_match_then_hyphen_then_numbers(full_string, beginning_to_match):
     '''
