@@ -217,4 +217,15 @@ Export our WB csv
 '''
 
 use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
-print("SUCCESS. Generated Workbench file. Check and make any other modifications before using. If using Excel/Libreoffice, import all fields as type 'text': " + os.path.join(c.METADATA_DIR, WB_FILENAME))
+print("SUCCESS. Generated Workbench file: " + os.path.join(c.METADATA_DIR, WB_FILENAME))
+
+'''
+Post-completion reminders to user
+'''
+print("REMINDERS:")
+print("- Check and make any other modifications before submitting.")
+print("- If using Excel/Libreoffice, import all fields as type 'text'.")
+# flag if a field_member_of value is blank
+if "field_member_of" in INPUT_FIELDS:
+    if "" in WB_dict["field_member_of"]:
+        print("- One or more rows has no value for field_member_of. Don't forget to add in a row for its parent!")
