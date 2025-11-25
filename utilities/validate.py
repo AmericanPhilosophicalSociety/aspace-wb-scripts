@@ -118,46 +118,6 @@ def filename_padding_amount(filename_noext, number_of_files):
             return True
     raise OSError("File " + str(filename_noext) + " has wrong padding for a directory of " + str(number_of_files) + " files.")
 
-
-
-'''
-    
-def files_in_book(top_directory):
-    # files directory ...
-    directories_list = extract_dir.subdirectories_list(top_directory)
-    # is not empty
-    if len(directories_list) == 0:
-        raise OSError("Folder " + str(top_directory) + " contains no directories. Please put your directories with their files in.")
-    # has directories named with just alphanumeric and underscore
-    for directory in directories_list:
-        if not string_is_alphanumeric_and_underscore(directory):
-            raise OSError("Directory " + os.path.join(top_directory, directory) + " is not just alphanumeric with underscores. Check all directories.")
-    # each directory's files ...
-    for directory in directories_list:
-        directory_files = extract_dir.file_list(os.path.join(top_directory, directory), extensions=True)
-        for file in directory_files:
-            # has a permitted file extension
-            if extract_file.file_extension(file) not in c.EXTENSIONS:
-                raise OSError("File " + os.path.join(top_directory, directory, file) + " is not in permitted filetypes. Check all files. Check with CDS if more types need to be allowed.")
-            # has a name composed of directory name + hyphen + numbers
-            # (isolates just the file name, not extension, to hand to validator)
-            file = os.path.splitext(file)[0]
-            if not string_is_match_then_hyphen_then_numbers(file, directory):
-                raise OSError("File " + os.path.join(top_directory, directory, file) + " does not follow the correct titling: directory + hyphen + numbers. Check all files.")
-    # return True if this all worked out
-    return True
-
-def files_in_single(directory):
-    extensions_to_check = extract_dir.unique_extensions(directory)
-    # check we only have one extension
-    if len(extensions_to_check) != 1:
-        raise OSError("Only one extension allowed. Check that files all have the same extension.")
-    # all extensions are valid
-    for extension in extensions_to_check:
-        if extension not in c.EXTENSIONS:
-            raise OSError("Folder " + str(c.FILESTOUPLOAD_DIR) + " contains unexpected files including type: " + str(extension))
-'''
-
 def ISO8601_date(input):
     # taking assumed EDTF date, check if it's a level 0 date - YYYY, YYYY-MM, YYYY-MM-DD
     # (this also would work for any arbitrary string)

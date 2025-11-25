@@ -105,7 +105,9 @@ else:
 print('... command line arguments parsed ...')
 
 '''
-Check our files and generate a listing of these as media_list, depending on WB_type, and EXTENSION variable
+Check our files and generate:
+- media_list, which is list of folder names if WB_type book, or a list of file names if single
+- EXTENSION variable, isolating the single extension uploaded
 '''
 print("Checking files ...")
 
@@ -164,18 +166,6 @@ elif WB_type == 'single':
     EXTENSION = extensions_to_check[0]
     if EXTENSION not in c.EXTENSIONS:
         raise OSError("Invalid extension found: " + str(EXTENSION))
-
-print(media_list)
-print(EXTENSION)
-
-'''
-if WB_type == 'book':
-    validate.files_in_book(FILES_DIR)
-    print("Book note: script does not check exact padding. Padding needs to be 3 digits if <1000, 4+ digits if >=1000 files.")
-    media_list = extract_dir.subdirectories_list(FILES_DIR)
-elif WB_type == 'single':
-    validate.files_in_single(FILES_DIR)
-    media_list = extract_dir.file_list(FILES_DIR, extensions=True)'''
 
 print("... files look okay ...")
 
@@ -249,9 +239,10 @@ def _file_metadata_to_WB_fields_SINGLE():
     
 def _file_metadata_to_WB_fields_BOOK():
     '''
-    TO DO: check we don't need any more extension-based fields than field_internet_media_type
     fills the following fields from file metadata:
-    file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
+        file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
+    skipped because we do not need these for book:
+        field_access_terms, field_display_hints
     '''
 
     # file

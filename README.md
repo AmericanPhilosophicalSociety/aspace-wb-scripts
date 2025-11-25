@@ -4,8 +4,6 @@ Scripts to aid American Philosophical Society (APS) staff in preparing CSV files
 
 For fuller explanation of the Workbench fields, see the [APS Digital Library Metadata Guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/).
 
-THIS BRANCH IS AN ALPHA VERSION, NOT FULLY TESTED.
-
 # Installation
 
 (to be written! In short:
@@ -78,20 +76,16 @@ ArchivesSpace's Bulk Update Spreadsheet is unlikely to change in fundamental str
 
 Testing/sample data is currently lacking. This should include sample media for various types, and sample spreadsheets.
 
-# Omissions/assumptions
+# Omissions/assumptions/known issues
 
 - This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after this process, and filling in the fields: field_resource_type ("Collection"), field_model ("Collection"), title, field_metadata_title. Then move ids up, and use parent_id to reference appropriate parents. Ask CDS for guidance on this.
-- Validate_Filled.py currently does not check for appropriate degree of padding of book page numbers (3 digits 1-999, 4 digits 1000-9999, etc).
+- This process assumes that you are copying files from the Digital Library Staging Area into a working directory for upload preparation. This is useful as it prevents confusion in the Digital Library Staging Area, in case files are renamed and then accidentally left.
 - There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in Validate_Filled.py calling a function in validate.py)
-- mimetype is a future Workbench field, with a placeholder in default_specs.py variable extension_to_WB_field, and would need to be added to Create_Fillable.py
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
+- Create_ASpace_DOs.py generates Digital Objects you can plug into the ArchivesSpace Bulk Update Spreadsheet. Note that this spreadsheet (at least in the plugin version) expires after 1 week. It will also fail if any of the records were updated in the interface after downloading. If this happens, redownload the spreadsheet to add the output of Create_ASpace_DOs.py.
 
 # To do
 
-- Incorporate field_internet_media_type in Book objects. This requires modification to Create_Fillable._file_metadata_to_WB_fields_BOOK, and first to get an extensions list that both book and single can use.
-- Simultaneously: Validate_Filled.py more robust extension checking (book AND single must check for single file type)
-- Validate_Filled.py check for padding amount.
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change.
 - Find a way to make simpler the process of making a new fields list. Perhaps a dedicated script that could generate a new csv from required fields?
-- Add warning to user to make new rows in output of Filled_to_WB.py if any field_member_of is empty.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
