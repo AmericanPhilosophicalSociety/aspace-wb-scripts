@@ -86,6 +86,7 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # To do
 
-- Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change.
+- Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change. Temporary fix was to just edit the iso639.csv file to use 2B for a few languages.
+- Modify Create_Fillable.py to bypass file checking, allowing the creation of a new blank file, OR have a new script that just does this. This would make the scripts more useful to somebody filling in a spreadsheet as they do digitization (e.g. the head reference archivist).
 - Find a way to make simpler the process of making a new fields list. Perhaps a dedicated script that could generate a new csv from required fields?
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
