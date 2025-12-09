@@ -468,3 +468,10 @@ pd_ExcelWriter.close()
 End
 '''
 print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)
+'''
+Post-completion reminders to user
+'''
+if use_AS:
+    print("REMINDER:")
+    print("\tFirst check that the file order ('file') matches the ArchivesSpace metadata order, because sometimes there is a difference between how Python and Windows Explorer alphabetize the 'file' field.")
+    print("\tIf there is a difference, reorder the ArchivesSpace spreadsheet rows and run again.")

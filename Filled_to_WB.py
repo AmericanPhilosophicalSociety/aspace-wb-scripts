@@ -223,9 +223,9 @@ print("SUCCESS. Generated Workbench file: " + os.path.join(c.METADATA_DIR, WB_FI
 Post-completion reminders to user
 '''
 print("REMINDERS:")
-print("- Check and make any other modifications before submitting.")
-print("- If using Excel/Libreoffice, import all fields as type 'text'.")
+print("\tCheck and make any other modifications before submitting.")
+print("\tIf using Excel/Libreoffice, import all fields as type 'text'.")
 # flag if a field_member_of value is blank
 if "field_member_of" in INPUT_FIELDS:
     if "" in WB_dict["field_member_of"]:
-        print("- One or more rows has no value for field_member_of. Don't forget to add in a row for its parent!")
+        print("\tOne or more rows has no value for field_member_of. Don't forget to add in a row for its parent!")
