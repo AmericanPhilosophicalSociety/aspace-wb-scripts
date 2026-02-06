@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aspace-wb-scripts"
+version = "1.0.0"
+description = "Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingesting files into Islandora 8 using Workbench"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "American Philosophical Society", email = "digital@amphilsoc.org"}
+]
+maintainers = [
+    {name = "American Philosophical Society", email = "digital@amphilsoc.org"}
+]
+keywords = ["archivespace", "islandora", "workbench", "metadata", "digital-library"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "certifi==2024.12.14",
+    "charset-normalizer==3.4.1",
+    "colorama==0.4.6",
+    "DateTime==5.5",
+    "decorator==4.4.2",
+    "edtf-validate==2.0.0",
+    "et_xmlfile==2.0.0",
+    "idna==3.10",
+    "imageio==2.37.0",
+    "imageio-ffmpeg==0.6.0",
+    "moviepy==1.0.3",
+    "mutagen==1.47.0",
+    "numpy==2.2.2",
+    "openpyxl==3.1.5",
+    "pandas==2.2.3",
+    "pillow==10.4.0",
+    "proglog==0.1.10",
+    "pyparsing==3.2.1",
+    "python-dateutil==2.9.0.post0",
+    "python-dotenv==1.0.1",
+    "pytz==2024.2",
+    "requests==2.32.3",
+    "six==1.17.0",
+    "tqdm==4.67.1",
+    "tzdata==2025.1",
+    "urllib3==2.3.0",
+    "zope.interface==7.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black>=22.0",
+    "flake8>=4.0",
+    "pylint>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts"
+Repository = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts"
+Documentation = "https://americanphilosophicalsociety.github.io/APS_digitization/metadata/"
+Issues = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts/issues"
+
+[project.scripts]
+aspace-wb-create-fillable = "aspace_wb.cli.create_fillable:main"
+aspace-wb-validate = "aspace_wb.cli.validate_filled:main"
+aspace-wb-export = "aspace_wb.cli.filled_to_wb:main"
+aspace-wb-create-dos = "aspace_wb.cli.create_aspace_dos:main"
+aspace-wb-blank = "aspace_wb.cli.create_blank_fillable:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aspace_wb*"]
+
+[tool.setuptools.package-data]
+aspace_wb = ["data/fields/*.csv", "data/cvs/*.csv"]
+
+[tool.black]
+line-length = 100
+target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
