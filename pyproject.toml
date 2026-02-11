@@ -76,6 +76,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aspace_wb"]
-
-[tool.setuptools.package-data]
-aspace_wb = ["data/fields/*.csv", "data/cvs/*.csv"]
