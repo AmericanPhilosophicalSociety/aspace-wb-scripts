@@ -5,9 +5,9 @@ this can be used in an ArchivesSpace bulk update upload or however you want
 import os
 import pandas
 import argparse
-import default_specs as c
-import utilities.convert_data as convert_data
-import utilities.use_CSVs as use_CSVs
+from ..utils import default_specs as c
+from ..utils import convert_data
+from ..utils import use_CSVs
 
 '''
 Parse command line arguments
