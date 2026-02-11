@@ -6,10 +6,9 @@ Assumes a fully valid, checked against Validate_Filled.py, spreadsheet
 import os
 import pandas
 from argparse import ArgumentParser
-import default_specs as c
-import utilities.convert_data as convert_data
-import utilities.use_CSVs as use_CSVs
-import utilities.validate as validate
+from ..utils import default_specs as c
+from ..utils import convert_data, use_CSVs, validate
+
 
 '''
 Parse command line arguments
