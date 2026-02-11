@@ -14,9 +14,10 @@ import pandas
 import re
 from argparse import ArgumentParser
 from datetime import datetime
-import default_specs as c
-import utilities.extract_dir as extract_dir
-import utilities.use_CSVs as use_CSVs
+from ..utils import default_specs as c
+from ..utils import extract_dir
+from ..utils import use_CSVs
+
 
 '''
 Parse command line arguments
