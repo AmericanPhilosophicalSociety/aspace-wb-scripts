@@ -14,66 +14,66 @@ For fuller explanation of the Workbench fields, see the [APS Digital Library Met
 
 # Usage
 
-There are four files reflecting a typical order of usage:
-- Create_Fillable.py creates a .xlsx file containing Workbench field names, derived from files that are to be uploaded. Optional flags:
-    - --fields, recommended: name (no .csv extension) of fields file to use. These lists are customizable.
-    - --AS, recommended: name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file.
-    - --filefolder: alternate directory for the location of media files to upload. This is usually only necessary when the files are too big to copy over into the local /files_to_upload/ directory, so may instead be on an external harddrive or alternate server. Use forwardslashes, e.g.: E:/bigbookfiles
-- Validate_Filled.py validates a few of the fields in the filled .xlsx file.
-- Filled_to_WB.py exports the .csv file for use by Workbench from the filled .xlsx file
-- Create_ASpace_DOs.py creates information to populate ArchivesSpace Digital Objects from Workbench's output .csv
+There are four commands reflecting a typical order of usage:
+- ```aspace-wb-create-fillable``` creates a .xlsx file containing Workbench field names, derived from files that are to be uploaded. Optional flags:
+    - ```--fields```, recommended: name (no .csv extension) of fields file to use. These lists are customizable.
+    - ```--AS```, recommended: name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file.
+    - ```--filefolder```: alternate directory for the location of media files to upload. This is usually only necessary when the files are too big to copy over into the local /files_to_upload/ directory, so may instead be on an external harddrive or alternate server. Use forwardslashes, e.g.: E:/bigbookfiles
+- ```aspace-wb-validate``` validates a few of the fields in the filled .xlsx file.
+- ```aspace-wb-export``` the .csv file for use by Workbench from the filled .xlsx file
+- ```aspace-wb-create-dos``` creates information to populate ArchivesSpace Digital Objects from Workbench's output .csv
 
-The argument 'book' or 'single' refers to the Workbench upload type and is a required argument (after the name of the Python file) in Create_Fillable.py, Validate_Filled.py and Filled_to_WB.py.
+The argument 'book' or 'single' refers to the Workbench upload type and is a required argument (after the name of the Python file) in ```aspace-wb-create-fillable```, ```aspace-wb-validate```, and ```aspace-wb-export```.
 
 Example:
 1. If using ArchivesSpace Bulk Update Spreadsheet to get metadata: First, download the sheet by going to the collection node on the staff side and clicking "More" -> "Bulk Update Spreadsheet". Download the series you need, and include all fields. Next put this into /metadata/, unprotect the sheet, and remove all rows except the first two rows (field names and field machine names) and ONE row for each object to be uploaded.
 2. Copy your files into /files_to_upload/, and rename them following CDS guidelines. If using the Bulk Update Spreadsheet, name them in such a way that the file order is identical to the row order in the ArchivesSpace spreadsheet.
-3. Run Create_Fillable.py with appropriate flags:
-```
-python Create_Fillable.py book --fields fields --AS archivesspace_file.xlsx
+3. Run ```aspace-wb-create-fillable``` with appropriate flags:
+```bash
+python aspace-wb-create-fillable book --fields fields --AS archivesspace_file.xlsx
 ```
 4. Check the file that was generated in /metadata/ (including that the ArchivesSpace metadata matches correctly), and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point, you can copy your media files across to the upload server.
-5. Run Validate_Filled.py, editing the file and running again if any errors were raised:
+5. Run ```aspace-wb-validate```, editing the file and running again if any errors were raised:
+```bash
+python aspace-wb-validate book filled_file.xlsx
 ```
-python Validate_Filled.py book filled_file.xlsx
-```
-6. Run Filled_to_WB.py to generate the output Workbench .csv:
-```
-python Filled_to_WB.py book filled_file.xlsx
+6. Run ```aspace-wb-export``` to generate the output Workbench .csv:
+```bash
+python aspace-wb-export book filled_file.xlsx
 ```
 7. Check the output Workbench .csv (open in Excel/Libreoffice with "text" as data type), and rename and copy this .csv over to the upload server.
-8. Once the Workbench upload is complete, you can get a spreadsheet with fields for attaching ArchivesSpace's Digital Object (either via the Bulk Update Spreadsheet or the staff user interface) by running Create_ASpace_DOs.py on the .csv that Workbench produces:
-```
-python Create_ASpace_DOs.py workbench_output.csv
+8. Once the Workbench upload is complete, you can get a spreadsheet with fields for attaching ArchivesSpace's Digital Object (either via the Bulk Update Spreadsheet or the staff user interface) by running ```aspace-wb-create-dos``` on the .csv that Workbench produces:
+```bash
+python aspace-wb-create-dos workbench_output.csv
 ```
 
 If you are filling out a spreadsheet progressively, not based on pre-existing files (e.g. a reference archivist filling out their week's Workbench sheet while scanning), you can instead create a blank spreadsheet with your own fields, to use or adapt as your own template, e.g.:
 ```
-python Create_Blank_Fillable.py book --fields fields
+python aspace-wb-blank book --fields fields
 ```
-You could run steps 5 onwards on your finished spreadsheet. This however will skip checks on the file names, extensions, etc., will not fill the related fields automatically, and Validate_Filled.py does not check these autogenerated fields. An output from this with all fields, made on 2026-01-07, is provided as: blank_all_fields_template.xlsx
+You could run steps 5 onwards on your finished spreadsheet. This however will skip checks on the file names, extensions, etc., will not fill the related fields automatically, and ```aspace-wb-validate``` does not check these autogenerated fields. An output from this with all fields, made on 2026-01-07, is provided as: blank_all_fields_template.xlsx
 
 # User customization
 
-The /fields/ directory contains .csv files that are lists of Workbench fields that can be used by Create_Fillable.py. This is highly recommended, as without these as called by the --fields flag, every available field will be output. Each project, department or individual user can create their own lists of fields for their use. It is recommended to have different lists of fields for each Workbench upload type (book/single) as well as optionally for different media within single (audio, video, photos etc.). See existing examples.
+The /fields/ directory contains .csv files that are lists of Workbench fields that can be used by ```aspace-wb-create-fillable```. This is highly recommended, as without these as called by the --fields flag, every available field will be output. Each project, department or individual user can create their own lists of fields for their use. It is recommended to have different lists of fields for each Workbench upload type (book/single) as well as optionally for different media within single (audio, video, photos etc.). See existing examples.
 
 To create a new set of fields:
-- Duplicate and rename "example_minimum.book.csv" or "example_minimum_single.csv" within /fields/. Keep the csv extension. These files contain the minimum fields required when running Create_Fillable.py, but not likely the minimum required by a CDS project.
+- Duplicate and rename "example_minimum.book.csv" or "example_minimum_single.csv" within /fields/. Keep the csv extension. These files contain the minimum fields required when running ```aspace-wb-create-fillable```, but not likely the minimum required by a CDS project.
 - Add any other fields you need, from CDS's full listing of fields
 - Rearrange them to your liking.
 
-Note that any fields omitted will not be autofilled from ArchivesSpace's spreadsheet. See the function '_AS_metadata_to_WB_fields' in Create_Fillable.py for which fields are attempted.
+Note that any fields omitted will not be autofilled from ArchivesSpace's spreadsheet. See the function '_AS_metadata_to_WB_fields' in ```aspace-wb-create-fillable``` for which fields are attempted.
 
 # Maintenance
 
-Any new Workbench fields should be added to default_specs.py:
+Any new Workbench fields should be added to ```utilities/default_specs.py```:
 - Add the field name, and optional description, as a tuple to WB_FIELDS_ORDERED_WITH_DESCRIPTION. Without being here, the presence of these fields will cause an error.
 - If these fields are required, add them to the appropriate previous WB_FIELDS_ tuples
 
 There are a few controlled vocabularies within /CVs/ that require occasional updates, in decreasing order of frequency:
 - agents_in_AS.csv contains a row for every single ArchivesSpace Archival Object that uses an Agent. This is formatted as: name, archival_object_title, archival_object_ref_id. This can be exported using a custom report in ArchivesSpace. Update frequency: approximately monthly, to reflect new/updated finding aid data.
 - cnair_subject.csv is a list of CNAIR subjects (subject terms only). The main vocabulary is at [Airtable](https://airtable.com/apph1jZcKY5ZIa42M/shrmPmyg5ZOOtyTWt) and CNAIR staff can export a .csv. Individual changes could also be hand-edited. Update frequency: whenever CNAIR changes its subjects.
-- iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. Previously this file was generated using /utilities/ISO639json_to_CSV.py (see instructions within that file), though this did not account for the newer change to prefer ISO639-2b codes where different.
+- iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. Previously this file was generated using utils/ISO639json_to_CSV.py (see instructions within that file), though this did not account for the newer change to prefer ISO639-2b codes where different.
 - relator.csv contains relator names and codes from the Library of Congress's controlled vocabulary. Update frequency: infrequent (if ever), given the unlikelihood of significant changes. LOC provides a .tsv file [here](https://id.loc.gov/vocabulary/relators.html) that can be adapted.
 
 ArchivesSpace's Bulk Update Spreadsheet is unlikely to change in fundamental structure, but field names may change. Check for other data that could be mapped to Workbench fields. 
@@ -84,15 +84,15 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # Omissions/assumptions/known issues
 
-- This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after Filled_to_WB.py, and filling in the fields: field_resource_type ("Collection"), field_model ("Collection"), title, field_metadata_title. Then move ids up, and use parent_id to reference appropriate parents. Ask CDS for guidance on this.
+- This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after ```aspace-wb-export```, and filling in the fields: field_resource_type ("Collection"), field_model ("Collection"), title, field_metadata_title. Then move ids up, and use parent_id to reference appropriate parents. Ask CDS for guidance on this.
 - This process assumes that you are copying files from the Digital Library Staging Area into a working directory for upload preparation. This is useful as it prevents confusion in the Digital Library Staging Area, in case files are renamed and then accidentally left.
-- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in Validate_Filled.py calling a function in validate.py)
+- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in ```aspace-wb-validate``` calling a function in utils/validate.py)
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
-- Create_ASpace_DOs.py generates Digital Objects you can plug into the ArchivesSpace Bulk Update Spreadsheet. Note that this spreadsheet (at least in the plugin version) expires after 1 week. It will also fail if any of the records were updated in the interface after downloading. If this happens, redownload the spreadsheet to add the output of Create_ASpace_DOs.py.
+- ```aspace-wb-create-dos``` generates Digital Objects you can plug into the ArchivesSpace Bulk Update Spreadsheet. Note that this spreadsheet (at least in the plugin version) expires after 1 week. It will also fail if any of the records were updated in the interface after downloading. If this happens, redownload the spreadsheet to add the output of ```aspace-wb-create-dos```.
 
 # To do
 
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change. Temporary fix was to just edit the iso639.csv file to use 2B for a few languages.
-- To avoid duplication, the functionality of "Create_Blank_Fillable.py" (which is Create_Fillable.py but bypassing any file metadata) could be incorporated into Create_Fillable.py using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
+- To avoid duplication, the functionality of ```aspace-wb-blank``` (which is ```aspace-wb-create-fillable``` but bypassing any file metadata) could be incorporated into ```aspace-wb-create-fillable``` using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
-- reorder output of Create_ASpace_DOs.py so all AS-entry fields are to the right
+- reorder output of ```aspace-wb-create-dos``` so all AS-entry fields are to the right
