@@ -7,12 +7,12 @@ import pandas
 import re
 from argparse import ArgumentParser
 from datetime import datetime
-import default_specs as c
-import utilities.extract_dir as extract_dir
-import utilities.extract_file as extract_file
-import utilities.convert_data as convert_data
-import utilities.use_CSVs as use_CSVs
-import utilities.validate as validate
+import aspace_wb.utils.default_specs as c
+import aspace_wb.utils.extract_dir as extract_dir
+import aspace_wb.utils.extract_file as extract_file
+import aspace_wb.utils.convert_data as convert_data
+import aspace_wb.utils.use_CSVs as use_CSVs
+import aspace_wb.utils.validate as validate
 
 
 '''

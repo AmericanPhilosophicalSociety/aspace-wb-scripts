@@ -4,9 +4,9 @@ from datetime import datetime
 import re
 import pandas
 import os
-import default_specs as c
-import utilities.validate as validate
-import utilities.use_CSVs as use_CSVs
+from . import default_specs as c
+from . import validate
+from . import use_CSVs
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called

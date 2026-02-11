@@ -2,7 +2,8 @@
 metadata extraction from directory
 '''
 import os
-import utilities.convert_data as convert_data
+from . import convert_data
+
 
 def file_count(directorypath, fileextension=""):
     '''

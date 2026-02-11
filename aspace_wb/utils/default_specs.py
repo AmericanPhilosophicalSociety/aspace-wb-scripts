@@ -2,11 +2,12 @@
 File defining constants, Workbench fields, and mappings between different fields
 '''
 import os
-import utilities.use_CSVs as use_CSVs
+from . import use_CSVs
 
 '''
 Locations of files & directories; controlled vocabularies; misc
 '''
+
 
 # directories and files
 FILESTOUPLOAD_DIR = "files_to_upload"

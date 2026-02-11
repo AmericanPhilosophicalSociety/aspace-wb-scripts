@@ -83,13 +83,6 @@ aspace-wb-export = "aspace_wb.cli.filled_to_wb:main"
 aspace-wb-create-dos = "aspace_wb.cli.create_aspace_dos:main"
 aspace-wb-blank = "aspace_wb.cli.create_blank_fillable:main"
 
-[tool.setuptools]
-package-dir = {"" = "."}
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["aspace_wb*"]
-
 [tool.setuptools.package-data]
 aspace_wb = ["data/fields/*.csv", "data/cvs/*.csv"]
 

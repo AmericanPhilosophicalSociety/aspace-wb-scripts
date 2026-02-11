@@ -6,7 +6,7 @@ import sys
 import os
 
 # Add project root to Python path to import original script
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+# sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 def main():
