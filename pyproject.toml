@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "aspace-wb-scripts"
 version = "0.1.0"
@@ -62,18 +58,9 @@ dependencies = [
     "zope.interface==7.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=6.0",
-    "black>=22.0",
-    "flake8>=4.0",
-    "pylint>=2.0",
-]
-
 [project.urls]
 Homepage = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts"
 Repository = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts"
-Documentation = "https://americanphilosophicalsociety.github.io/APS_digitization/metadata/"
 Issues = "https://github.com/americanphilosophicalsociety/aspace-wb-scripts/issues"
 
 [project.scripts]
@@ -83,28 +70,12 @@ aspace-wb-export = "aspace_wb.cli.filled_to_wb:main"
 aspace-wb-create-dos = "aspace_wb.cli.create_aspace_dos:main"
 aspace-wb-blank = "aspace_wb.cli.create_blank_fillable:main"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aspace_wb"]
+
 [tool.setuptools.package-data]
 aspace_wb = ["data/fields/*.csv", "data/cvs/*.csv"]
-
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312']
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-
-[tool.uv.workspace]
-members = [
-    ".",
-]
-
-[tool.uv.sources]
-aspace-wb-scripts = { workspace = true }
-
-[dependency-groups]
-dev = [
-    "aspace-wb-scripts",
-]
