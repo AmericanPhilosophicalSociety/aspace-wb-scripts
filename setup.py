@@ -10,5 +10,5 @@ setup(
     setup_requires=["setuptools_scm"],
     packages=find_packages(),
     include_package_data=True,
-    python_requires=">=3.7",
+    python_requires=">=3.10",
 )

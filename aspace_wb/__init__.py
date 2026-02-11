@@ -6,7 +6,7 @@ CSV files for ingesting files into Islandora 8 using Workbench. It automates met
 extraction from media files and ArchivesSpace Bulk Update Spreadsheets.
 """
 
-__version__ = "1.0.0"
+__version__ = "0.1.0"
 __author__ = "American Philosophical Society"
 __email__ = "digital@amphilsoc.org"
 
