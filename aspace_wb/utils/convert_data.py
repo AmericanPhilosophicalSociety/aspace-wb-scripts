@@ -4,10 +4,10 @@ from datetime import datetime
 import re
 import pandas
 from importlib.resources import files as import_file
-from . import default_specs as c
-from . import validate
-from . import use_CSVs
-from ..data import cvs
+from aspace_wb.utils import default_specs as c
+from aspace_wb.utils import validate
+from aspace_wb.utils import use_CSVs
+from aspace_wb.data import cvs
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called

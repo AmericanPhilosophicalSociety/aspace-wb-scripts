@@ -10,7 +10,7 @@ This could be improved to use argparse
 
 import sys
 import json
-from . import use_CSVs
+from aspace_wb.utils import use_CSVs
 
 filepath = sys.argv[1]
 

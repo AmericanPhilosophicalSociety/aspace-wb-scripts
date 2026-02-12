@@ -20,8 +20,8 @@ TO ADD? validate that DOWNFILLING are valid. warn if empty.
 import os
 import pandas
 from argparse import ArgumentParser
-from ..utils import default_specs as c
-from ..utils import extract_dir, validate
+from aspace_wb.utils import default_specs as c
+from aspace_wb.utils import extract_dir, validate
 
 '''
 Parse command line arguments

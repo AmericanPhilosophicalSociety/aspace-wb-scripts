@@ -1,9 +1,9 @@
 '''
 File defining constants, Workbench fields, and mappings between different fields
 '''
-from . import use_CSVs
+from aspace_wb.utils import use_CSVs
 from importlib.resources import files as import_file
-from ..data import cvs
+from aspace_wb.data import cvs
 
 '''
 Locations of files & directories; controlled vocabularies; misc

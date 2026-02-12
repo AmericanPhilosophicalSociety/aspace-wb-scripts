@@ -2,7 +2,7 @@
 metadata extraction from directory
 '''
 import os
-from . import convert_data
+from aspace_wb.utils import convert_data
 
 
 def file_count(directorypath, fileextension=""):

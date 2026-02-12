@@ -4,7 +4,7 @@ File defining constants, Workbench fields, and mappings between different fields
 
 import os
 from importlib import resources
-from ..utils import use_CSVs
+from aspace_wb.utils import use_CSVs
 
 """
 Locations of files & directories; controlled vocabularies; misc

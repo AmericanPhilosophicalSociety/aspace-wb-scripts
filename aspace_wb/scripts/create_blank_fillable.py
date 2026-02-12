@@ -15,10 +15,10 @@ import re
 from argparse import ArgumentParser
 from importlib.resources import files as import_file
 from datetime import datetime
-from ..utils import default_specs as c
-from ..utils import extract_dir
-from ..utils import use_CSVs
-from ..data import fields
+from aspace_wb.utils import default_specs as c
+from aspace_wb.utils import extract_dir
+from aspace_wb.utils import use_CSVs
+from aspace_wb.data import fields
 
 
 '''

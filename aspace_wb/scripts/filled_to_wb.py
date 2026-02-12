@@ -6,8 +6,8 @@ Assumes a fully valid, checked against Validate_Filled.py, spreadsheet
 import os
 import pandas
 from argparse import ArgumentParser
-from ..utils import default_specs as c
-from ..utils import convert_data, use_CSVs, validate
+from aspace_wb.utils import default_specs as c
+from aspace_wb.utils import convert_data, use_CSVs, validate
 
 
 '''

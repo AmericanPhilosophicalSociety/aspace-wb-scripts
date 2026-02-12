@@ -17,8 +17,8 @@ try:
 except ImportError:
     pandas = None
 import os
-from ..core import specs as c
-from . import extract_dir, extract_file
+from aspace_wb.core import specs as c
+from aspace_wb.utils import extract_dir, extract_file
 
 """
 Functions
@@ -179,7 +179,7 @@ def ISO8601_date(input):
     # (this also would work for any arbitrary string)
     # this is the only value for a date string allowed by ArchivesSpace's date representation in Begin or End field
     input = str(input)
-    date_matches = ["^\d\d\d\d$", "^\d\d\d\d-\d\d$", "^\d\d\d\d-\d\d-\d\d$"]
+    date_matches = [r"^\d\d\d\d$", r"^\d\d\d\d-\d\d$", r"^\d\d\d\d-\d\d-\d\d$"]
     dates_match = False
     for match in date_matches:
         if re.match(match, input):
