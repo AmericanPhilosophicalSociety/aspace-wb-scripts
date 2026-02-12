@@ -8,7 +8,7 @@ extraction from media files and ArchivesSpace Bulk Update Spreadsheets.
 
 __version__ = "0.1.0"
 __author__ = "American Philosophical Society"
-__email__ = "digital@amphilsoc.org"
+__email__ = "cds@amphilsoc.org"
 
 from .core.specs import *
 
