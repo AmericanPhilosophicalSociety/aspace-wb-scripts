@@ -98,7 +98,7 @@ def text_date_to_ISO8601(input):
         }
     # lowercase, strip out square brackets
     input = input.lower()
-    input = re.sub('[\[\]]', '', input)
+    input = re.sub(r'[\[\]]', '', input)
     print(input)
     # check it's not already an ISO8601 date. this eliminates well-formed YYYY, YYYY-MM, YYYY-MM-DD
     if validate.ISO8601_date(input):
@@ -147,7 +147,7 @@ def AS_date_to_WB_date(expression, begin, end):
                 return ("", "undated")
             else:
                 # if it's YYYY-YYYY, change to YYYY/YYYY
-                if re.fullmatch(re.compile('^\d\d\d\d-\d\d\d\d$'), expression):
+                if re.fullmatch(re.compile(r'^\d\d\d\d-\d\d\d\d$'), expression):
                     expression = expression.replace("-","/")
                     return (expression, "")
                 # otherwise put it in text date after changing it to "undated"
