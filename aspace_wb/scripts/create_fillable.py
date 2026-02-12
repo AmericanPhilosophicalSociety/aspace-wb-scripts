@@ -7,12 +7,14 @@ import pandas
 import re
 from argparse import ArgumentParser
 from datetime import datetime
+from importlib.resources import files as import_file
 import aspace_wb.utils.default_specs as c
 import aspace_wb.utils.extract_dir as extract_dir
 import aspace_wb.utils.extract_file as extract_file
 import aspace_wb.utils.convert_data as convert_data
 import aspace_wb.utils.use_CSVs as use_CSVs
 import aspace_wb.utils.validate as validate
+from aspace_wb.data import fields
 
 
 '''
@@ -28,7 +30,10 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
-cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False))
+FIELD_CHOICES = import_file(fields).glob('*.csv')
+FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
+FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
+cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES)
 cl_parser.add_argument('--AS', type=str)
 cl_parser.add_argument('--filefolder', type=str)
 cl_args = cl_parser.parse_args()
@@ -42,7 +47,7 @@ WB_type = cl_args.type
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
     FIELDS_TITLE = cl_args.fields
-    fields_in_use = use_CSVs.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
+    fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
     # validate fields - could move to _Validate function
     # validate fields following type
     if WB_type == 'single':

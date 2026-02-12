@@ -3,24 +3,26 @@
 from datetime import datetime
 import re
 import pandas
-import os
+from importlib.resources import files as import_file
 from . import default_specs as c
 from . import validate
 from . import use_CSVs
+from ..data import cvs
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called
 this could be in default_specs, but it's okay
 '''
 # agents_in_csv has 3 columns: agent, title (of the archival object), refid
-AGENTS_PATH = os.path.join(c.CV_DIR, c.AS_AGENTS_FILENAME)
+# import_file(cvs).joinpath(ISO639_FILENAME)
+AGENTS_PATH = import_file(cvs).joinpath(c.AS_AGENTS_FILENAME)
 AGENTS_AGENTS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 0)
 AGENTS_TITLES = use_CSVs.CSV_col_to_list(AGENTS_PATH, 1)
 AGENTS_REFIDS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 2)
 
 # language
 # CSV is formatted language name, code. get two options for easy lookup.
-LANGUAGES_PATH = os.path.join(c.CV_DIR, c.ISO639_FILENAME)
+LANGUAGES_PATH = import_file(cvs).joinpath(c.ISO639_FILENAME)
 languages_name_first = use_CSVs.two_col_CSV_to_dict(LANGUAGES_PATH)
 languages_code_first = {value: key for key, value in languages_name_first.items()}
 
@@ -285,7 +287,7 @@ def relator_code_to_relator_title(input):
     '''
     unused - code is in relator.csv column 0, title is in 1
     '''
-    return use_CSVs.neighbor_from_value_in_CSV_col(os.path.join(c.CV_DIR, c.RELATOR_CODES_FILENAME), input, 0, 1)
+    return use_CSVs.neighbor_from_value_in_CSV_col(import_file(cvs).joinoath(c.RELATOR_CODES_FILENAME), input, 0, 1)
 
 def remove_linebreaks(input):
     '''

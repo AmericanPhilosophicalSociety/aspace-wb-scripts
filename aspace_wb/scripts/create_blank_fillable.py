@@ -13,10 +13,12 @@ import os
 import pandas
 import re
 from argparse import ArgumentParser
+from importlib.resources import files as import_file
 from datetime import datetime
 from ..utils import default_specs as c
 from ..utils import extract_dir
 from ..utils import use_CSVs
+from ..data import fields
 
 
 '''
@@ -31,7 +33,10 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
-cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False))
+FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
+FIELD_CHOICES = [f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()]
+cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES)
+# cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False))
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
@@ -43,7 +48,7 @@ WB_type = cl_args.type
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
     FIELDS_TITLE = cl_args.fields
-    fields_in_use = use_CSVs.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
+    fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
     # validate fields - could move to _Validate function
     # validate fields following type
     if WB_type == 'single':
