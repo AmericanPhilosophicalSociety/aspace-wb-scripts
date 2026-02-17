@@ -96,3 +96,51 @@ Testing/sample data is currently lacking. This should include sample media for v
 - To avoid duplication, the functionality of ```wb-blank``` (which is ```wb-fillable``` but bypassing any file metadata) could be incorporated into ```wb-fillable``` using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
 - reorder output of ```wb-create-dos``` so all AS-entry fields are to the right
+
+# Contributing
+
+This library is under active development and welcomes contributions. Please work from the existing issues before submitting a pull request.
+
+## Installation for development
+
+Clone the repo for local development:
+
+```bash
+git clone git@github.com:AmericanPhilosophicalSociety/aspace-wb-scripts.git
+cd aspace-wb-scripts
+```
+
+Create a python virtual environment and install the package for local use:
+
+On Windows:
+
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+On Linux/WSL:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the version for local development:
+
+```
+pip install -e .
+```
+
+Create a new git branch for your work, replacing ```new-feature``` with a descriptive branch name:
+
+```
+git branch new-feature
+git checkout new-feature
+```
+
+For using the script, you will need to create the required directories ```files_to_upload``` and ```metadata```:
+
+```
+mkdir files_to_upload
+mkdir metadata
+```
