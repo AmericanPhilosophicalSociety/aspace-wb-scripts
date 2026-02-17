@@ -13,16 +13,17 @@ authors = [
 maintainers = [
     {name = "American Philosophical Society", email = "cds@amphilsoc.org"}
 ]
-keywords = ["archivespace", "islandora", "workbench", "metadata", "digital-library"]
+keywords = ["archivesspace", "islandora", "workbench", "metadata", "digital-library"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Education",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
