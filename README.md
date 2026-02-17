@@ -30,21 +30,21 @@ Example:
 2. Copy your files into /files_to_upload/, and rename them following CDS guidelines. If using the Bulk Update Spreadsheet, name them in such a way that the file order is identical to the row order in the ArchivesSpace spreadsheet.
 3. Run ```wb-fillable``` with appropriate flags:
 ```bash
-python wb-fillable book --fields fields --AS archivesspace_file.xlsx
+wb-fillable book --fields fields --AS archivesspace_file.xlsx
 ```
 4. Check the file that was generated in /metadata/ (including that the ArchivesSpace metadata matches correctly), and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point, you can copy your media files across to the upload server.
 5. Run ```wb-validate```, editing the file and running again if any errors were raised:
 ```bash
-python wb-validate book filled_file.xlsx
+wb-validate book filled_file.xlsx
 ```
 6. Run ```wb-to-wb``` to generate the output Workbench .csv:
 ```bash
-python wb-to-wb book filled_file.xlsx
+wb-to-wb book filled_file.xlsx
 ```
 7. Check the output Workbench .csv (open in Excel/Libreoffice with "text" as data type), and rename and copy this .csv over to the upload server.
 8. Once the Workbench upload is complete, you can get a spreadsheet with fields for attaching ArchivesSpace's Digital Object (either via the Bulk Update Spreadsheet or the staff user interface) by running ```wb-create-dos``` on the .csv that Workbench produces:
 ```bash
-python wb-create-dos workbench_output.csv
+wb-create-dos workbench_output.csv
 ```
 
 If you are filling out a spreadsheet progressively, not based on pre-existing files (e.g. a reference archivist filling out their week's Workbench sheet while scanning), you can instead create a blank spreadsheet with your own fields, to use or adapt as your own template, e.g.:
