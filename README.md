@@ -1,79 +1,247 @@
 # aspace-wb-scripts
 
-Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingesting files into Islandora 8 using [Workbench](https://github.com/mjordan/islandora_workbench). It can autofill metadata from the media to be uploaded, as well as from metadata within ArchivesSpace's Bulk Update Spreadsheet. It aims to reduce the need for memorization of some Workbench vocabularies, and to reduce or remove the need for copy-pasting between systems.
+Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingest into Islandora 8 using [Workbench](https://github.com/mjordan/islandora_workbench). Scripts are provided for the following tasks:
+
++ Generate a simplified, fillable version of a Workbench sheet with some data prepopulated (from your media files and/or an ArchivesSpace bulk update spreadsheet)
++ Validate that you have filled in your simplified Workbench sheet correctly
++ Convert your simplified Workbench sheet into a final Workbench sheet in the format required for Digital Library ingest
++ After your files have been ingested, use your Workbench output CSV to create ArchivesSpace digital objects
+
+The scripts aim to reduce the need for memorization of some Workbench vocabularies, and to reduce or remove the need for copy-pasting between systems.
 
 For fuller explanation of the Workbench fields, see the [APS Digital Library Metadata Guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/).
 
 # Installation
 
-(to be written! In short:
-- clone from Github
-- create Python virtual environment using Python3.7 or higher (which version exactly? we need dictionaries to maintain order, hence 3.7. this was written using Python3.11)
-- install requirements.txt into this venv
-- create empty directories 'files_to_upload' and 'metadata')
+[copied from David's pull request instructions, may need some cleanup depending on how we decide this should work for users]
+
+In your terminal, navigate to your Desktop and run the following command to clone this code from Github.
+
+Clone the repo for local development:
+
+```bash
+git clone git@github.com:AmericanPhilosophicalSociety/aspace-wb-scripts.git
+cd aspace-wb-scripts
+```
+
+Create a python virtual environment and install the package for local use:
+
+On Windows:
+
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+On Linux/WSL:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the version for local development:
+
+```
+pip install -e .
+```
+
+Create the required directories ```files_to_upload``` and ```metadata```:
+
+```
+mkdir files_to_upload
+mkdir metadata
+```
+
+## Get updates
+
+To get the most recent version of this code, ```cd``` to the directory containing your code and run:
+
+```
+git pull
+```
 
 # Usage
 
-There are four files reflecting a typical order of usage:
-- Create_Fillable.py creates a .xlsx file containing Workbench field names, derived from files that are to be uploaded. Optional flags:
-    - --fields, recommended: name (no .csv extension) of fields file to use. These lists are customizable.
-    - --AS, recommended: name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file.
-    - --filefolder: alternate directory for the location of media files to upload. This is usually only necessary when the files are too big to copy over into the local /files_to_upload/ directory, so may instead be on an external harddrive or alternate server. Use forwardslashes, e.g.: E:/bigbookfiles
-- Validate_Filled.py validates a few of the fields in the filled .xlsx file.
-- Filled_to_WB.py exports the .csv file for use by Workbench from the filled .xlsx file
-- Create_ASpace_DOs.py creates information to populate ArchivesSpace Digital Objects from Workbench's output .csv
+## Access appropriate directory
 
-The argument 'book' or 'single' refers to the Workbench upload type and is a required argument (after the name of the Python file) in Create_Fillable.py, Validate_Filled.py and Filled_to_WB.py.
+If you haven't done so already, ```cd``` into the directory where the package is installed, filling in your username and the appropriate path. Then activate your virtual environment.
 
-Example:
-1. If using ArchivesSpace Bulk Update Spreadsheet to get metadata: First, download the sheet by going to the collection node on the staff side and clicking "More" -> "Bulk Update Spreadsheet". Download the series you need, and include all fields. Next put this into /metadata/, unprotect the sheet, and remove all rows except the first two rows (field names and field machine names) and ONE row for each object to be uploaded.
-2. Copy your files into /files_to_upload/, and rename them following CDS guidelines. If using the Bulk Update Spreadsheet, name them in such a way that the file order is identical to the row order in the ArchivesSpace spreadsheet.
-3. Run Create_Fillable.py with appropriate flags:
+In Windows PowerShell:
+
 ```
-python Create_Fillable.py book --fields fields --AS archivesspace_file.xlsx
-```
-4. Check the file that was generated in /metadata/ (including that the ArchivesSpace metadata matches correctly), and fill in remaining fields. You can delete columns you don't need, or leave them blank. At this point, you can copy your media files across to the upload server.
-5. Run Validate_Filled.py, editing the file and running again if any errors were raised:
-```
-python Validate_Filled.py book filled_file.xlsx
-```
-6. Run Filled_to_WB.py to generate the output Workbench .csv:
-```
-python Filled_to_WB.py book filled_file.xlsx
-```
-7. Check the output Workbench .csv (open in Excel/Libreoffice with "text" as data type), and rename and copy this .csv over to the upload server.
-8. Once the Workbench upload is complete, you can get a spreadsheet with fields for attaching ArchivesSpace's Digital Object (either via the Bulk Update Spreadsheet or the staff user interface) by running Create_ASpace_DOs.py on the .csv that Workbench produces:
-```
-python Create_ASpace_DOs.py workbench_output.csv
+cd C:\Users\username\Desktop\aspace-wb-scripts
+.venv\Scripts\activate
 ```
 
-If you are filling out a spreadsheet progressively, not based on pre-existing files (e.g. a reference archivist filling out their week's Workbench sheet while scanning), you can instead create a blank spreadsheet with your own fields, to use or adapt as your own template, e.g.:
+In VSCode terminal or Git Bash:
+
 ```
-python Create_Blank_Fillable.py book --fields fields
+cd C:/Users/username/Desktop/aspace-wb-scripts
+.venv/Scripts/activate
 ```
-You could run steps 5 onwards on your finished spreadsheet. This however will skip checks on the file names, extensions, etc., will not fill the related fields automatically, and Validate_Filled.py does not check these autogenerated fields. An output from this with all fields, made on 2026-01-07, is provided as: blank_all_fields_template.xlsx
+
+## Prepare necessary files
+
+**If you want to create a Workbench sheet for files that have already been digitized** (recommended):
+
++ Copy your media files into ```files_to_upload```. Do NOT run the script directly on files in the Digital Library Staging Area.
++ Your files should be named according to [CDS guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/#file).
+
+(If you would rather create a Workbench sheet only from ArchivesSpace data, skip this step. If your files are too large to copy, see below for how to specify an alternate file path.)
+
+**If you want to populate your Workbench sheet with data from ArchivesSpace** (also recommended):
+
++ Download an ArchivesSpace bulk update spreadsheet: in the staff interface on ArchivesSpace, find the collection you're working on and click "More" -> "Bulk Update Spreadsheet". Select as many series as you want to include. Under "Column types to include in spreadsheet," leave everything checked. Click "Download Spreadsheet."
++ In Excel, unprotect the sheet. Keep the first two rows (field human-readable names and field machine names), and one row for each object you will be ingesting. Delete any additional rows.
+    + **Note**: the row order in this spreadsheet must be identical to the file order in files_to_upload.
++ Move your revised bulk update spreadsheet into ```/metadata```.
+
+## Run scripts
+
+This code provides you with a set of command line utilities that can be used to perform various Workbench-related tasks. These are designed to be used in sequence.
+
+Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```---fields``` or ```--filefolder``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
+
+### Create fillable spreadsheet (```wb-fillable``` or ```wb-blank```)
+
+Creates a simplified version of a Workbench spreadsheet, with some data prepopulated. Data can be pulled from TIF/video/audio files; an ArchivesSpace bulk update spreadsheet; or a combination of the two.
+
+| Information | Acceptable input | Required? | Flag | Example
+| --- | --- | --- | --- | --- |
+| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | |  book |
+| Fields to include | Name of a .csv file containing a list of fields to include. Omit the .csv extension. You can create your own custom list (see below) or use one of the preset options: ```example_minimum_book```, ```example_minimum_single```, ```cnairaudio```, ```cnairbook```, or ```cnairimage```. If no list of fields is specified, all valid Workbench fields will be included. | Recommended | ```--fields```  | example_minimum_book |
+| Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file | Recommended | ```--AS```  | update.xlsx
+| Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround them in quotes. | No | ```--filefolder```  | C:/Users/yshiroma/Desktop/"Files to Upload" |
+
+Example command with minimum required information:
+
+```bash
+wb-fillable book
+```
+
+Example command with all flags:
+
+```bash
+wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --filefolder C:/Users/username/Desktop/"Folder Name"
+```
+
+**To create a blank spreadsheet with a particular set of fields,** run the following command:
+
+```bash
+wb-blank book --fields fields_file 
+```
+
+Check in ```/metadata``` that your output has been created successfully. It should be named ```output_wb-fillable``` or ```output_wb-blank```, depending on which script you used.
+
+### Manually fill spreadsheet
+
+Depending on your input, different Workbench fields will be prepopulated in ```output_wb-fillable```. Your spreadsheet will also include a row of help text below the field names indicating what information needs to be entered and which values have been auto-generated.
+
+Fill out the remaining fields according to standard Workbench guidelines, with a few exceptions:
+
++ ```id```, ```parent_id```, ```field_weight```, ```field_display_hints```, and ```field_metadata_title``` are omitted in ```output_wb_fillable``` because they will be filled in automatically later by ```wb-to-wb```
++ For any field marked "Fills down," you can fill in a value only once and it will be auto-filled to any blank cell below it in that column
++ ```field_language``` can be entered as an ISO639 language name or code
++ ```field_linked_agent``` is broken out into ```field_linked_agent_NAME```, ```field_linked_agent_ROLE```, and ```field_linked_agent_TYPE```, making it possible to enter these pieces of information separately. If there are multiple linked agents, entries should be pipe-separated.
+
+For example, consider the following ```field_linked_agent``` entry from a standard Workbench sheet:
+
+> relators:cre:person:Nussbaum, Martha, 1947-|relators:pbl:corporate_body:American Philosophical Society
+
+The examples below show how this same data would be entered into ```output_wb-fillable```.
+
+| Field | Description | Example |
+| --- | --- | --- |
+| ```field_linked_agent_NAME``` | Name, in Library of Congress subject heading format | Nussbaum, Martha, 1947-\|American Philosophical Society |
+| ```field_linked_agent_ROLE``` | Relator code, from list of Default Relationship Types | cre\|pbl |
+| ```field_linked_agent_TYPE``` | Type of linked agent (```person```, ```corporate_body```, or ```family```), or an abbreviation (```p```, ```c```, or ```f```). If left blank, all entires are assumed to be persons. | person\|corporate_body |
+
+
+### Validate spreadsheet (```wb-validate```)
+
+Validates that certain fields have been entered correctly in ```output_wb-fillable```.
+
+| Information | Acceptable input | Required? | Example |
+| --- | --- | --- | --- |
+| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes |  book |
+| Name of your simplified workbench sheet | Name (with .xlsx extension) of your simplified Workbench sheet | Yes |  output_wb-filled.xlsx |
+
+Run ```wb-validate```:
+
+```bash
+wb-validate book output_wb-filled.xlsx
+```
+
+This process will check the following:
+
++ All field names are valid
++ Titles are unique
++ Titles are given a URL alias when appropriate
++ Relator codes and linked agent types are valid, and match the number of names listed in ```field_linked_agent_NAME```
++ Dates in ```field_edtf_date_created``` are valid
++ Correct control terms are used in ```field_cnair_subject``` and ```field_language```
+
+Any errors will be printed to the console for you to fix manually. This script does NOT output any new files.
+
+
+### Convert simplified Workbench sheet to final Workbench sheet (```wb-to-wb```)
+
+Creates a .csv file for use by Workbench from the filled .xlsx file.
+
+| Information | Acceptable input | Required? | Example
+| --- | --- | --- | --- |
+| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes |  book |
+| Name of your validated, simplified Workbench sheet | File name (with .xlsx extension) | Yes |  output_wb-filled.xlsx |
+
+Run ```wb-to-wb``` to generate the output Workbench .csv:
+
+```bash
+wb-to-wb book output_wb-filled.xlsx
+```
+
+This will output a file titled ```output_wb-to-wb.csv``` in the ```/metadata``` directory. Check this output by opening it in Google Sheets, Excel, or your code editor. If everything looks good, you're ready to copy your .csv and media files over to the Digital Library server, following the standard ingest process.
+
+**Note**: This process assumes that you will be adding objects to existing nodes within the Digital Library. If you are creating a new collection instead, you will need to manually enter it then adjust the values in ```id``` and ```parent_id```. See the [Digital Library metadata guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/#parent) for more information.
+
+### Create ArchivesSpace digital objects (```wb-create-dos```)
+
+After your media files have been ingested, use your Workbench output CSV to generate the metadata needed to create digital objects in ArchivesSpace.
+
+| Information | Acceptable input | Required? | Example
+| --- | --- | --- | --- |
+| Name of your Workbench output CSV | File name (with .csv extension) | Yes | 2026-02-13_output_YDS.csv |
+
+Run the following command:
+
+```bash
+wb-create-dos workbench_output.csv
+```
+
+This will output a file titled ```output_wb-create-dos.csv``` in the ```/metadata``` directory. You can then copy/paste information from this CSV into an ArchivesSpace bulk update spreadsheet to create digital object links. For full guidelines, see [here](https://americanphilosophicalsociety.github.io/APS_digitization/digitization/#instructions-for-archivesspace).
+
+**Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the spreadsheet.
 
 # User customization
 
-The /fields/ directory contains .csv files that are lists of Workbench fields that can be used by Create_Fillable.py. This is highly recommended, as without these as called by the --fields flag, every available field will be output. Each project, department or individual user can create their own lists of fields for their use. It is recommended to have different lists of fields for each Workbench upload type (book/single) as well as optionally for different media within single (audio, video, photos etc.). See existing examples.
+The ```/fields``` directory contains .csv files with lists of Workbench fields required for differnt upload types (e.g. book or single) and different media types (e.g. audio or image). These are selected by the ```--fields``` in ```workbench-fillable``` and ```workbench-blank```.
 
-To create a new set of fields:
-- Duplicate and rename "example_minimum.book.csv" or "example_minimum_single.csv" within /fields/. Keep the csv extension. These files contain the minimum fields required when running Create_Fillable.py, but not likely the minimum required by a CDS project.
-- Add any other fields you need, from CDS's full listing of fields
-- Rearrange them to your liking.
+To create your own customized list of fields, follow these instructions:
 
-Note that any fields omitted will not be autofilled from ArchivesSpace's spreadsheet. See the function '_AS_metadata_to_WB_fields' in Create_Fillable.py for which fields are attempted.
+- Duplicate and rename "example_minimum.book.csv" or "example_minimum_single.csv". Keep the .csv extension. These files contain the minimum fields required when running ```wb-fillable```.
+- Add any other fields you need and rearrange to your liking.
+
+**Note**: when auto-filling data from an ArchivesSpace bulk update spreadsheet, only fields included in your list can be auto-filled. See the function '_AS_metadata_to_WB_fields' in ```wb-fillable``` for which fields are attempted.
 
 # Maintenance
 
-Any new Workbench fields should be added to default_specs.py:
+Any new Workbench fields should be added to ```utilities/default_specs.py```:
 - Add the field name, and optional description, as a tuple to WB_FIELDS_ORDERED_WITH_DESCRIPTION. Without being here, the presence of these fields will cause an error.
 - If these fields are required, add them to the appropriate previous WB_FIELDS_ tuples
 
 There are a few controlled vocabularies within /CVs/ that require occasional updates, in decreasing order of frequency:
 - agents_in_AS.csv contains a row for every single ArchivesSpace Archival Object that uses an Agent. This is formatted as: name, archival_object_title, archival_object_ref_id. This can be exported using a custom report in ArchivesSpace. Update frequency: approximately monthly, to reflect new/updated finding aid data.
 - cnair_subject.csv is a list of CNAIR subjects (subject terms only). The main vocabulary is at [Airtable](https://airtable.com/apph1jZcKY5ZIa42M/shrmPmyg5ZOOtyTWt) and CNAIR staff can export a .csv. Individual changes could also be hand-edited. Update frequency: whenever CNAIR changes its subjects.
-- iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. Previously this file was generated using /utilities/ISO639json_to_CSV.py (see instructions within that file), though this did not account for the newer change to prefer ISO639-2b codes where different.
+- iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. Previously this file was generated using utils/ISO639json_to_CSV.py (see instructions within that file), though this did not account for the newer change to prefer ISO639-2b codes where different.
 - relator.csv contains relator names and codes from the Library of Congress's controlled vocabulary. Update frequency: infrequent (if ever), given the unlikelihood of significant changes. LOC provides a .tsv file [here](https://id.loc.gov/vocabulary/relators.html) that can be adapted.
 
 ArchivesSpace's Bulk Update Spreadsheet is unlikely to change in fundamental structure, but field names may change. Check for other data that could be mapped to Workbench fields. 
@@ -84,15 +252,54 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # Omissions/assumptions/known issues
 
-- This process assumes that a user is adding objects to existing nodes within the Digital Library. Creating a new collection node requires modifying the output Workbench .csv file after Filled_to_WB.py, and filling in the fields: field_resource_type ("Collection"), field_model ("Collection"), title, field_metadata_title. Then move ids up, and use parent_id to reference appropriate parents. Ask CDS for guidance on this.
-- This process assumes that you are copying files from the Digital Library Staging Area into a working directory for upload preparation. This is useful as it prevents confusion in the Digital Library Staging Area, in case files are renamed and then accidentally left.
-- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in Validate_Filled.py calling a function in validate.py)
+- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in ```wb-validate``` calling a function in utils/validate.py)
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
-- Create_ASpace_DOs.py generates Digital Objects you can plug into the ArchivesSpace Bulk Update Spreadsheet. Note that this spreadsheet (at least in the plugin version) expires after 1 week. It will also fail if any of the records were updated in the interface after downloading. If this happens, redownload the spreadsheet to add the output of Create_ASpace_DOs.py.
 
 # To do
 
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change. Temporary fix was to just edit the iso639.csv file to use 2B for a few languages.
-- To avoid duplication, the functionality of "Create_Blank_Fillable.py" (which is Create_Fillable.py but bypassing any file metadata) could be incorporated into Create_Fillable.py using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
+- To avoid duplication, the functionality of ```wb-blank``` (which is ```wb-fillable``` but bypassing any file metadata) could be incorporated into ```wb-fillable``` using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
-- reorder output of Create_ASpace_DOs.py so all AS-entry fields are to the right
+- reorder output of ```wb-create-dos``` so all AS-entry fields are to the right
+
+# Contributing
+
+This library is under active development and welcomes contributions. Please work from the existing issues before submitting a pull request.
+
+## Installation for development
+
+Clone the repo for local development:
+
+```bash
+git clone git@github.com:AmericanPhilosophicalSociety/aspace-wb-scripts.git
+cd aspace-wb-scripts
+```
+
+Create a python virtual environment and install the package for local use:
+
+On Windows:
+
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+On Linux/WSL:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the version for local development:
+
+```
+pip install -e .
+```
+
+Create a new git branch for your work, replacing ```new-feature``` with a descriptive branch name:
+
+```
+git branch new-feature
+git checkout new-feature
+```
+
