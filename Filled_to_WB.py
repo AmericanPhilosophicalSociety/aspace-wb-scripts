@@ -36,8 +36,6 @@ FILLED_FILENAME = cl_args.filled_file
 # check existence
 if not os.path.exists(os.path.join(c.METADATA_DIR, FILLED_FILENAME)):
     raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
-# create output filename from this
-WB_FILENAME = os.path.splitext(FILLED_FILENAME)[0] + "_wb-to-wb.csv"
 
 print('... command line arguments parsed ...')
 
@@ -215,9 +213,23 @@ print("... fields rearranged.")
 '''
 Export our WB csv
 '''
+# create output filename
+WB_FILENAME = f"{os.path.splitext(FILLED_FILENAME)[0]}_wb-to-wb"
+FILE_EXTENSION = ".csv"
 
-use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
-print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, WB_FILENAME)}")
+# if file already exists, append a counter to prevent overwriting
+while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION}")):
+    filename_split = WB_FILENAME.split("_")
+    if filename_split[-1].isdigit():
+        counter = int(filename_split[-1]) + 1
+        WB_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+    else:
+        WB_FILENAME += "_2"
+
+FILENAME_FULL = f"{WB_FILENAME}{FILE_EXTENSION}"
+
+use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILENAME_FULL))
+print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILENAME_FULL)}")
 
 '''
 Post-completion reminders to user
