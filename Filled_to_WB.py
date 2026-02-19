@@ -37,7 +37,7 @@ FILLED_FILENAME = cl_args.filled_file
 if not os.path.exists(os.path.join(c.METADATA_DIR, FILLED_FILENAME)):
     raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 # create output filename from this
-WB_FILENAME = os.path.splitext(FILLED_FILENAME)[0] + "_WB-OUTPUT.csv"
+WB_FILENAME = os.path.splitext(FILLED_FILENAME)[0] + "_wb-to-wb.csv"
 
 print('... command line arguments parsed ...')
 

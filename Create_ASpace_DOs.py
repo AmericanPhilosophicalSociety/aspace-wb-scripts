@@ -24,9 +24,6 @@ NODES_FILE = cl_args.nodes_file
 if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
     raise OSError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
 
-# create output filename
-OUTPUT_FILENAME = os.path.splitext(NODES_FILE)[0] + "_NODES-OUTPUT.xlsx"
-
 print("... command line arguments okay ...")
 
 '''
@@ -84,5 +81,19 @@ if 'url_alias' in nodes_dict:
 Generate output xlsx
 '''
 output_pandas_DF = pandas.DataFrame(data=output_dict)
-output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, OUTPUT_FILENAME), index=False)
-print(f'Done. Created file: {os.path.join(c.METADATA_DIR, OUTPUT_FILENAME)}')
+
+# create output filename
+OUTPUT_FILENAME = f"{os.path.splitext(NODES_FILE)[0]}_wb-create-dos"
+OUTPUT_EXTENSION = ".xlsx"
+
+# if file already exists, append a counter to prevent overwriting
+while os.path.exists(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}")):
+    filename_split = OUTPUT_FILENAME.split("_")
+    if filename_split[-1].isdigit():
+        counter = int(filename_split[-1]) + 1
+        OUTPUT_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+    else:
+        OUTPUT_FILENAME += "_1"
+
+output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"), index=False)
+print(f'Done. Created file: {os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}")}')

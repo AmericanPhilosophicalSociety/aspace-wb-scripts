@@ -96,12 +96,12 @@ if cl_args.filefolder:
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
 
-# make output filename based on AS or just fields_in_use
-TIME = datetime.now().strftime("%Y%m%d_%H-%M-%S")
+# make output filename, using bulk update sheet file prefix if available
 if use_AS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
+    FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
 else:
-    FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
+    FILE_PREFIX = "output"
+FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable.xlsx"
 
 
 print('... command line arguments parsed ...')
