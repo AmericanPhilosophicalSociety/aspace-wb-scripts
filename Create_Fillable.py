@@ -96,14 +96,6 @@ if cl_args.filefolder:
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
 
-# make output filename, using bulk update sheet file prefix if available
-if use_AS:
-    FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
-else:
-    FILE_PREFIX = "output"
-FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable.xlsx"
-
-
 print('... command line arguments parsed ...')
 
 '''
@@ -433,8 +425,26 @@ https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
 Instead, opted to just format the description row
 
 '''
+# make output filename, using bulk update sheet file prefix if available
+if use_AS:
+    FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
+else:
+    FILE_PREFIX = "output"
+FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable"
+FILE_EXTENSION = ".xlsx"
+
+
+# if file already exists, add a counter to stop it from being overwritten
+while os.path.exists(os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}")):
+    filename_split = FILLABLE_FILENAME.split("_")
+    if filename_split[-1].isdigit():
+        counter = int(filename_split[-1]) + 1
+        FILLABLE_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+    else:
+        FILLABLE_FILENAME += "_2"
+        
 pd_ExcelWriter = pandas.ExcelWriter(
-    os.path.join(c.METADATA_DIR, FILLABLE_FILENAME),
+    os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
     engine="xlsxwriter"
 )
 output_pd_dataframe.to_excel(

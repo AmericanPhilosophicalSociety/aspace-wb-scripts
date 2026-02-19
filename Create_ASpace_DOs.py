@@ -93,7 +93,7 @@ while os.path.exists(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXT
         counter = int(filename_split[-1]) + 1
         OUTPUT_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
     else:
-        OUTPUT_FILENAME += "_1"
+        OUTPUT_FILENAME += "_2"
 
 output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"), index=False)
 print(f'Done. Created file: {os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}")}')
