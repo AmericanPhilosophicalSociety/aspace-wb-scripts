@@ -110,7 +110,7 @@ Creates a simplified version of a Workbench spreadsheet, with some data prepopul
 | --- | --- | --- | --- | --- |
 | Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | |  book |
 | Fields to include | Name of a .csv file containing a list of fields to include. Omit the .csv extension. You can create your own custom list (see below) or use one of the preset options: ```example_minimum_book```, ```example_minimum_single```, ```cnairaudio```, ```cnairbook```, or ```cnairimage```. If no list of fields is specified, all valid Workbench fields will be included. | Recommended | ```--fields```  | example_minimum_book |
-| Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace Bulk Update Spreadsheet file | Recommended | ```--AS```  | update.xlsx
+| Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace bulk update spreadsheet file | Recommended | ```--AS```  | update.xlsx
 | Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround them in quotes. | No | ```--filefolder```  | C:/Users/yshiroma/Desktop/"Files to Upload" |
 
 Example command with minimum required information:
@@ -131,7 +131,7 @@ wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --filefolder 
 wb-blank book --fields fields_file 
 ```
 
-Check in ```/metadata``` that your output has been created successfully. It should be named ```output_wb-fillable``` or ```output_wb-blank```, depending on which script you used.
+Check in ```/metadata``` that your output has been created successfully. It should be named ```output_wb-fillable``` or ```output_wb-blank```, depending on which script you used (with 'output' replaced by the name of your ArchivesSpace bulk update sheet if you provided one).
 
 ### Manually fill spreadsheet
 
@@ -199,7 +199,7 @@ Run ```wb-to-wb``` to generate the output Workbench .csv:
 wb-to-wb book output_wb-filled.xlsx
 ```
 
-This will output a file titled ```output_wb-to-wb.csv``` in the ```/metadata``` directory. Check this output by opening it in Google Sheets, Excel, or your code editor. If everything looks good, you're ready to copy your .csv and media files over to the Digital Library server, following the standard ingest process.
+This will output a file titled ```output_wb-to-wb.csv``` in the ```/metadata``` directory (with 'output' replaced by the name of your original input file). Check this output by opening it in Google Sheets, Excel, or your code editor. If everything looks good, you're ready to copy your .csv and media files over to the Digital Library server, following the standard ingest process.
 
 **Note**: This process assumes that you will be adding objects to existing nodes within the Digital Library. If you are creating a new collection instead, you will need to manually enter it then adjust the values in ```id``` and ```parent_id```. See the [Digital Library metadata guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/#parent) for more information.
 
@@ -217,7 +217,7 @@ Run the following command:
 wb-create-dos workbench_output.csv
 ```
 
-This will output a file titled ```output_wb-create-dos.csv``` in the ```/metadata``` directory. You can then copy/paste information from this CSV into an ArchivesSpace bulk update spreadsheet to create digital object links. For full guidelines, see [here](https://americanphilosophicalsociety.github.io/APS_digitization/digitization/#instructions-for-archivesspace).
+This will output a file titled ```output_wb-create-dos.csv``` in the ```/metadata``` directory (with 'output' replaced by the name of your original input file). You can then copy/paste information from this CSV into an ArchivesSpace bulk update spreadsheet to create digital object links. For full guidelines, see [here](https://americanphilosophicalsociety.github.io/APS_digitization/digitization/#instructions-for-archivesspace).
 
 **Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the spreadsheet.
 
