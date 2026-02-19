@@ -16,13 +16,13 @@ Parse command line arguments
 print('Checking command line arguments - expected: [nodes csv file] ...')
 
 cl_parser = argparse.ArgumentParser()
-cl_parser.add_argument('nodes_file', type=str)
+cl_parser.add_argument('nodes_file', type=str, help="Name of your Workbench output CSV (with .csv extension)")
 cl_args = cl_parser.parse_args()
 NODES_FILE = cl_args.nodes_file
 
 # check existence of file
 if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
-    raise OSError("Nodes file " + str(NODES_FILE) + " not found in directory " + str(c.METADATA_DIR))
+    raise OSError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
 
 # create output filename
 OUTPUT_FILENAME = os.path.splitext(NODES_FILE)[0] + "_NODES-OUTPUT.xlsx"
@@ -85,4 +85,4 @@ Generate output xlsx
 '''
 output_pandas_DF = pandas.DataFrame(data=output_dict)
 output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, OUTPUT_FILENAME), index=False)
-print('Done. Created file: ' + os.path.join(c.METADATA_DIR, OUTPUT_FILENAME))
+print(f'Done. Created file: {os.path.join(c.METADATA_DIR, OUTPUT_FILENAME)}')

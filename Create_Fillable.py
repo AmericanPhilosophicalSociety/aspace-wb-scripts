@@ -3,9 +3,10 @@ Creates a fillable xlsx file
 '''
 
 import os
+import sys
 import pandas
 import re
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 import default_specs as c
 import utilities.extract_dir as extract_dir
@@ -27,10 +28,11 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 # parse arguments - see above for listing
 
 cl_parser = ArgumentParser()
-cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
-cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False))
-cl_parser.add_argument('--AS', type=str)
-cl_parser.add_argument('--filefolder', type=str)
+cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
+cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False), help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
+cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
+cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
@@ -79,7 +81,7 @@ if cl_args.AS:
     AS_FILENAME = cl_args.AS
     # confirm the file exists as stated
     if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
-        raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + AS_FILENAME + ", which is a renamed ArchivesSpace Bulk Update spreadsheet. Check.")
+        raise OSError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
 else:
     use_AS = False
 
@@ -88,9 +90,9 @@ if cl_args.filefolder:
     FILES_DIR = cl_args.filefolder
     # confirm the directory exists
     if not os.path.exists(FILES_DIR):
-        raise OSError("Folder " + FILES_DIR + " does not appear to exist.")
+        raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
     if not os.path.isdir(FILES_DIR):
-        raise OSError("Path " + FILES_DIR + " is not a directory.")
+        raise OSError("The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
 
@@ -180,7 +182,7 @@ if use_AS:
     # confirm that the list of media matches the number of records in AS
     records_count = AS_pd_dataframe.shape[0]
     if len(media_list) != records_count:
-        raise OSError("ArchivesSpace file has " + str(records_count) + " records. " + FILES_DIR + " has " + str(len(media_list)) + " directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
+        raise OSError(f"ArchivesSpace file has {str(records_count)} records. {FILES_DIR} has {str(len(media_list))} directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
     print('... ArchivesSpace file loaded okay ...')
 else:
     records_count = len(media_list)

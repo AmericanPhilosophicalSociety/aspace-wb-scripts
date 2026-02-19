@@ -32,8 +32,8 @@ Parse command line arguments
 print('Checking command line arguments - expected: [single/book] [filled file.xlsx] ...')
 
 cl_parser = ArgumentParser()
-cl_parser.add_argument('type', type=str, choices=('single', 'book'))
-cl_parser.add_argument('filled_file', type=str)
+cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
+cl_parser.add_argument('filled_file', type=str, help="Name (with .xlsx extension) of your simplified Workbench sheet")
 cl_args = cl_parser.parse_args()
 
 # assign arguments
@@ -44,7 +44,7 @@ WB_type = cl_args.type
 # FILLED_FILENAME from filled_file
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
-    raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + FILLED_FILENAME + ". Check.")
+    raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 
 print("... command line arguments okay.")
 
@@ -110,7 +110,7 @@ if "title" in INPUT_FIELDS:
         print("Checking lengths of titles...")
         for title in titles:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
-                print("!! Warning - if a Book, the following title needs a url_alias under " + str(c.BOOK_TITLE_URL_ALIAS_LENGTH) + " characters:" + str(title))
+                print(f"!! Warning - if a Book, the following title needs a url_alias under {str(c.BOOK_TITLE_URL_ALIAS_LENGTH)} characters: {str(title)}")
 
 
 # field_linked_agent fields
