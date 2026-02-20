@@ -3,24 +3,26 @@
 from datetime import datetime
 import re
 import pandas
-import os
-import default_specs as c
-import utilities.validate as validate
-import utilities.use_CSVs as use_CSVs
+from importlib.resources import files as import_file
+from aspace_wb.utils import default_specs as c
+from aspace_wb.utils import validate
+from aspace_wb.utils import use_CSVs
+from aspace_wb.data import cvs
 
 '''
 on import, get our big CSVs so they're reusable rather than re-loaded into memory every time the function is called
 this could be in default_specs, but it's okay
 '''
 # agents_in_csv has 3 columns: agent, title (of the archival object), refid
-AGENTS_PATH = os.path.join(c.CV_DIR, c.AS_AGENTS_FILENAME)
+# import_file(cvs).joinpath(ISO639_FILENAME)
+AGENTS_PATH = import_file(cvs).joinpath(c.AS_AGENTS_FILENAME)
 AGENTS_AGENTS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 0)
 AGENTS_TITLES = use_CSVs.CSV_col_to_list(AGENTS_PATH, 1)
 AGENTS_REFIDS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 2)
 
 # language
 # CSV is formatted language name, code. get two options for easy lookup.
-LANGUAGES_PATH = os.path.join(c.CV_DIR, c.ISO639_FILENAME)
+LANGUAGES_PATH = import_file(cvs).joinpath(c.ISO639_FILENAME)
 languages_name_first = use_CSVs.two_col_CSV_to_dict(LANGUAGES_PATH)
 languages_code_first = {value: key for key, value in languages_name_first.items()}
 
@@ -96,7 +98,7 @@ def text_date_to_ISO8601(input):
         }
     # lowercase, strip out square brackets
     input = input.lower()
-    input = re.sub('[\[\]]', '', input)
+    input = re.sub(r'[\[\]]', '', input)
     print(input)
     # check it's not already an ISO8601 date. this eliminates well-formed YYYY, YYYY-MM, YYYY-MM-DD
     if validate.ISO8601_date(input):
@@ -145,7 +147,7 @@ def AS_date_to_WB_date(expression, begin, end):
                 return ("", "undated")
             else:
                 # if it's YYYY-YYYY, change to YYYY/YYYY
-                if re.fullmatch(re.compile('^\d\d\d\d-\d\d\d\d$'), expression):
+                if re.fullmatch(re.compile(r'^\d\d\d\d-\d\d\d\d$'), expression):
                     expression = expression.replace("-","/")
                     return (expression, "")
                 # otherwise put it in text date after changing it to "undated"
@@ -285,7 +287,7 @@ def relator_code_to_relator_title(input):
     '''
     unused - code is in relator.csv column 0, title is in 1
     '''
-    return use_CSVs.neighbor_from_value_in_CSV_col(os.path.join(c.CV_DIR, c.RELATOR_CODES_FILENAME), input, 0, 1)
+    return use_CSVs.neighbor_from_value_in_CSV_col(import_file(cvs).joinoath(c.RELATOR_CODES_FILENAME), input, 0, 1)
 
 def remove_linebreaks(input):
     '''

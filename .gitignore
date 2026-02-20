@@ -3,3 +3,6 @@ __pycache__
 files_to_upload
 metadata
 files_uploaded
+uv.lock
+.env
+dist/
