@@ -8,12 +8,14 @@ import pandas
 import re
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
-import default_specs as c
-import utilities.extract_dir as extract_dir
-import utilities.extract_file as extract_file
-import utilities.convert_data as convert_data
-import utilities.use_CSVs as use_CSVs
-import utilities.validate as validate
+from importlib.resources import files as import_file
+import aspace_wb.utils.default_specs as c
+import aspace_wb.utils.extract_dir as extract_dir
+import aspace_wb.utils.extract_file as extract_file
+import aspace_wb.utils.convert_data as convert_data
+import aspace_wb.utils.use_CSVs as use_CSVs
+import aspace_wb.utils.validate as validate
+from aspace_wb.data import fields
 
 
 '''
@@ -33,6 +35,13 @@ cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIE
 cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
 cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
 
+cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
+FIELD_CHOICES = import_file(fields).glob('*.csv')
+FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
+FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
+cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES)
+cl_parser.add_argument('--AS', type=str)
+cl_parser.add_argument('--filefolder', type=str)
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
@@ -44,7 +53,7 @@ WB_type = cl_args.type
 # make into a list, and make FIELDS_TITLE for reference later in making our output file
 if cl_args.fields:
     FIELDS_TITLE = cl_args.fields
-    fields_in_use = use_CSVs.CSV_col_to_list(os.path.join(c.FIELDS_DIR, cl_args.fields + ".csv"), 0)
+    fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
     # validate fields - could move to _Validate function
     # validate fields following type
     if WB_type == 'single':
