@@ -13,7 +13,7 @@ For fuller explanation of the Workbench fields, see the [APS Digital Library Met
 
 # Installation
 
-[copied from David's pull request instructions, may need some cleanup depending on how we decide this should work for users]
+[copied from David's pull request instructions. this will need to be revised for regular users who aren't doing development on the code, but leaving it until we figure out how we want the process to work]
 
 In your terminal, navigate to your Desktop and run the following command to clone this code from Github.
 
@@ -219,7 +219,7 @@ wb-create-dos workbench_output.csv
 
 This will output a file titled ```output_wb-create-dos.csv``` in the ```/metadata``` directory (with 'output' replaced by the name of your original input file). You can then copy/paste information from this CSV into an ArchivesSpace bulk update spreadsheet to create digital object links. For full guidelines, see [here](https://americanphilosophicalsociety.github.io/APS_digitization/digitization/#instructions-for-archivesspace).
 
-**Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the spreadsheet.
+**Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the spreadsheet and rerun ```wb-create-dos```.
 
 # User customization
 
