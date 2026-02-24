@@ -3,11 +3,9 @@ Creates a fillable xlsx file
 '''
 
 import os
-import sys
 import pandas
 import re
-from argparse import ArgumentParser, ArgumentTypeError
-from datetime import datetime
+from argparse import ArgumentParser
 from importlib.resources import files as import_file
 import aspace_wb.utils.default_specs as c
 import aspace_wb.utils.extract_dir as extract_dir
@@ -31,17 +29,15 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
-cl_parser.add_argument('--fields', type=str, choices=extract_dir.file_list(c.FIELDS_DIR, extensions=False), help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
-cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
-cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
 
-cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
 FIELD_CHOICES = import_file(fields).glob('*.csv')
 FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
 FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
-cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES)
-cl_parser.add_argument('--AS', type=str)
-cl_parser.add_argument('--filefolder', type=str)
+cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
+
+cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
+cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
