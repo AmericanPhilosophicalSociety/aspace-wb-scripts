@@ -176,7 +176,7 @@ This process will check the following:
 
 + All field names are valid
 + Titles are unique
-+ Titles are given a URL alias when needed (NOTE: script does not check whether the provided URL alias is valid)
++ If any titles need a URL alias, you will be prompted to enter one (NOTE: script does not check whether a URL alias has been entered already, or whether that URL alias is valid)
 + Relator codes and linked agent types are valid, and match the number of names listed in ```field_linked_agent_NAME```
 + Dates in ```field_edtf_date_created``` are valid
 + Correct control terms are used in ```field_cnair_subject``` and ```field_language```
