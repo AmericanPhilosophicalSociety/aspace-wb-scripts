@@ -238,7 +238,7 @@ Any new Workbench fields should be added to ```utilities/default_specs.py```:
 - Add the field name, and optional description, as a tuple to WB_FIELDS_ORDERED_WITH_DESCRIPTION. Without being here, the presence of these fields will cause an error.
 - If these fields are required, add them to the appropriate previous WB_FIELDS_ tuples
 
-There are a few controlled vocabularies within /CVs/ that require occasional updates, in decreasing order of frequency:
+There are a few controlled vocabularies within /vocabularies/ that require occasional updates, in decreasing order of frequency:
 - agents_in_AS.csv contains a row for every single ArchivesSpace Archival Object that uses an Agent. This is formatted as: name, archival_object_title, archival_object_ref_id. This can be exported using a custom report in ArchivesSpace. Update frequency: approximately monthly, to reflect new/updated finding aid data.
 - cnair_subject.csv is a list of CNAIR subjects (subject terms only). The main vocabulary is at [Airtable](https://airtable.com/apph1jZcKY5ZIa42M/shrmPmyg5ZOOtyTWt) and CNAIR staff can export a .csv. Individual changes could also be hand-edited. Update frequency: whenever CNAIR changes its subjects.
 - iso639.csv contains 3-letter language codes and language names from the ISO639 standard. Update frequency: infrequent, check annually if any changes were made. Previously this file was generated using utils/ISO639json_to_CSV.py (see instructions within that file), though this did not account for the newer change to prefer ISO639-2b codes where different.
@@ -252,7 +252,7 @@ Testing/sample data is currently lacking. This should include sample media for v
 
 # Omissions/assumptions/known issues
 
-- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /CVs/ and code added to validate them (in ```wb-validate``` calling a function in utils/validate.py)
+- There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /vocabularies/ and code added to validate them (in ```wb-validate``` calling a function in utils/validate.py)
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
 
 # To do

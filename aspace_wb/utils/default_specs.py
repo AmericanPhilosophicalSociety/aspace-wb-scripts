@@ -3,7 +3,7 @@ File defining constants, Workbench fields, and mappings between different fields
 '''
 from aspace_wb.utils import use_CSVs
 from importlib.resources import files as import_file
-from aspace_wb.data import cvs
+from aspace_wb.data import vocabularies
 
 '''
 Locations of files & directories; controlled vocabularies; misc
@@ -13,7 +13,7 @@ Locations of files & directories; controlled vocabularies; misc
 # directories and files
 FILESTOUPLOAD_DIR = "files_to_upload"
 METADATA_DIR = "metadata"
-CV_DIR = "CVs" # controlled vocabularies
+CV_DIR = "vocabularies" # controlled vocabularies
 FIELDS_DIR = "fields"
 AS_AGENTS_FILENAME = "agents_in_AS.csv"
 ISO639_FILENAME = "iso639.csv"
@@ -21,11 +21,11 @@ CNAIR_SUBJECTS_FILENAME = "cnair_subject.csv"
 RELATOR_CODES_FILENAME = "relator.csv"
 
 # controlled vocabularies, from the above
-LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(import_file(cvs).joinpath(ISO639_FILENAME), 0)
-LANGUAGE_CODES = use_CSVs.CSV_col_to_list(import_file(cvs).joinpath(ISO639_FILENAME), 1)
-CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(cvs).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
+LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 0)
+LANGUAGE_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 1)
+CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
 # CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, CNAIR_SUBJECTS_FILENAME), 0)
-RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(cvs).joinpath(RELATOR_CODES_FILENAME), 0)
+RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(RELATOR_CODES_FILENAME), 0)
 # RELATOR_CODES = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, RELATOR_CODES_FILENAME), 0)
 
 # other
