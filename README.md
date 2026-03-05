@@ -2,12 +2,10 @@
 
 Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingest into Islandora 8 using [Workbench](https://github.com/mjordan/islandora_workbench). Scripts are provided for the following tasks:
 
-+ Generate a simplified, fillable version of a Workbench sheet with some data prepopulated (from your media files and/or an ArchivesSpace bulk update spreadsheet)
++ Generate a simplified, fillable version of a Workbench sheet with some data prepopulated (from your media files and, optionally, from an ArchivesSpace bulk update spreadsheet)
 + Validate that you have filled in your simplified Workbench sheet correctly
 + Convert your simplified Workbench sheet into a final Workbench sheet in the format required for Digital Library ingest
 + After your files have been ingested, use your Workbench output CSV to create ArchivesSpace digital objects
-
-The scripts aim to reduce the need for memorization of some Workbench vocabularies, and to reduce or remove the need for copy-pasting between systems.
 
 For fuller explanation of the Workbench fields, see the [APS Digital Library Metadata Guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/).
 
@@ -82,14 +80,16 @@ cd C:/Users/username/Desktop/aspace-wb-scripts
 
 ## Prepare necessary files
 
-**If you want to create a Workbench sheet for files that have already been digitized** (recommended):
+### Prepare media files (required)
 
 + Copy your media files into ```files_to_upload```. Do NOT run the script directly on files in the Digital Library Staging Area.
 + Your files should be named according to [CDS guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/#file).
 
-(If you would rather create a Workbench sheet only from ArchivesSpace data, skip this step. If your files are too large to copy, see below for how to specify an alternate file path.)
+(If your files are too large to copy, see below for how to specify an alternate file path.)
 
-**If you want to populate your Workbench sheet with data from ArchivesSpace** (also recommended):
+### Prepare bulk update spreadsheet (recommended)
+
+If the collection you're ingesting already has a finding aid, you can follow these steps to populate additional data from ArchivesSpace.
 
 + Download an ArchivesSpace bulk update spreadsheet: in the staff interface on ArchivesSpace, find the collection you're working on and click "More" -> "Bulk Update Spreadsheet". Select as many series as you want to include. Under "Column types to include in spreadsheet," leave everything checked. Click "Download Spreadsheet."
 + In Excel, unprotect the sheet. Keep the first two rows (field human-readable names and field machine names), and one row for each object you will be ingesting. Delete any additional rows.
@@ -100,11 +100,11 @@ cd C:/Users/username/Desktop/aspace-wb-scripts
 
 This code provides you with a set of command line utilities that can be used to perform various Workbench-related tasks. These are designed to be used in sequence.
 
-Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```---fields``` or ```--filefolder``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
+Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```--fields``` or ```--filefolder``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
 
 ### Create fillable spreadsheet (```wb-fillable``` or ```wb-blank```)
 
-Creates a simplified version of a Workbench spreadsheet, with some data prepopulated. Data can be pulled from TIF/video/audio files; an ArchivesSpace bulk update spreadsheet; or a combination of the two.
+Creates a simplified version of a Workbench spreadsheet, with some data prepopulated. Data is pulled from media files, with the option to add additional data from an ArchivesSpace bulk update spreadsheet.
 
 | Information | Acceptable input | Required? | Flag | Example
 | --- | --- | --- | --- | --- |
@@ -125,7 +125,7 @@ Example command with all flags:
 wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --filefolder C:/Users/username/Desktop/"Folder Name"
 ```
 
-**To create a blank spreadsheet with a particular set of fields,** run the following command:
+**To create a blank spreadsheet with a particular set of fields, without drawing any information from media files** run the following command:
 
 ```bash
 wb-blank book --fields fields_file 
@@ -176,7 +176,7 @@ This process will check the following:
 
 + All field names are valid
 + Titles are unique
-+ Titles are given a URL alias when appropriate
++ Titles are given a URL alias when needed (NOTE: script does not check whether the provided URL alias is valid)
 + Relator codes and linked agent types are valid, and match the number of names listed in ```field_linked_agent_NAME```
 + Dates in ```field_edtf_date_created``` are valid
 + Correct control terms are used in ```field_cnair_subject``` and ```field_language```
@@ -219,7 +219,7 @@ wb-create-dos workbench_output.csv
 
 This will output a file titled ```output_wb-create-dos.csv``` in the ```/metadata``` directory (with 'output' replaced by the name of your original input file). You can then copy/paste information from this CSV into an ArchivesSpace bulk update spreadsheet to create digital object links. For full guidelines, see [here](https://americanphilosophicalsociety.github.io/APS_digitization/digitization/#instructions-for-archivesspace).
 
-**Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the spreadsheet and rerun ```wb-create-dos```.
+**Note:** ArchivesSpace bulk update sheets expire after one week. The bulk update process will also fail if any associated records have been updated via the staff interface since the bulk update sheet was downloaded. If this happens, you will need to download a new version of the ArchivesSpace spreadsheet, or create the Digital Objects manually in the ArchivesSpace staff user interface.
 
 # User customization
 
