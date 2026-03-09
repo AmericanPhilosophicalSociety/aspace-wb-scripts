@@ -528,7 +528,7 @@ def write_file(final_dict, use_AS):
     '''
     End
     '''
-    print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)
+    print(f'Done. Created file: {c.METADATA_DIR}\\{FILLABLE_FILENAME}')
 
 '''
 Execute functions to fill out the dictionary
@@ -558,8 +558,10 @@ if WB_type == 'single':
     _file_metadata_to_WB_fields_SINGLE()
 elif WB_type == 'book':
     _file_metadata_to_WB_fields_BOOK()
+    
 if use_AS:
     _AS_metadata_to_WB_fields()
+    
 _WB_uniform_fields()
 
 print('... fields populated ...')
