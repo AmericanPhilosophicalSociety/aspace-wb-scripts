@@ -38,6 +38,8 @@ def create_args():
     cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
     
     cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+    
+    cl_parser.add_argument('--blank', action='store_true', help="Output Workbench sheet with only field names and descriptions filled")
 
     return cl_parser.parse_args()
 
@@ -91,9 +93,14 @@ def process_args(cl_args):
     else:
         FILES_DIR = c.FILESTOUPLOAD_DIR
 
+    if cl_args.blank:
+        blank = True
+    else:
+        blank = False
+        
     print('... command line arguments parsed ...')
     
-    return WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR
+    return WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank
 
 def process_fields(WB_type):
     fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
@@ -536,11 +543,9 @@ results in filled prepop_dict
 '''
 
 cl_args = create_args()
-WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR = process_args(cl_args)
+WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank = process_args(cl_args)
 
 prepop_dict = {}
-
-blank = True
 
 if blank:
     final_dict = {
