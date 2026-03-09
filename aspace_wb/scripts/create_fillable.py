@@ -16,41 +16,88 @@ import aspace_wb.utils.validate as validate
 from aspace_wb.data import fields
 
 
-'''
-Parse command line arguments
-    required, positional: Workbench upload type (book/single)
-    optional: --fields name of fields file to use
-    optional: --AS AS file to aid in populating metadata
-    optional: --filefolder alternate file path
-'''
-print('Checking command line arguments\nExpected: [book/single] [optional: --fields fields_file_to_use] [optional: --AS ArchivesSpacefile.xlsx] [optional: --filefolder alternate/file/directory/path] ...')
+def create_args():
+    '''
+    Parse command line arguments
+        required, positional: Workbench upload type (book/single)
+        optional: --fields name of fields file to use
+        optional: --AS AS file to aid in populating metadata
+        optional: --filefolder alternate file path
+    '''
 
-# parse arguments - see above for listing
+    # parse arguments - see above for listing
 
-cl_parser = ArgumentParser()
-cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
+    cl_parser = ArgumentParser()
+    
+    cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
 
-FIELD_CHOICES = import_file(fields).glob('*.csv')
-FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
-FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
-cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
+    FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
+    FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
+    cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
 
-cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
-cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+    cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
+    
+    cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
 
-cl_args = cl_parser.parse_args()
+    return cl_parser.parse_args()
 
-# assign arguments to variables:
+def process_args(cl_args):
+    # assign arguments to variables:
 
-# WB_type from 'type'
-WB_type = cl_args.type
+    # WB_type from 'type'
+    WB_type = cl_args.type
 
-# fields_in_use from 'fields'
-# make into a list, and make FIELDS_TITLE for reference later in making our output file
-if cl_args.fields:
-    FIELDS_TITLE = cl_args.fields
+    # fields_in_use from 'fields'
+    # make into a list, and make FIELDS_TITLE for reference later in making our output file
+    if cl_args.fields:
+        FIELDS_TITLE = cl_args.fields
+        fields_in_use = process_fields(WB_type)
+    else:
+        # give all fields if no --fields argument
+        FIELDS_TITLE = 'all_fields'
+        fields_in_use = c.WB_FIELDS_ALL
+        
+    # modify fields_in_use so that, if present, field_linked_agent gets split into its components
+    # by adding the fields, then removing 'field_linked_agent'
+    # if we did not do this now, when inserting these fields into the dictionary later they'd get added to the end
+    # and the dictionary would require reconstructing to keep the user's requested field order
+    if 'field_linked_agent' in fields_in_use:
+        insert_index = fields_in_use.index('field_linked_agent')
+        fields_in_use.insert(insert_index, 'field_linked_agent_NAME')
+        fields_in_use.insert(insert_index + 1, 'field_linked_agent_ROLE')
+        fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
+        fields_in_use.remove('field_linked_agent')
+        
+
+    # use_AS from 'AS'
+    if cl_args.AS:
+        use_AS = True
+        AS_FILENAME = cl_args.AS
+        # confirm the file exists as stated
+        if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
+            raise OSError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
+    else:
+        use_AS = False
+        AS_FILENAME = None
+
+    # FILES_DIR from filefolder if supplied, otherwise uses defaults
+    if cl_args.filefolder:
+        FILES_DIR = cl_args.filefolder
+        # confirm the directory exists
+        if not os.path.exists(FILES_DIR):
+            raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
+        if not os.path.isdir(FILES_DIR):
+            raise OSError("The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
+    else:
+        FILES_DIR = c.FILESTOUPLOAD_DIR
+
+    print('... command line arguments parsed ...')
+    
+    return WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR
+
+def process_fields(WB_type):
     fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
-    # validate fields - could move to _Validate function
+
     # validate fields following type
     if WB_type == 'single':
         for x in c.WB_FIELDS_REQUIRED_AT_INPUT_SINGLE:
@@ -64,54 +111,76 @@ if cl_args.fields:
     for x in fields_in_use:
         if x not in c.WB_FIELDS_ALL:
             raise ValueError("Fix your fields file. Contains erroneous field: " + str(x))
-elif not cl_args.fields:
-    # give all fields if no --fields argument
-    FIELDS_TITLE = 'all_fields'
-    fields_in_use = c.WB_FIELDS_ALL
-# modify fields_in_use so that, if present, field_linked_agent gets split into its components
-# by adding the fields, then removing 'field_linked_agent'
-# if we did not do this now, when inserting these fields into the dictionary later they'd get added to the end
-# and the dictionary would require reconstructing to keep the user's requested field order
-if 'field_linked_agent' in fields_in_use:
-    insert_index = fields_in_use.index('field_linked_agent')
-    fields_in_use.insert(insert_index, 'field_linked_agent_NAME')
-    fields_in_use.insert(insert_index + 1, 'field_linked_agent_ROLE')
-    fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
-    fields_in_use.remove('field_linked_agent')
+        
+    return fields_in_use
+
+def check_files(WB_type):
+    '''
+    Check our files and generate:
+    - media_list, which is list of folder names if WB_type book
+    - EXTENSION variable, isolating the single extension uploaded
+    '''
+    print("Checking files ...")
     
+    if WB_type == 'book':
+        # get media_list
+        media_list = extract_dir.subdirectories_list(FILES_DIR)
 
-# use_AS from 'AS'
-if cl_args.AS:
-    use_AS = True
-    AS_FILENAME = cl_args.AS
-    # confirm the file exists as stated
-    if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
-        raise OSError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
-else:
-    use_AS = False
+        # prep extensions_to_check, which gets populated
+        extensions_to_check = []
 
-# FILES_DIR from filefolder if supplied, otherwise uses defaults
-if cl_args.filefolder:
-    FILES_DIR = cl_args.filefolder
-    # confirm the directory exists
-    if not os.path.exists(FILES_DIR):
-        raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
-    if not os.path.isdir(FILES_DIR):
-        raise OSError("The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
-else:
-    FILES_DIR = c.FILESTOUPLOAD_DIR
+        # perform directory checks:
+        # only subdirectories within FILES_DIR
+        validate.directory_contains_only_subdirectories(FILES_DIR)    
+        for subdirectory in media_list:
+            # each subdirectory contains files
+            validate.directory_contains_only_files(os.path.join(FILES_DIR, subdirectory))
+            # each subdirectory name is valid
+            validate.directory_name_for_book(subdirectory)
+            # prep for next bit
+            subdirectory_files = extract_dir.file_list(os.path.join(FILES_DIR, subdirectory), extensions=True)
+            subdirectory_filecount = len(subdirectory_files)
+            for file in subdirectory_files:
+                # file names conform to book requirements
+                validate.filename_for_book(subdirectory, os.path.splitext(file)[0])
+                # file names have correct padding
+                validate.filename_padding_amount(os.path.splitext(file)[0], subdirectory_filecount)
+                # add file extension to extension_to_check
+                extensions_to_check.append(os.path.splitext(file)[1])
+                
+                # check extensions
+            extensions_to_check = convert_data.unique_in_list(extensions_to_check)
+    elif WB_type == 'single':
+        # get media_list
+        media_list = extract_dir.file_list(FILES_DIR, extensions=True)
 
-print('... command line arguments parsed ...')
+        # perform directory checks:
+        # only files within FILES_DIR
+        validate.directory_contains_only_files(FILES_DIR)
+        for file in media_list:
+            file = os.path.splitext(file)[0]
+            # and each file has a valid filename
+            validate.filename_for_single(file)
 
-'''
-Check our files and generate:
-- media_list, which is list of folder names if WB_type book, or a list of file names if single
-- EXTENSION variable, isolating the single extension uploaded
-'''
-print("Checking files ...")
+        # get and check extension - single extension, is allowed
+        extensions_to_check = extract_dir.unique_extensions(FILES_DIR)
+    
+    if len(extensions_to_check) != 1:
+        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
+    EXTENSION = extensions_to_check[0]
+    if EXTENSION not in c.EXTENSIONS:
+        raise OSError("Invalid extension found: " + str(EXTENSION))
+    
+    return media_list, EXTENSION
 
-if WB_type == 'book':
-
+def check_files_book():
+    '''
+    Check our files and generate:
+    - media_list, which is list of folder names if WB_type book
+    - EXTENSION variable, isolating the single extension uploaded
+    '''
+    print("Checking files ...")
+    
     # get media_list
     media_list = extract_dir.subdirectories_list(FILES_DIR)
 
@@ -144,8 +213,16 @@ if WB_type == 'book':
     EXTENSION = extensions_to_check[0]
     if EXTENSION not in c.EXTENSIONS:
         raise OSError("Invalid extension found: " + str(EXTENSION))
+    
+    return media_list, EXTENSION
 
-elif WB_type == 'single':
+def check_files_single():
+    '''
+    Check our files and generate:
+    - media_list, which is list of file names
+    - EXTENSION variable, isolating the single extension uploaded
+    '''
+    print("Checking files ...")
 
     # get media_list
     media_list = extract_dir.file_list(FILES_DIR, extensions=True)
@@ -166,14 +243,15 @@ elif WB_type == 'single':
     if EXTENSION not in c.EXTENSIONS:
         raise OSError("Invalid extension found: " + str(EXTENSION))
 
-print("... files look okay ...")
+    print("... files look okay ...")
 
-'''
-If using ArchivesSpace file, check that this file looks okay by comparing to media_list
-Put number of records into records_count for easy access
-'''
+    return media_list, EXTENSION
 
-if use_AS:
+def process_AS(media_list):
+    '''
+    If using ArchivesSpace file, check that this file looks okay by comparing to media_list
+    Put number of records into records_count for easy access
+    '''
     AS_pd_dataframe = pandas.read_excel(os.path.join(c.METADATA_DIR, AS_FILENAME), header=1)
     AS_dict = AS_pd_dataframe.to_dict(orient="list")
     # confirm that the list of media matches the number of records in AS
@@ -181,14 +259,14 @@ if use_AS:
     if len(media_list) != records_count:
         raise OSError(f"ArchivesSpace file has {str(records_count)} records. {FILES_DIR} has {str(len(media_list))} directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
     print('... ArchivesSpace file loaded okay ...')
-else:
-    records_count = len(media_list)
+    
+    return records_count, AS_dict
+
 
 
 '''
 Define functions to call for populating our dictionary
 '''
-prepop_dict = {}
 
 def _file_metadata_to_WB_fields_SINGLE():
     '''
@@ -373,34 +451,139 @@ def _WB_uniform_fields():
     if 'field_reformatting_quality' in fields_in_use:
         prepop_dict['field_reformatting_quality'] = [c.field_reformatting_quality for i in range(records_count)]
 
+def write_file(final_dict, use_AS):
+    '''
+    Create Pandas dataframe from final_dict
+    '''
+    print('Creating output file ...')
+
+    # create the Pandas dataframe
+    output_pd_dataframe = pandas.DataFrame(final_dict)
+
+    '''
+    Decorate and export the output file
+
+    This line works to just create our output file but it doesn't look nice
+    output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False) # index=False means no index column created
+
+    Instead, we do ... too much
+
+    Tried to implement this but could not get it to format both header and description row nicely:
+    https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
+
+    Instead, opted to just format the description row
+
+    '''
+    # make output filename, using bulk update sheet file prefix if available
+    if use_AS:
+        FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
+    else:
+        FILE_PREFIX = "output"
+    FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable"
+    FILE_EXTENSION = ".xlsx"
+
+
+    # if file already exists, add a counter to stop it from being overwritten
+    while os.path.exists(os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}")):
+        filename_split = FILLABLE_FILENAME.split("_")
+        if filename_split[-1].isdigit():
+            counter = int(filename_split[-1]) + 1
+            FILLABLE_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+        else:
+            FILLABLE_FILENAME += "_2"
+            
+    pd_ExcelWriter = pandas.ExcelWriter(
+        os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
+        engine="xlsxwriter"
+    )
+    output_pd_dataframe.to_excel(
+        pd_ExcelWriter, sheet_name="Workbench",
+        startrow=0,
+        header=True,
+        index=False
+    )
+    pd_ExcelWriter_book = pd_ExcelWriter.book
+    pd_ExcelWriter_sheet = pd_ExcelWriter.sheets["Workbench"]
+    pd_description_format = pd_ExcelWriter_book.add_format(
+        {
+            # we can add formatting for our description row here
+            # use anything defined in here: https://xlsxwriter.readthedocs.io/format.html#format-methods-and-format-properties
+            'italic': True,
+            'text_wrap': True,
+            'valign': 'vcenter',
+            'center_across': True,
+            'border': 1,
+            'bg_color': "#ECEBD8"
+        }
+    )
+    # write the formatting
+    # set description row to use pd_description_format
+    CELL_HEIGHT_DESCRIPTION = 40
+    pd_ExcelWriter_sheet.set_row(1, CELL_HEIGHT_DESCRIPTION, pd_description_format)
+    # set cell width to something reasonable. there is no such thing as autofit all cells.
+    CELL_WIDTH = 30
+    pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,CELL_WIDTH)
+    # close to write the file
+    pd_ExcelWriter.close()
+    '''
+    End
+    '''
+    print(f'Done. Created file: {c.METADATA_DIR}\\{FILLABLE_FILENAME}')
 
 '''
 Execute functions to fill out the dictionary
 results in filled prepop_dict
 '''
 
-print('Populating fields ...')
+cl_args = create_args()
+WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR = process_args(cl_args)
 
-if WB_type == 'single':
-    _file_metadata_to_WB_fields_SINGLE()
-elif WB_type == 'book':
-    _file_metadata_to_WB_fields_BOOK()
-if use_AS:
-    _AS_metadata_to_WB_fields()
-_WB_uniform_fields()
+prepop_dict = {}
 
-print('... fields populated ...')
+blank = True
 
-'''
-Expand prepop_dict to include all fields, and adding description row, resulting in final_dict
-'''
+if blank:
+    final_dict = {
+        key: [''] for key in fields_in_use
+    }
+else:
+    media_list, EXTENSION = check_files(WB_type)
 
-# create a dictionary of all fields from fields_in_use, copying the structure of prepop_dict, with appropriate number of records
-final_dict = {
-    key: ['' for i in range(records_count)] for key in fields_in_use
-}
-# merge this with prepop_dict, keeping prepop_dict values
-final_dict.update(prepop_dict)
+    # if WB_type == "book":
+    #     media_list, EXTENSION = check_files_book()
+    # elif WB_type == "single":
+    #     media_list, EXTENSION = check_files_single()
+
+    if use_AS:
+        records_count, AS_dict = process_AS(media_list)
+    else:
+        records_count = len(media_list)
+
+    print('Populating fields ...')
+
+    if WB_type == 'single':
+        _file_metadata_to_WB_fields_SINGLE()
+    elif WB_type == 'book':
+        _file_metadata_to_WB_fields_BOOK()
+        
+    if use_AS:
+        _AS_metadata_to_WB_fields()
+        
+    _WB_uniform_fields()
+
+    print('... fields populated ...')
+
+    '''
+    Expand prepop_dict to include all fields, and adding description row, resulting in final_dict
+    '''
+
+    # create a dictionary of all fields from fields_in_use, copying the structure of prepop_dict, with appropriate number of records
+    final_dict = {
+        key: ['' for i in range(records_count)] for key in fields_in_use
+    }
+    # merge this with prepop_dict, keeping prepop_dict values
+    final_dict.update(prepop_dict)
+
 # now that we have a merged dictionary, add definitions row
 # first, get our field:description tuples as a dictionary
 fields_descriptions_dict = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
@@ -408,83 +591,7 @@ fields_descriptions_dict = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
 for k, v in final_dict.items():
     v.insert(0, fields_descriptions_dict[k])
 
-'''
-Create Pandas dataframe from final_dict
-'''
-print('Creating output file ...')
-
-# create the Pandas dataframe
-output_pd_dataframe = pandas.DataFrame(final_dict)
-
-'''
-Decorate and export the output file
-
-This line works to just create our output file but it doesn't look nice
-output_pd_dataframe.to_excel(os.path.join(c.METADATA_DIR, FILLABLE_FILENAME), index=False) # index=False means no index column created
-
-Instead, we do ... too much
-
-Tried to implement this but could not get it to format both header and description row nicely:
-https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
-
-Instead, opted to just format the description row
-
-'''
-# make output filename, using bulk update sheet file prefix if available
-if use_AS:
-    FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
-else:
-    FILE_PREFIX = "output"
-FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable"
-FILE_EXTENSION = ".xlsx"
-
-
-# if file already exists, add a counter to stop it from being overwritten
-while os.path.exists(os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}")):
-    filename_split = FILLABLE_FILENAME.split("_")
-    if filename_split[-1].isdigit():
-        counter = int(filename_split[-1]) + 1
-        FILLABLE_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
-    else:
-        FILLABLE_FILENAME += "_2"
-        
-pd_ExcelWriter = pandas.ExcelWriter(
-    os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
-    engine="xlsxwriter"
-)
-output_pd_dataframe.to_excel(
-    pd_ExcelWriter, sheet_name="Workbench",
-    startrow=0,
-    header=True,
-    index=False
-)
-pd_ExcelWriter_book = pd_ExcelWriter.book
-pd_ExcelWriter_sheet = pd_ExcelWriter.sheets["Workbench"]
-pd_description_format = pd_ExcelWriter_book.add_format(
-    {
-        # we can add formatting for our description row here
-        # use anything defined in here: https://xlsxwriter.readthedocs.io/format.html#format-methods-and-format-properties
-        'italic': True,
-        'text_wrap': True,
-        'valign': 'vcenter',
-        'center_across': True,
-        'border': 1,
-        'bg_color': "#ECEBD8"
-    }
-)
-# write the formatting
-# set description row to use pd_description_format
-CELL_HEIGHT_DESCRIPTION = 40
-pd_ExcelWriter_sheet.set_row(1, CELL_HEIGHT_DESCRIPTION, pd_description_format)
-# set cell width to something reasonable. there is no such thing as autofit all cells.
-CELL_WIDTH = 30
-pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,CELL_WIDTH)
-# close to write the file
-pd_ExcelWriter.close()
-'''
-End
-'''
-print('Done. Created file: ' + c.METADATA_DIR + '\\' + FILLABLE_FILENAME)
+write_file(final_dict, use_AS)
 '''
 Post-completion reminders to user
 '''
