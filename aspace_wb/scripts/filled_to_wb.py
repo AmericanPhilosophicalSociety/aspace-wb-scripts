@@ -21,8 +21,8 @@ print('Checking command line arguments - expected: [single/book] [filled file.xl
 # parse arguments
 
 cl_parser = ArgumentParser()
-cl_parser.add_argument('type', type=str, choices=('single', 'book'))
-cl_parser.add_argument('filled_file', type=str)
+cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
+cl_parser.add_argument('filled_file', type=str, help="Name of your validated, simplified Workbench sheet (with .xlsx extension)")
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
@@ -34,9 +34,7 @@ WB_type = cl_args.type
 FILLED_FILENAME = cl_args.filled_file
 # check existence
 if not os.path.exists(os.path.join(c.METADATA_DIR, FILLED_FILENAME)):
-    raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + FILLED_FILENAME + ". Check.")
-# create output filename from this
-WB_FILENAME = os.path.splitext(FILLED_FILENAME)[0] + "_WB-OUTPUT.csv"
+    raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 
 print('... command line arguments parsed ...')
 
@@ -166,7 +164,7 @@ def _delete_empty_fields():
     if empty_fields:
         for key in empty_fields:
             WB_dict.pop(key)
-        print("The following columns were empty and have been deleted. Rerun this script if this was an error:" + str(empty_fields))
+        print(f"The following columns were empty and have been deleted. Rerun this script if this was an error: {str(empty_fields)}")
 
 def _add_required_empty_fields():
     '''
@@ -184,7 +182,7 @@ def _add_required_empty_fields():
             WB_dict[f] = ["" for i in range(INPUT_ROW_COUNT)]
             empty_added.append(f)
     if empty_added:
-        print("The following columns were added to be purposefully blank for upload: " + str(empty_added))
+        print(f"The following columns were added to be purposefully blank for upload: {str(empty_added)}")
 
 
 '''
@@ -214,9 +212,23 @@ print("... fields rearranged.")
 '''
 Export our WB csv
 '''
+# create output filename
+WB_FILENAME = f"{os.path.splitext(FILLED_FILENAME)[0]}_wb-to-wb"
+FILE_EXTENSION = ".csv"
 
-use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, WB_FILENAME))
-print("SUCCESS. Generated Workbench file: " + os.path.join(c.METADATA_DIR, WB_FILENAME))
+# if file already exists, append a counter to prevent overwriting
+while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION}")):
+    filename_split = WB_FILENAME.split("_")
+    if filename_split[-1].isdigit():
+        counter = int(filename_split[-1]) + 1
+        WB_FILENAME = f"{'_'.join(filename_split[:-1])}_{counter}"
+    else:
+        WB_FILENAME += "_2"
+
+FILENAME_FULL = f"{WB_FILENAME}{FILE_EXTENSION}"
+
+use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILENAME_FULL))
+print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILENAME_FULL)}")
 
 '''
 Post-completion reminders to user

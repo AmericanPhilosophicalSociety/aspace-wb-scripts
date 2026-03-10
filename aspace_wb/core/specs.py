@@ -13,7 +13,7 @@ Locations of files & directories; controlled vocabularies; misc
 # directories and files
 FILESTOUPLOAD_DIR = "files_to_upload"
 METADATA_DIR = "metadata"
-CV_DIR = "CVs"  # controlled vocabularies
+CV_DIR = "vocabularies"  # controlled vocabularies
 FIELDS_DIR = "fields"
 AS_AGENTS_FILENAME = "agents_in_AS.csv"
 ISO639_FILENAME = "iso639.csv"
@@ -33,16 +33,16 @@ def get_package_data_path(data_type: str, filename: str) -> str:
 
 # controlled vocabularies, from the package data
 LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(
-    get_package_data_path("cvs", ISO639_FILENAME), 0
+    get_package_data_path("vocabularies", ISO639_FILENAME), 0
 )
 LANGUAGE_CODES = use_CSVs.CSV_col_to_list(
-    get_package_data_path("cvs", ISO639_FILENAME), 1
+    get_package_data_path("vocabularies", ISO639_FILENAME), 1
 )
 CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(
-    get_package_data_path("cvs", CNAIR_SUBJECTS_FILENAME), 0
+    get_package_data_path("vocabularies", CNAIR_SUBJECTS_FILENAME), 0
 )
 RELATOR_CODES = use_CSVs.CSV_col_to_list(
-    get_package_data_path("cvs", RELATOR_CODES_FILENAME), 0
+    get_package_data_path("vocabularies", RELATOR_CODES_FILENAME), 0
 )
 
 # other

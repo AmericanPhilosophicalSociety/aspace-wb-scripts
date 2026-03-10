@@ -6,7 +6,6 @@ import os
 import pandas
 import re
 from argparse import ArgumentParser
-from datetime import datetime
 from importlib.resources import files as import_file
 import aspace_wb.utils.default_specs as c
 import aspace_wb.utils.extract_dir as extract_dir
@@ -29,13 +28,16 @@ print('Checking command line arguments\nExpected: [book/single] [optional: --fie
 # parse arguments - see above for listing
 
 cl_parser = ArgumentParser()
-cl_parser.add_argument('type', type=str, choices=('single', 'book')) 
+cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
+
 FIELD_CHOICES = import_file(fields).glob('*.csv')
 FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
 FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
-cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES)
-cl_parser.add_argument('--AS', type=str)
-cl_parser.add_argument('--filefolder', type=str)
+cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
+
+cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
+cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+
 cl_args = cl_parser.parse_args()
 
 # assign arguments to variables:
@@ -84,7 +86,7 @@ if cl_args.AS:
     AS_FILENAME = cl_args.AS
     # confirm the file exists as stated
     if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
-        raise OSError("Folder " + c.METADATA_DIR + " does not appear to contain " + AS_FILENAME + ", which is a renamed ArchivesSpace Bulk Update spreadsheet. Check.")
+        raise OSError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
 else:
     use_AS = False
 
@@ -93,19 +95,11 @@ if cl_args.filefolder:
     FILES_DIR = cl_args.filefolder
     # confirm the directory exists
     if not os.path.exists(FILES_DIR):
-        raise OSError("Folder " + FILES_DIR + " does not appear to exist.")
+        raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
     if not os.path.isdir(FILES_DIR):
-        raise OSError("Path " + FILES_DIR + " is not a directory.")
+        raise OSError("The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
 else:
     FILES_DIR = c.FILESTOUPLOAD_DIR
-
-# make output filename based on AS or just fields_in_use
-TIME = datetime.now().strftime("%Y%m%d_%H-%M-%S")
-if use_AS:
-    FILLABLE_FILENAME = os.path.splitext(AS_FILENAME)[0] + "_" + FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
-else:
-    FILLABLE_FILENAME = FIELDS_TITLE + "_" + TIME + "_FILLABLE.xlsx"
-
 
 print('... command line arguments parsed ...')
 
@@ -185,7 +179,7 @@ if use_AS:
     # confirm that the list of media matches the number of records in AS
     records_count = AS_pd_dataframe.shape[0]
     if len(media_list) != records_count:
-        raise OSError("ArchivesSpace file has " + str(records_count) + " records. " + FILES_DIR + " has " + str(len(media_list)) + " directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
+        raise OSError(f"ArchivesSpace file has {str(records_count)} records. {FILES_DIR} has {str(len(media_list))} directories (if book)/files (if single). Correct the mismatch. Check that you left AS's two header rows including the machine names!")
     print('... ArchivesSpace file loaded okay ...')
 else:
     records_count = len(media_list)
@@ -436,8 +430,26 @@ https://xlsxwriter.readthedocs.io/example_pandas_header_format.html
 Instead, opted to just format the description row
 
 '''
+# make output filename, using bulk update sheet file prefix if available
+if use_AS:
+    FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
+else:
+    FILE_PREFIX = "output"
+FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable"
+FILE_EXTENSION = ".xlsx"
+
+
+# if file already exists, add a counter to stop it from being overwritten
+while os.path.exists(os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}")):
+    filename_split = FILLABLE_FILENAME.split("_")
+    if filename_split[-1].isdigit():
+        counter = int(filename_split[-1]) + 1
+        FILLABLE_FILENAME = f"{'_'.join(filename_split[:-1])}_{counter}"
+    else:
+        FILLABLE_FILENAME += "_2"
+        
 pd_ExcelWriter = pandas.ExcelWriter(
-    os.path.join(c.METADATA_DIR, FILLABLE_FILENAME),
+    os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
     engine="xlsxwriter"
 )
 output_pd_dataframe.to_excel(
