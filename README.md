@@ -102,7 +102,7 @@ This code provides you with a set of command line utilities that can be used to 
 
 Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```--fields``` or ```--filefolder``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
 
-### Create fillable spreadsheet (```wb-fillable``` or ```wb-blank```)
+### Create fillable spreadsheet (```wb-fillable```)
 
 Creates a simplified version of a Workbench spreadsheet, with some data prepopulated. Data is pulled from media files, with the option to add additional data from an ArchivesSpace bulk update spreadsheet.
 
@@ -112,6 +112,7 @@ Creates a simplified version of a Workbench spreadsheet, with some data prepopul
 | Fields to include | Name of a .csv file containing a list of fields to include. Omit the .csv extension. You can create your own custom list (see below) or use one of the preset options: ```example_minimum_book```, ```example_minimum_single```, ```cnairaudio```, ```cnairbook```, or ```cnairimage```. If no list of fields is specified, all valid Workbench fields will be included. | Recommended | ```--fields```  | example_minimum_book |
 | Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace bulk update spreadsheet file | Recommended | ```--AS```  | update.xlsx
 | Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround them in quotes. | No | ```--filefolder```  | C:/Users/yshiroma/Desktop/"Files to Upload" |
+| Output blank sheet? | Use flag if you want to create a blank Workbench sheet using only the specified fields and field descriptions. No further info required | No | ```--blank```  | |
 
 Example command with minimum required information:
 
@@ -125,13 +126,13 @@ Example command with all flags:
 wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --filefolder C:/Users/username/Desktop/"Folder Name"
 ```
 
-**To create a blank spreadsheet with a particular set of fields, without drawing any information from media files** run the following command:
+Example command to create a blank spreadsheet from a particular set of fields, without drawing any information from media files or ArchivesSpace:
 
 ```bash
-wb-blank book --fields fields_file 
+wb-fillable book --fields fields_file --blank
 ```
 
-Check in ```/metadata``` that your output has been created successfully. It should be named ```output_wb-fillable``` or ```output_wb-blank```, depending on which script you used (with 'output' replaced by the name of your ArchivesSpace bulk update sheet if you provided one).
+Check in ```/metadata``` that your output has been created successfully. It should be named ```output_wb-fillable``` (with 'output' replaced by the name of your ArchivesSpace bulk update sheet if you provided one).
 
 ### Manually fill spreadsheet
 
@@ -258,7 +259,6 @@ Testing/sample data is currently lacking. This should include sample media for v
 # To do
 
 - Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change. Temporary fix was to just edit the iso639.csv file to use 2B for a few languages.
-- To avoid duplication, the functionality of ```wb-blank``` (which is ```wb-fillable``` but bypassing any file metadata) could be incorporated into ```wb-fillable``` using a flag, e.g. --blank. This would require putting the file checking and metadata extraction into dedicated functions.
 - After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
 - reorder output of ```wb-create-dos``` so all AS-entry fields are to the right
 
