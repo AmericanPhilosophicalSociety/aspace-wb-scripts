@@ -67,7 +67,7 @@ def process_args(cl_args):
     if 'field_linked_agent' in fields_in_use:
         insert_index = fields_in_use.index('field_linked_agent')
         fields_in_use.insert(insert_index, 'field_linked_agent_NAME')
-        fields_in_use.insert(insert_index + 1, 'field_linked_agent_ROLE')
+        fields_in_use.insert(insert_index + 1, 'field_linked_agent_RELATOR')
         fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
         fields_in_use.remove('field_linked_agent')
         
@@ -353,7 +353,7 @@ def _AS_metadata_to_WB_fields():
         # place in dictionary
         prepop_dict['field_note'] = _field_note
 
-    if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_agent_TYPE' in fields_in_use:
+    if 'field_linked_agent_NAME' in fields_in_use and 'field_linked_agent_RELATOR' in fields_in_use and 'field_linked_agent_TYPE' in fields_in_use:
         # created earlier from user-supplied 'field_linked_agent'
         # create names list from ArchivesSpace's AO-Agents report
         _field_linked_agent_NAME = []
@@ -363,7 +363,7 @@ def _AS_metadata_to_WB_fields():
             )
             _field_linked_agent_NAME.append(agents)
         prepop_dict['field_linked_agent_NAME'] = _field_linked_agent_NAME
-        prepop_dict['field_linked_agent_ROLE'] = ['' for i in range(records_count)]
+        prepop_dict['field_linked_agent_RELATOR'] = ['' for i in range(records_count)]
         prepop_dict['field_linked_agent_TYPE'] = ['' for i in range(records_count)]
 
     # access restriction - flag to user if something exists

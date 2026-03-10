@@ -114,7 +114,7 @@ if "title" in INPUT_FIELDS:
 
 # field_linked_agent fields
 
-if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
+if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in INPUT_FIELDS and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
     print("Checking field_linked_agent fields ...")
 
     print("... checking role (relator) codes ...")

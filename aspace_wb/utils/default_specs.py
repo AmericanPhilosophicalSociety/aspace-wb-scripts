@@ -102,7 +102,7 @@ WB_FIELDS_EXPORT_KEEP_EMPTY_BOOK = (
 # this is only called once out of several places it could be called (in which individual field names are typed out)
 WB_field_linked_agent_SPLIT_FIELDS = (
     'field_linked_agent_NAME',
-    'field_linked_agent_ROLE',
+    'field_linked_agent_RELATOR',
     'field_linked_agent_TYPE'
 )
 
@@ -126,7 +126,7 @@ WB_FIELDS_ORDERED_WITH_DESCRIPTION = (
     ('field_subtitle',''),
     ('field_linked_agent',''),
     ('field_linked_agent_NAME','Name, written as in Library of Congress subject headings. If multiple values, separate with pipes'),
-    ('field_linked_agent_ROLE','Relator codes for the names given in field_linked_agent_NAME. Must input one for each name, pipe-separated'),
+    ('field_linked_agent_RELATOR','Relator codes for the names given in field_linked_agent_NAME. Must input one for each name, pipe-separated'),
     ('field_linked_agent_TYPE',"Can be person, corporate_body, or family. Abbreviations acceptable (p, c, or f). Include one for each name in field_linked_agent_NAME, pipe-separated, OR leave blank if all are of type 'person'"),
     ('field_speaker_affiliation',''),
     ('field_family',''),
