@@ -95,5 +95,7 @@ while os.path.exists(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXT
     else:
         OUTPUT_FILENAME += "_2"
 
-output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"), index=False)
-print(f'Done. Created file: {os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}")}')
+filename = f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"
+output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, filename), index=False)
+
+print(f'Done. Created file: {os.path.join(c.METADATA_DIR, filename)}')
