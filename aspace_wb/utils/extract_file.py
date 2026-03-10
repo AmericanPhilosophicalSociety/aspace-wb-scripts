@@ -3,6 +3,7 @@ Metadata extraction from files
 """
 
 import os
+from pypdf import PdfReader
 
 try:
     import mutagen
@@ -37,11 +38,13 @@ def audio_duration_seconds(filepath):
     return int(length)
 
 
-def pdf_page_count(filepath):
+def count_pdf_pages(filepath):
     """
-    not yet coded but a good idea once we start ingesting PDFs
+    Returns number of pages in a PDF
     """
-    pass
+    with open(filepath, 'rb') as file:
+        reader = PdfReader(file)
+        return len(reader.pages)
 
 
 def video_duration_seconds(filepath):

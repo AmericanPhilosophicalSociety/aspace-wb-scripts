@@ -222,6 +222,7 @@ def _file_metadata_to_WB_fields_SINGLE():
             # required fields
             prepop_dict['field_model'] = [d['field_model'] for i in range(records_count)]
             prepop_dict['field_resource_type'] = [d['field_resource_type'] for i in range(records_count)]
+            
             # optional fields dependent on extension
             if d['field_access_terms']:
                 prepop_dict['field_access_terms'] = [d['field_access_terms'] for i in range(records_count)]
@@ -229,7 +230,8 @@ def _file_metadata_to_WB_fields_SINGLE():
                 prepop_dict['field_display_hints'] = [d['field_display_hints'] for i in range(records_count)]
             if d['field_internet_media_type']:
                 prepop_dict['field_internet_media_type'] = [d['field_internet_media_type'] for i in range(records_count)]
-            # use field_model to calculate extent - Image not required, Digital Document (.pdf) not yet coded
+                
+            # use field_model to calculate extent - Image not required
             if d['field_model'] == 'Audio':
                 # get audio duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
@@ -240,6 +242,10 @@ def _file_metadata_to_WB_fields_SINGLE():
                 prepop_dict['field_extent'] = [
                     convert_data.seconds_to_HHMMSS(extract_file.video_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
+            elif d['field_model'] == 'Digital Document':
+                # counts PDF pages
+                prepop_dict['field_extent'] = [f"{extract_file.count_pdf_pages(os.path.join(FILES_DIR, file))}p." for file in media_list]
+                
 
     # field_date_digitized
     # get date creation estimate, convert to year

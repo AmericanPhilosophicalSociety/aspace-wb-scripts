@@ -108,7 +108,7 @@ Creates a simplified version of a Workbench spreadsheet, with some data prepopul
 
 | Information | Acceptable input | Required? | Flag | Example
 | --- | --- | --- | --- | --- |
-| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | |  book |
+| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, video, or PDF object) | Yes | |  book |
 | Fields to include | Name of a .csv file containing a list of fields to include. Omit the .csv extension. You can create your own custom list (see below) or use one of the preset options: ```example_minimum_book```, ```example_minimum_single```, ```cnairaudio```, ```cnairbook```, or ```cnairimage```. If no list of fields is specified, all valid Workbench fields will be included. | Recommended | ```--fields```  | example_minimum_book |
 | Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace bulk update spreadsheet file | Recommended | ```--AS```  | update.xlsx
 | Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround them in quotes. | No | ```--filefolder```  | C:/Users/yshiroma/Desktop/"Files to Upload" |
