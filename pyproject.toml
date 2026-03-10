@@ -69,7 +69,6 @@ wb-fillable = "aspace_wb.cli.create_fillable:main"
 wb-validate = "aspace_wb.cli.validate_filled:main"
 wb-to-wb = "aspace_wb.cli.filled_to_wb:main"
 wb-create-dos = "aspace_wb.cli.create_aspace_dos:main"
-wb-blank = "aspace_wb.cli.create_blank_fillable:main"
 
 [build-system]
 requires = ["hatchling"]
