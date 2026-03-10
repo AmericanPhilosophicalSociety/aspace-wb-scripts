@@ -221,7 +221,7 @@ while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION
     filename_split = WB_FILENAME.split("_")
     if filename_split[-1].isdigit():
         counter = int(filename_split[-1]) + 1
-        WB_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+        WB_FILENAME = f"{'_'.join(filename_split[:-1])}_{counter}"
     else:
         WB_FILENAME += "_2"
 
