@@ -124,14 +124,14 @@ def _add_complex_fields():
 
     # field_linked_agent
     # calls function from _ConvertData on the values
-    if "field_linked_agent_NAME" and "field_linked_agent_ROLE" and "field_linked_agent_TYPE" in INPUT_FIELDS:
+    if "field_linked_agent_NAME" in INPUT_FIELDS and "field_linked_agent_RELATOR" in INPUT_FIELDS and "field_linked_agent_TYPE" in INPUT_FIELDS:
         WB_dict["field_linked_agent"] = []
         for i in range(INPUT_ROW_COUNT):
             if input_dict["field_linked_agent_NAME"][i]:
-                # supply the converted name, role, type
+                # supply the converted name, relator, type
                 WB_dict["field_linked_agent"].append(convert_data.agents_info_to_WB_agent(
                     input_dict["field_linked_agent_NAME"][i],
-                    input_dict["field_linked_agent_ROLE"][i],
+                    input_dict["field_linked_agent_RELATOR"][i],
                     input_dict["field_linked_agent_TYPE"][i]
                     ))
             else:
@@ -139,7 +139,7 @@ def _add_complex_fields():
                 WB_dict["field_linked_agent"].append("")
         # a miserable thing to do: delete these fields so they don't confuse us when we try to add other fields
         del input_dict['field_linked_agent_NAME']
-        del input_dict['field_linked_agent_ROLE']
+        del input_dict['field_linked_agent_RELATOR']
         del input_dict['field_linked_agent_TYPE']
 
 
