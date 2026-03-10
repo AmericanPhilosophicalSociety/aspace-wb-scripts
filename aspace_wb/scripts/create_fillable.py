@@ -43,6 +43,7 @@ def create_args():
 
     return cl_parser.parse_args()
 
+
 def process_args(cl_args):
     # assign arguments to variables:
 
@@ -70,7 +71,6 @@ def process_args(cl_args):
         fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
         fields_in_use.remove('field_linked_agent')
         
-
     # use_AS from 'AS'
     if cl_args.AS:
         use_AS = True
@@ -89,7 +89,7 @@ def process_args(cl_args):
         if not os.path.exists(FILES_DIR):
             raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
         if not os.path.isdir(FILES_DIR):
-            raise OSError("The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
+            raise OSError(f"The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
     else:
         FILES_DIR = c.FILESTOUPLOAD_DIR
 
@@ -102,6 +102,7 @@ def process_args(cl_args):
     
     return WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank
 
+
 def process_fields(WB_type):
     fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
 
@@ -109,17 +110,18 @@ def process_fields(WB_type):
     if WB_type == 'single':
         for x in c.WB_FIELDS_REQUIRED_AT_INPUT_SINGLE:
             if x not in fields_in_use:
-                raise ValueError("Fix your fields file. Missing required field: " + str(x))
+                raise ValueError(f"Fix your fields file. Missing required field: {str(x)}")
     elif WB_type == 'book':
         for x in c.WB_FIELDS_REQUIRED_AT_INPUT_BOOK:
             if x not in fields_in_use:
-                raise ValueError("Fix your fields file. Missing required field: " + str(x))
+                raise ValueError(f"Fix your fields file. Missing required field: {str(x)}")
     # validate fields against all fields
     for x in fields_in_use:
         if x not in c.WB_FIELDS_ALL:
-            raise ValueError("Fix your fields file. Contains erroneous field: " + str(x))
+            raise ValueError(f"Fix your fields file. Contains erroneous field: {str(x)}")
         
     return fields_in_use
+
 
 def check_files(WB_type):
     '''
@@ -173,86 +175,13 @@ def check_files(WB_type):
         extensions_to_check = extract_dir.unique_extensions(FILES_DIR)
     
     if len(extensions_to_check) != 1:
-        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
+        raise OSError(f"Only one extension allowed. You have files with the extensions: {str(extensions_to_check)}")
     EXTENSION = extensions_to_check[0]
     if EXTENSION not in c.EXTENSIONS:
-        raise OSError("Invalid extension found: " + str(EXTENSION))
+        raise OSError(f"Invalid extension found: {str(EXTENSION)}")
     
     return media_list, EXTENSION
 
-def check_files_book():
-    '''
-    Check our files and generate:
-    - media_list, which is list of folder names if WB_type book
-    - EXTENSION variable, isolating the single extension uploaded
-    '''
-    print("Checking files ...")
-    
-    # get media_list
-    media_list = extract_dir.subdirectories_list(FILES_DIR)
-
-    # prep extensions_to_check, which gets populated
-    extensions_to_check = []
-
-    # perform directory checks:
-    # only subdirectories within FILES_DIR
-    validate.directory_contains_only_subdirectories(FILES_DIR)    
-    for subdirectory in media_list:
-        # each subdirectory contains files
-        validate.directory_contains_only_files(os.path.join(FILES_DIR, subdirectory))
-        # each subdirectory name is valid
-        validate.directory_name_for_book(subdirectory)
-        # prep for next bit
-        subdirectory_files = extract_dir.file_list(os.path.join(FILES_DIR, subdirectory), extensions=True)
-        subdirectory_filecount = len(subdirectory_files)
-        for file in subdirectory_files:
-            # file names conform to book requirements
-            validate.filename_for_book(subdirectory, os.path.splitext(file)[0])
-            # file names have correct padding
-            validate.filename_padding_amount(os.path.splitext(file)[0], subdirectory_filecount)
-            # add file extension to extension_to_check
-            extensions_to_check.append(os.path.splitext(file)[1])
-
-    # check extensions
-    extensions_to_check = convert_data.unique_in_list(extensions_to_check)
-    if len(extensions_to_check) != 1:
-        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
-    EXTENSION = extensions_to_check[0]
-    if EXTENSION not in c.EXTENSIONS:
-        raise OSError("Invalid extension found: " + str(EXTENSION))
-    
-    return media_list, EXTENSION
-
-def check_files_single():
-    '''
-    Check our files and generate:
-    - media_list, which is list of file names
-    - EXTENSION variable, isolating the single extension uploaded
-    '''
-    print("Checking files ...")
-
-    # get media_list
-    media_list = extract_dir.file_list(FILES_DIR, extensions=True)
-
-    # perform directory checks:
-    # only files within FILES_DIR
-    validate.directory_contains_only_files(FILES_DIR)
-    for file in media_list:
-        file = os.path.splitext(file)[0]
-        # and each file has a valid filename
-        validate.filename_for_single(file)
-
-    # get and check extension - single extension, is allowed
-    extensions_to_check = extract_dir.unique_extensions(FILES_DIR)
-    if len(extensions_to_check) != 1:
-        raise OSError("Only one extension allowed. You have files with the extensions: " + str(extensions_to_check))
-    EXTENSION = extensions_to_check[0]
-    if EXTENSION not in c.EXTENSIONS:
-        raise OSError("Invalid extension found: " + str(EXTENSION))
-
-    print("... files look okay ...")
-
-    return media_list, EXTENSION
 
 def process_AS(media_list):
     '''
@@ -446,6 +375,7 @@ def _AS_metadata_to_WB_fields():
     if access_issue_flag:
         print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')
 
+
 def _WB_uniform_fields():
     '''
     fills the following fields from uniform values:
@@ -457,6 +387,7 @@ def _WB_uniform_fields():
 
     if 'field_reformatting_quality' in fields_in_use:
         prepop_dict['field_reformatting_quality'] = [c.field_reformatting_quality for i in range(records_count)]
+
 
 def write_file(final_dict, use_AS):
     '''
@@ -537,12 +468,15 @@ def write_file(final_dict, use_AS):
     '''
     print(f'Done. Created file: {c.METADATA_DIR}\\{FILLABLE_FILENAME}')
 
+
+
 '''
 Execute functions to fill out the dictionary
 results in filled prepop_dict
 '''
 
 cl_args = create_args()
+
 WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank = process_args(cl_args)
 
 prepop_dict = {}
