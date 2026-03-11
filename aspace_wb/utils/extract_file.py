@@ -4,6 +4,7 @@ Metadata extraction from files
 
 import os
 from pypdf import PdfReader
+import aspace_wb.utils.default_specs as c
 
 try:
     import mutagen
@@ -65,6 +66,31 @@ def file_name(filepath):
 
 def file_extension(filepath):
     return os.path.splitext(filepath)[1]
+
+
+def construct_output_filename(orig_name, extension, script):
+    """
+    construct an appropriate name files output by wb-fillable, wb-to-wb, or wb-create-dos
+    appends script name (e.g. _wb-fillable), plus a counter (e.g. _2) if this will cause an existing file to be overwritten
+    """
+    
+    # if this is running on output from wb-fillable, strip that from the file name so we don't end up with a file named _wb-fillable_wb-to-wb
+    if "_wb-fillable" in orig_name and orig_name != "_wb-fillable":
+        orig_name = orig_name.replace("_wb_fillable", "")
+        
+    new_name = f"{orig_name}_{script}"
+    filepath = os.path.join(c.METADATA_DIR, f"{new_name}{extension}")
+    
+    while os.path.exists(filepath):
+        name_split = new_name.split("_")
+        # check that num < 20 as a rough heuristic to avoid changing numbers in file names that end with _date or _node
+        if name_split[-1].isdigit() and int(name_split[-1]) < 20:
+            counter = int(name_split[-1]) + 1
+            new_name = f"{"_".join(name_split[:-1])}_{counter}"
+        else:
+            new_name += "_2"
+            
+    return new_name
 
 
 def audio_id3_tags(filepath):

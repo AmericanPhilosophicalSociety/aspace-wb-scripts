@@ -423,18 +423,9 @@ def write_file(final_dict, use_AS):
         FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
     else:
         FILE_PREFIX = "output"
-    FILLABLE_FILENAME = f"{FILE_PREFIX}_wb-fillable"
+        
     FILE_EXTENSION = ".xlsx"
-
-
-    # if file already exists, add a counter to stop it from being overwritten
-    while os.path.exists(os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}")):
-        filename_split = FILLABLE_FILENAME.split("_")
-        if filename_split[-1].isdigit():
-            counter = int(filename_split[-1]) + 1
-            FILLABLE_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
-        else:
-            FILLABLE_FILENAME += "_2"
+    FILLABLE_FILENAME = extract_file.construct_output_filename(FILE_PREFIX, FILE_EXTENSION, "wb-fillable")
             
     pd_ExcelWriter = pandas.ExcelWriter(
         os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
