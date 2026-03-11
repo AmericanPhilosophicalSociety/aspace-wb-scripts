@@ -76,7 +76,7 @@ def construct_output_filename(orig_name, extension, script):
     
     # if this is running on output from wb-fillable, strip that from the file name so we don't end up with a file named _wb-fillable_wb-to-wb
     if "_wb-fillable" in orig_name and orig_name != "_wb-fillable":
-        orig_name = orig_name.replace("_wb_fillable", "")
+        orig_name = orig_name.replace("_wb-fillable", "")
         
     new_name = f"{orig_name}_{script}"
     filepath = os.path.join(c.METADATA_DIR, f"{new_name}{extension}")
@@ -89,6 +89,8 @@ def construct_output_filename(orig_name, extension, script):
             new_name = f"{"_".join(name_split[:-1])}_{counter}"
         else:
             new_name += "_2"
+            
+        filepath = os.path.join(c.METADATA_DIR, f"{new_name}{extension}")
             
     return new_name
 

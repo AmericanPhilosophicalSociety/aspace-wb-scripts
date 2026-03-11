@@ -8,6 +8,7 @@ import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import convert_data, use_CSVs, validate
+import aspace_wb.utils.extract_file as extract_file
 
 
 '''
@@ -213,20 +214,22 @@ print("... fields rearranged.")
 Export our WB csv
 '''
 # create output filename
-WB_FILENAME = f"{os.path.splitext(FILLED_FILENAME)[0]}_wb-to-wb"
+FILE_PREFIX = os.path.splitext(FILLED_FILENAME)[0]
 FILE_EXTENSION = ".csv"
+WB_FILENAME = extract_file.construct_output_filename(FILE_PREFIX, FILE_EXTENSION, "wb-to-wb")
 
 # if file already exists, append a counter to prevent overwriting
-while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION}")):
-    filename_split = WB_FILENAME.split("_")
-    if filename_split[-1].isdigit():
-        counter = int(filename_split[-1]) + 1
-        WB_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
-    else:
-        WB_FILENAME += "_2"
+# while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION}")):
+#     filename_split = WB_FILENAME.split("_")
+#     if filename_split[-1].isdigit():
+#         counter = int(filename_split[-1]) + 1
+#         WB_FILENAME = f"{"_".join(filename_split[:-1])}_{counter}"
+#     else:
+#         WB_FILENAME += "_2"
 
-FILENAME_FULL = f"{WB_FILENAME}{FILE_EXTENSION}"
+# FILENAME_FULL = f"{WB_FILENAME}{FILE_EXTENSION}"
 
+FILENAME_FULL = WB_FILENAME + FILE_EXTENSION
 use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILENAME_FULL))
 print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILENAME_FULL)}")
 
