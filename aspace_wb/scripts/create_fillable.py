@@ -424,11 +424,10 @@ def write_file(final_dict, use_AS):
     else:
         FILE_PREFIX = "output"
         
-    FILE_EXTENSION = ".xlsx"
-    FILLABLE_FILENAME = extract_file.construct_output_filename(FILE_PREFIX, FILE_EXTENSION, "wb-fillable")
+    FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-fillable")
             
     pd_ExcelWriter = pandas.ExcelWriter(
-        os.path.join(c.METADATA_DIR, f"{FILLABLE_FILENAME}{FILE_EXTENSION}"),
+        os.path.join(c.METADATA_DIR, FILE_NAME),
         engine="xlsxwriter"
     )
     output_pd_dataframe.to_excel(
@@ -463,7 +462,7 @@ def write_file(final_dict, use_AS):
     '''
     End
     '''
-    print(f'Done. Created file: {c.METADATA_DIR}\\{FILLABLE_FILENAME}')
+    print(f'Done. Created file: {c.METADATA_DIR}\\{FILE_NAME}')
 
 
 

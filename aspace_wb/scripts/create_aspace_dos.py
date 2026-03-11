@@ -84,11 +84,9 @@ Generate output xlsx
 output_pandas_DF = pandas.DataFrame(data=output_dict)
 
 # create output filename
-OUTPUT_PREFIX = os.path.splitext(NODES_FILE)[0]
-OUTPUT_EXTENSION = ".xlsx"
-OUTPUT_FILENAME = extract_file.construct_output_filename(OUTPUT_PREFIX, OUTPUT_EXTENSION, "wb-create-dos")
+FILE_PREFIX = os.path.splitext(NODES_FILE)[0]
+FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-create-dos")
 
-filename = f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"
-output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, filename), index=False)
+output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, FILE_NAME), index=False)
 
-print(f'Done. Created file: {os.path.join(c.METADATA_DIR, filename)}')
+print(f'Done. Created file: {os.path.join(c.METADATA_DIR, FILE_NAME)}')

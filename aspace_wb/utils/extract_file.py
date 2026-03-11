@@ -70,7 +70,7 @@ def file_extension(filepath):
 
 def construct_output_filename(orig_name, extension, script):
     """
-    construct an appropriate name files output by wb-fillable, wb-to-wb, or wb-create-dos
+    construct an appropriate name for files output by wb-fillable, wb-to-wb, or wb-create-dos
     appends script name (e.g. _wb-fillable), plus a counter (e.g. _2) if this will cause an existing file to be overwritten
     """
     
@@ -91,8 +91,8 @@ def construct_output_filename(orig_name, extension, script):
             new_name += "_2"
             
         filepath = os.path.join(c.METADATA_DIR, f"{new_name}{extension}")
-            
-    return new_name
+    
+    return f"{new_name}{extension}"
 
 
 def audio_id3_tags(filepath):

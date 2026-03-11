@@ -215,12 +215,10 @@ Export our WB csv
 '''
 # create output filename
 FILE_PREFIX = os.path.splitext(FILLED_FILENAME)[0]
-FILE_EXTENSION = ".csv"
-WB_FILENAME = extract_file.construct_output_filename(FILE_PREFIX, FILE_EXTENSION, "wb-to-wb")
+FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".csv", "wb-to-wb")
 
-FILENAME_FULL = WB_FILENAME + FILE_EXTENSION
-use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILENAME_FULL))
-print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILENAME_FULL)}")
+use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILE_NAME))
+print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILE_NAME)}")
 
 '''
 Post-completion reminders to user
