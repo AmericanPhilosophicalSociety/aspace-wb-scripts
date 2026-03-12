@@ -14,7 +14,6 @@ import aspace_wb.utils.extract_file as extract_file
 Parse command line arguments
     required, positional: nodes file (csv)
 '''
-print('Checking command line arguments - expected: [nodes csv file] ...')
 
 cl_parser = argparse.ArgumentParser()
 cl_parser.add_argument('nodes_file', type=str, help="Name of your Workbench output CSV (with .csv extension)")
@@ -24,8 +23,6 @@ NODES_FILE = cl_args.nodes_file
 # check existence of file
 if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
     raise OSError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
-
-print("... command line arguments okay ...")
 
 '''
 Load the nodes
