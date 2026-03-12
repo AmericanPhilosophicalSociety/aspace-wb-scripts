@@ -256,12 +256,6 @@ Testing/sample data is currently lacking. This should include sample media for v
 - There is currently no way to validate field entry against Islandora controlled vocabularies themselves unless they are explicitly downloaded into /vocabularies/ and code added to validate them (in ```wb-validate``` calling a function in utils/validate.py)
 - Agents from ArchivesSpace must currently come from a custom report where the maximum (50k rows, we need something close to 80k) is overridden using the browser inspect tool. An API call could be an improvement. There is currently [a ticket](https://archivesspace.atlassian.net/browse/ANW-2376) with ArchivesSpace to include agents (and all subjects and all other fields) in the spreadsheet.
 
-# To do
-
-- Replace language vocabulary with one that uses ISO639-2B where different to ISO639-3 (~20 cases). Probably necessary to replace the json extraction with something that uses the ISO639 library. Alternatively, have an ISO639-2B vocabulary of these differences and reference that, as they are unlikely to change. Temporary fix was to just edit the iso639.csv file to use 2B for a few languages.
-- After upgrade to ArchivesSpace v4, adapt Bulk Update Spreadsheet instructions and check for any discrepency between old and new sheets.
-- reorder output of ```wb-create-dos``` so all AS-entry fields are to the right
-
 # Contributing
 
 This library is under active development and welcomes contributions. Please work from the existing issues before submitting a pull request.
