@@ -397,13 +397,21 @@ def _WB_uniform_fields():
 
 def write_file(final_dict, use_AS):
     '''
-    Create Pandas dataframe from final_dict
+    Create Pandas dataframe from final_dict, then write to Excel sheet
     '''
     print('Creating output file ...')
 
     # create the Pandas dataframe
-    output_pd_dataframe = pandas.DataFrame(final_dict)
+    pandas_df = pandas.DataFrame(final_dict)
 
+    # make output filename, using bulk update sheet file prefix if available
+    if use_AS:
+        FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
+    else:
+        FILE_PREFIX = "output"
+        
+    FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-fillable")
+    
     '''
     Decorate and export the output file
 
@@ -418,19 +426,12 @@ def write_file(final_dict, use_AS):
     Instead, opted to just format the description row
 
     '''
-    # make output filename, using bulk update sheet file prefix if available
-    if use_AS:
-        FILE_PREFIX = os.path.splitext(AS_FILENAME)[0]
-    else:
-        FILE_PREFIX = "output"
-        
-    FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-fillable")
             
     pd_ExcelWriter = pandas.ExcelWriter(
         os.path.join(c.METADATA_DIR, FILE_NAME),
         engine="xlsxwriter"
     )
-    output_pd_dataframe.to_excel(
+    pandas_df.to_excel(
         pd_ExcelWriter, sheet_name="Workbench",
         startrow=0,
         header=True,
@@ -445,18 +446,18 @@ def write_file(final_dict, use_AS):
             'italic': True,
             'text_wrap': True,
             'valign': 'vcenter',
-            'center_across': True,
+            'align': 'center',
             'border': 1,
             'bg_color': "#ECEBD8"
         }
     )
     # write the formatting
     # set description row to use pd_description_format
-    CELL_HEIGHT_DESCRIPTION = 40
+    CELL_HEIGHT_DESCRIPTION = 60
     pd_ExcelWriter_sheet.set_row(1, CELL_HEIGHT_DESCRIPTION, pd_description_format)
     # set cell width to something reasonable. there is no such thing as autofit all cells.
     CELL_WIDTH = 30
-    pd_ExcelWriter_sheet.set_column(0,output_pd_dataframe.shape[1]-1,CELL_WIDTH)
+    pd_ExcelWriter_sheet.set_column(0,pandas_df.shape[1]-1,CELL_WIDTH)
     # close to write the file
     pd_ExcelWriter.close()
     '''
