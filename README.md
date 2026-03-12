@@ -80,7 +80,7 @@ cd C:/Users/username/Desktop/aspace-wb-scripts
 
 ## Prepare necessary files
 
-### Prepare media files (required)
+### Prepare media files (highly recommended)
 
 + Copy your media files into ```files_to_upload```. Do NOT run the script directly on files in the Digital Library Staging Area.
 + Your files should be named according to [CDS guidelines](https://americanphilosophicalsociety.github.io/APS_digitization/metadata/#file).
@@ -100,7 +100,7 @@ If the collection you're ingesting already has a finding aid, you can follow the
 
 This code provides you with a set of command line utilities that can be used to perform various Workbench-related tasks. These are designed to be used in sequence.
 
-Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```--fields``` or ```--filefolder``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
+Some of these commands take optional **flags**, which give the scripts additional information about how to process your data. Flags are parameters like ```--fields``` or ```--files``` that you can include in your commands, usually followed by some other piece of information such as a file name or variable. For more information and examples, see the sections below.
 
 ### Create fillable spreadsheet (```wb-fillable```)
 
@@ -111,8 +111,8 @@ Creates a simplified version of a Workbench spreadsheet, with some data prepopul
 | Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, video, or PDF object) | Yes | |  book |
 | Fields to include | Name of a .csv file containing a list of fields to include. Omit the .csv extension. You can create your own custom list (see below) or use one of the preset options: ```example_minimum_book```, ```example_minimum_single```, ```cnairaudio```, ```cnairbook```, or ```cnairimage```. If no list of fields is specified, all valid Workbench fields will be included. | Recommended | ```--fields```  | example_minimum_book |
 | Bulk update spreadsheet | Name (with .xlsx extension) of an adapted ArchivesSpace bulk update spreadsheet file | Recommended | ```--AS```  | update.xlsx
-| Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround them in quotes. | No | ```--filefolder```  | C:/Users/yshiroma/Desktop/"Files to Upload" |
-| Output blank sheet? | Use flag if you want to create a blank Workbench sheet using only the specified fields and field descriptions. No further info required | No | ```--blank```  | |
+| Path to media folder | Location of the folder containing your media files. Only necessary if you haven't copied these files into ```/files_to_upload```. Use forward slashes and if any directory names contain spaces, surround the path in quotes. | No | ```--files```  | "C:/Users/yshiroma/Desktop/Files to Upload" |
+| Output blank sheet? | Use this flag if you want to create a blank Workbench sheet using only the specified fields and field descriptions. This flag does not take any input. | No | ```--blank```  | |
 
 Example command with minimum required information:
 
@@ -120,10 +120,10 @@ Example command with minimum required information:
 wb-fillable book
 ```
 
-Example command with all flags:
+Example command to use a custom set of fields, ArchivesSpace data, and file path:
 
 ```bash
-wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --filefolder C:/Users/username/Desktop/"Folder Name"
+wb-fillable book --fields fields_file --AS archivesspace_file.xlsx --files "C:/Users/username/Desktop/Folder Name"
 ```
 
 Example command to create a blank spreadsheet from a particular set of fields, without drawing any information from media files or ArchivesSpace:

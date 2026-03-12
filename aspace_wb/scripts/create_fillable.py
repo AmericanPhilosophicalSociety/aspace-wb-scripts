@@ -22,7 +22,7 @@ def create_args():
         required, positional: Workbench upload type (book/single)
         optional: --fields name of fields file to use
         optional: --AS AS file to aid in populating metadata
-        optional: --filefolder alternate file path
+        optional: --files alternate file path
     '''
 
     # parse arguments - see above for listing
@@ -37,7 +37,7 @@ def create_args():
 
     cl_parser.add_argument('--AS', type=str, help="Name (with .xlsx extension) of your ArchivesSpace bulk update spreadsheet file")
     
-    cl_parser.add_argument('--filefolder', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
+    cl_parser.add_argument('--files', type=str, help="Location of the folder containing your media files. Only necessary if you haven't copied these files into /files_to_upload. Use forward slashes and if any directory names contain spaces, surround them in quotes.")
     
     cl_parser.add_argument('--blank', action='store_true', help="Output Workbench sheet with only field names and descriptions filled")
 
@@ -82,9 +82,9 @@ def process_args(cl_args):
         use_AS = False
         AS_FILENAME = None
 
-    # FILES_DIR from filefolder if supplied, otherwise uses defaults
-    if cl_args.filefolder:
-        FILES_DIR = cl_args.filefolder
+    # FILES_DIR from files arg if supplied, otherwise uses defaults
+    if cl_args.files:
+        FILES_DIR = cl_args.files
         # confirm the directory exists
         if not os.path.exists(FILES_DIR):
             raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
