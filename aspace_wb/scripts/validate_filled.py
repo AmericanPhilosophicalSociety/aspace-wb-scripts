@@ -28,7 +28,6 @@ Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-print('Checking command line arguments - expected: [single/book] [filled file.xlsx] ...')
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
@@ -44,8 +43,6 @@ WB_type = cl_args.type
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
     raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
-
-print("... command line arguments okay.")
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access
