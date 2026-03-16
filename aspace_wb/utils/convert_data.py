@@ -271,9 +271,8 @@ def lang_info_to_wb(input):
         if individual_language["name"] == input or individual_language["wb_code"] == input:
             return individual_language["wb_code"]
     
-    # eles, input is not valid and cannot be returned as full WB entry
-    # raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")    
-    return None
+    # else, input is not valid and cannot be returned as full WB entry
+    raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")    
 
 def pipe_to_semicolon(input):
     '''

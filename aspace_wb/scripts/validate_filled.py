@@ -186,9 +186,10 @@ if "field_language" in INPUT_FIELDS:
         if not validate.nan(value):
             languages = value.split("|")
             for language in languages:
-                lang_code = convert_data.lang_info_to_wb(language)
-                if not lang_code:
-                    print(f"Invalid language: {language}")
+                try:
+                    lang_code = convert_data.lang_info_to_wb(language)
+                except Exception as e:
+                    print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 
 print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
