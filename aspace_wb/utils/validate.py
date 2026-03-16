@@ -194,34 +194,6 @@ def ISO8601_date(input):
         )
 
 
-def language(input):
-    """
-    Supply code OR language, validate these
-    """
-    if input in c.LANGUAGE_CODES:
-        return True
-    elif input in c.LANGUAGE_NAMES:
-        return True
-    else:
-        raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")
-
-def validate_language(input):
-    """
-    Input ISO code, language name, or both
-    returns Workbench name for language in format Name (code), or None if value not found in language dict
-    """
-    
-    language_dict = c.LANGUAGE_DICT
-    
-    if input in language_dict:
-        return language_dict[input]["wb_code"]
-    
-    for individual_language in language_dict.values():
-        if individual_language["name"] == input or individual_language["wb_code"] == input:
-            return individual_language["wb_code"]
-        
-    return None
-
 def list_is_all_empty(input):
     # for each item in the input list, check it's not a NaN and then check if it's anything
     # if any are anything, return false, else return true (list is all empty)

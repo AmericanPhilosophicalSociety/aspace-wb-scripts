@@ -118,7 +118,7 @@ def _add_complex_fields():
                 #     "|".join([convert_data.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
                 # )
                 WB_dict["field_language"].append(
-                    "|".join([validate.validate_language(language) for language in input_dict["field_language"][i].split("|")])
+                    "|".join([convert_data.lang_info_to_wb(language) for language in input_dict["field_language"][i].split("|")])
                 )
             else:
                 WB_dict["field_language"].append("")

@@ -186,7 +186,7 @@ if "field_language" in INPUT_FIELDS:
         if not validate.nan(value):
             languages = value.split("|")
             for language in languages:
-                lang_code = validate.validate_language(language)
+                lang_code = convert_data.lang_info_to_wb(language)
                 if not lang_code:
                     print(f"Invalid language: {language}")
                 else:
