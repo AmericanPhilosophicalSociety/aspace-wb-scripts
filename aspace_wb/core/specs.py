@@ -38,6 +38,7 @@ LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(
 LANGUAGE_CODES = use_CSVs.CSV_col_to_list(
     get_package_data_path("vocabularies", ISO639_FILENAME), 1
 )
+
 CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(
     get_package_data_path("vocabularies", CNAIR_SUBJECTS_FILENAME), 0
 )

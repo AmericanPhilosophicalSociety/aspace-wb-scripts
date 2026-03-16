@@ -17,7 +17,8 @@ try:
 except ImportError:
     pandas = None
 import os
-from aspace_wb.core import specs as c
+# from aspace_wb.core import specs as c
+from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import extract_dir, extract_file
 
 """
@@ -204,6 +205,22 @@ def language(input):
     else:
         raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")
 
+def validate_language(input):
+    """
+    Input ISO code, language name, or both
+    returns Workbench name for language in format Name (code), or None if value not found in language dict
+    """
+    
+    language_dict = c.LANGUAGE_DICT
+    
+    if input in language_dict:
+        return language_dict[input]["wb_code"]
+    
+    for individual_language in language_dict.values():
+        if individual_language["name"] == input or individual_language["wb_code"] == input:
+            return individual_language["wb_code"]
+        
+    return None
 
 def list_is_all_empty(input):
     # for each item in the input list, check it's not a NaN and then check if it's anything

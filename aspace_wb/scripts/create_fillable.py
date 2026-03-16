@@ -15,7 +15,6 @@ import aspace_wb.utils.use_CSVs as use_CSVs
 import aspace_wb.utils.validate as validate
 from aspace_wb.data import fields
 
-
 def create_args():
     '''
     Parse command line arguments

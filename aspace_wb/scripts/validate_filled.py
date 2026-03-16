@@ -21,7 +21,7 @@ import os
 import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
-from aspace_wb.utils import extract_dir, validate
+from aspace_wb.utils import extract_dir, validate, convert_data
 
 '''
 Parse command line arguments
@@ -180,17 +180,23 @@ if "field_cnair_subject" in INPUT_FIELDS:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 # field_language
-
 if "field_language" in INPUT_FIELDS:
     print("Checking field_language...")
-    for x in input_dict["field_language"]:
-        if not validate.nan(x):
+    for value in input_dict["field_language"]:
+        if not validate.nan(value):
+            languages = value.split("|")
+            for language in languages:
+                lang_code = validate.validate_language(language)
+                if not lang_code:
+                    print(f"Invalid language: {language}")
+                else:
+                    print(lang_code)
             # multiple options possible. split:
-            for y in x.split('|'):
-                try:
-                    validate.language(y)
-                except Exception as e:
-                    print(c.VALIDATE_ERROR_PREFIX + str(e))
+            # for y in value.split('|'):
+            #     try:
+            #         validate.language(y)
+            #     except Exception as e:
+            #         print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 
 print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")

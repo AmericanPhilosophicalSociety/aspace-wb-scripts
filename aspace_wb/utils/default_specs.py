@@ -4,6 +4,7 @@ File defining constants, Workbench fields, and mappings between different fields
 from aspace_wb.utils import use_CSVs
 from importlib.resources import files as import_file
 from aspace_wb.data import vocabularies
+import csv
 
 '''
 Locations of files & directories; controlled vocabularies; misc
@@ -23,6 +24,22 @@ RELATOR_CODES_FILENAME = "relator.csv"
 # controlled vocabularies, from the above
 LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 0)
 LANGUAGE_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 1)
+
+def construct_language_dict():
+    LANGUAGE_PATH = import_file(vocabularies).joinpath(ISO639_FILENAME)
+    dict = {}
+    with open(LANGUAGE_PATH, mode='r', newline='', encoding='utf-8') as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            name = row[0]
+            code = row[1]
+            
+            dict[code] = {"name": name,
+                          "wb_code": f"{name} ({code})"}
+    return dict
+
+LANGUAGE_DICT = construct_language_dict()
+
 CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
 # CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, CNAIR_SUBJECTS_FILENAME), 0)
 RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(RELATOR_CODES_FILENAME), 0)
