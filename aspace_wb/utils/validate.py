@@ -245,6 +245,7 @@ def list_is_single_value_then_empty_string(input):
 
 
 def validate_loc(input, authority):
+    # validates 
     loc = LocAPI()
 
     # LOC currently request a max of 20 requests per minute
@@ -266,7 +267,7 @@ def validate_loc(input, authority):
 def piped_fields_same_length(input1, input2):
     # returns True if two pipe-separated fields are the same length
     # this is for cases where we mix the fields, e.g. agents (agent_name, agent_relator)
-    if len(input1.split("|")) == len(input2.split("|")):
+    if not nan(input1) and not nan(input2) and len(input1.split("|")) == len(input2.split("|")):
         return True
     else:
         raise ValueError(
