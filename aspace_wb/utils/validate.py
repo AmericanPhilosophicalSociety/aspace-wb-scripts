@@ -245,7 +245,9 @@ def list_is_single_value_then_empty_string(input):
 
 
 def validate_loc(input, authority):
-    # validates 
+    # validates that input text is a valid LOC subject heading
+    # can search a specific authority or all authorities
+    # case-sensitive
     loc = LocAPI()
 
     # LOC currently request a max of 20 requests per minute

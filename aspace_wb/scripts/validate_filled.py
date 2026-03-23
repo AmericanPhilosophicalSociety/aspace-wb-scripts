@@ -32,6 +32,7 @@ Parse command line arguments
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
 cl_parser.add_argument('filled_file', type=str, help="Name (with .xlsx extension) of your simplified Workbench sheet")
+cl_parser.add_argument('--skiploc', action='store_true', help="Skip validation of LOC headings. Use if you've already run LOC validation and want wb-validate to run faster")
 cl_args = cl_parser.parse_args()
 
 # assign arguments
@@ -43,6 +44,9 @@ WB_type = cl_args.type
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
     raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
+
+# skip_loc from --skip-loc
+skip_loc = cl_args.skiploc
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access
@@ -121,15 +125,16 @@ def check_subject_fields(field, authority):
                 if not subject_is_valid:
                     print(f"!! Warning - No LOC heading found for subject: {subject_to_check}")
 
-if "field_subject" in INPUT_FIELDS:
-    check_subject_fields("field_subject", "subjects")
-if "field_subjects_name" in INPUT_FIELDS:
-    check_subject_fields("field_subjects_name", "names")
-#TODO: should these search a specific authority? may need to add functionality to loc-api
-if "field_geographic_subject" in INPUT_FIELDS:
-    check_subject_fields("field_geographic_subject", None)
-if "field_temporal_subject" in INPUT_FIELDS:
-    check_subject_fields("field_temporal_subject", None)
+if not skip_loc:
+    if "field_subject" in INPUT_FIELDS:
+        check_subject_fields("field_subject", "subjects")
+    if "field_subjects_name" in INPUT_FIELDS:
+        check_subject_fields("field_subjects_name", "names")
+    #TODO: should these search a specific authority? may need to add functionality to loc-api
+    if "field_geographic_subject" in INPUT_FIELDS:
+        check_subject_fields("field_geographic_subject", None)
+    if "field_temporal_subject" in INPUT_FIELDS:
+        check_subject_fields("field_temporal_subject", None)
 
 
 # field_linked_agent fields
@@ -154,21 +159,21 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
             try:
                 validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_RELATOR"][i])
             except Exception as e:
-                print("name and relator")
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
 
-    print("... checking that names are valid LOC ...")
-    for names in input_dict["field_linked_agent_NAME"]:
-        if not validate.nan(names):
-            names_split = names.split('|')
-            for name in names_split:
-                try:
-                    loc_valid = validate.validate_loc(name, "names")
-                    if not loc_valid:
-                        print(f"!! Warning - No LOC heading found for name: {name}")
-                except Exception as e:
-                    print("name valid")
-                    print(c.VALIDATE_ERROR_PREFIX + str(e))
+    if not skip_loc:
+        print("... checking that names are valid LOC ...")
+        for names in input_dict["field_linked_agent_NAME"]:
+            if not validate.nan(names):
+                names_split = names.split('|')
+                for name in names_split:
+                    try:
+                        loc_valid = validate.validate_loc(name, "names")
+                        if not loc_valid:
+                            print(f"!! Warning - No LOC heading found for name: {name}")
+                    except Exception as e:
+                        print("name valid")
+                        print(c.VALIDATE_ERROR_PREFIX + str(e))
 
     print("... checking that type is always empty or same length as name ...")
     for i in range(INPUT_ROW_COUNT):
