@@ -166,7 +166,7 @@ Validates that certain fields have been entered correctly in ```output_wb-fillab
 | --- | --- | --- | --- | --- |
 | Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | | book |
 | Name of your simplified workbench sheet | Name (with .xlsx extension) of your simplified Workbench sheet | Yes | | output_wb-filled.xlsx |
-| Skip LOC validation? | Use this flag if you want to skip validation of Library of Congress subject headings, speeding up processing time. This flag does not take any input. | No | ```--skiploc``` |  |
+| Skip LOC validation? | Use this flag if you want to skip validation of Library of Congress subject headings, speeding up processing time (validation takes 3 seconds/heading). This flag does not take any input. | No | ```--skiploc``` |  |
 
 Run ```wb-validate```, including LOC validation:
 
@@ -185,7 +185,7 @@ This process will check the following:
 + All field names are valid
 + Titles are unique
 + If any titles need a URL alias, you will be prompted to enter one (NOTE: script does not check whether a URL alias has been entered already, or whether that URL alias is valid)
-+ ```field_subject```, ```field_subjects_name```, ```field_geographic_subject```, ```field_temporal_subject```, and ```field_linked_agent_NAME``` contain valid Library of Congress subject headings. (NOTE: this works by querying the [Library of Congress API](https://www.loc.gov/apis/json-and-yaml/). In certain cases, valid subject headings--especially complex subject headings--may show as invalid. Search is case-sensitive.)
++ ```field_subject```, ```field_subjects_name```, ```field_geographic_subject```, ```field_temporal_subject```, and ```field_linked_agent_NAME``` contain valid Library of Congress subject headings. (NOTE: this works by querying the [Library of Congress API](https://www.loc.gov/apis/json-and-yaml/). In certain cases, valid subject headings--especially complex subject headings--may show as invalid. Search is case-sensitive. Headings from other authorities will need to be checked manually.)
 + Relator codes and linked agent types are valid, and match the number of names listed in ```field_linked_agent_NAME```
 + Dates in ```field_edtf_date_created``` are valid
 + Correct control terms are used in ```field_cnair_subject``` and ```field_language```
