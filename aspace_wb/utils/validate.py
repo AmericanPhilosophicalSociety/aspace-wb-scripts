@@ -5,6 +5,9 @@ These all take a single instance of something
 EDTF standard defined here: https://www.loc.gov/standards/datetime/
 """
 
+import time
+from loc_authorities.api import LocAPI
+
 try:
     import edtf_validate.valid_edtf
 except ImportError:
@@ -240,6 +243,25 @@ def list_is_single_value_then_empty_string(input):
     else:
         return False
 
+
+def validate_loc(input, authority):
+    loc = LocAPI()
+
+    # LOC currently request a max of 20 requests per minute
+    # see: https://www.loc.gov/apis/json-and-yaml/working-within-limits/
+    seconds_delay = 60/20
+    time.sleep(seconds_delay)
+    if authority:
+        loc_result = loc.retrieve_label(input, authority)
+    else:
+        loc_result = loc.retrieve_label(input)
+    # print(f"loc_result: {loc_result}")
+
+    if loc_result:
+        return True
+    else:
+        return False
+    
 
 def piped_fields_same_length(input1, input2):
     # returns True if two pipe-separated fields are the same length

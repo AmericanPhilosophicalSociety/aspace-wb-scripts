@@ -18,12 +18,10 @@ TO ADD? validate that DOWNFILLING are valid. warn if empty.
 '''
 
 import os
-import time
 import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import extract_dir, validate, convert_data
-from loc_authorities.api import LocAPI
 
 '''
 Parse command line arguments
@@ -110,30 +108,30 @@ if "title" in INPUT_FIELDS:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
                 print(f"!! Warning - if a Book, the following title needs a url_alias under {str(c.BOOK_TITLE_URL_ALIAS_LENGTH)} characters: {str(title)}")
 
-def validate_loc(input):
-    loc = LocAPI()
+# check that entries in field_subject, field_subjects_name, field_geographic_subject, and field_temporal_subject are valid LOC and prints a warning if not
 
-    # LOC currently request a max of 20 requests per minute
-    # see: https://www.loc.gov/apis/json-and-yaml/working-within-limits/
-    seconds_delay = 60/20
-    time.sleep(seconds_delay)
+def check_subject_fields(field, authority):
+    subjects = input_dict[field]
+    for subject in subjects:
+        if not validate.nan(subject):
+            subject_split = subject.split('|')
+            for subject_to_check in subject_split:
+                subject_is_valid = validate.validate_loc(subject_to_check, authority)
 
-    loc_result = loc.retrieve_label(input)
-    # print(f"loc_result: {loc_result}")
+                if not subject_is_valid:
+                    print(f"!! Warning - No LOC heading found for subject: {subject_to_check}")
 
-    if loc_result:
-        return True
-    else:
-        return False
+if "field_subject" in INPUT_FIELDS:
+    check_subject_fields("field_subject", "subjects")
+if "field_subjects_name" in INPUT_FIELDS:
+    check_subject_fields("field_subjects_name", "names")
+#TODO: need to update loc-api to pass geographic authority
+if "field_geographic_subject" in INPUT_FIELDS:
+    check_subject_fields("field_geographic_subject", None)
+if "field_temporal_subject" in INPUT_FIELDS:
+    check_subject_fields("field_temporal_subject", None)
 
 
-#TODO: check LOC here
-# field_subject
-# field_subjects_name
-# field_geographic_subject
-# field_temporal_subject
-
-#TODO: add logic to check these are valid LOC
 # field_linked_agent fields
 
 if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in INPUT_FIELDS and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
@@ -156,9 +154,10 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
             try:
                 validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_RELATOR"][i])
 
+                #TODO: seems to be throwing error 'float' object has no attribute 'split'
                 names = input_dict["field_linked_agent_NAME"][i].split('|')
                 for name in names:
-                    loc_valid = validate_loc(name)
+                    loc_valid = validate.validate_loc(name, "names")
                     if not loc_valid:
                         print(f"!! Warning - No LOC heading found for name: {name}")
             except Exception as e:
