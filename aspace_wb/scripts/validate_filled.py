@@ -18,10 +18,12 @@ TO ADD? validate that DOWNFILLING are valid. warn if empty.
 '''
 
 import os
+import time
 import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import extract_dir, validate, convert_data
+from loc_authorities.api import LocAPI
 
 '''
 Parse command line arguments
@@ -108,7 +110,30 @@ if "title" in INPUT_FIELDS:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
                 print(f"!! Warning - if a Book, the following title needs a url_alias under {str(c.BOOK_TITLE_URL_ALIAS_LENGTH)} characters: {str(title)}")
 
+def validate_loc(input):
+    loc = LocAPI()
 
+    # LOC currently request a max of 20 requests per minute
+    # see: https://www.loc.gov/apis/json-and-yaml/working-within-limits/
+    seconds_delay = 60/20
+    time.sleep(seconds_delay)
+
+    loc_result = loc.retrieve_label(input)
+    # print(f"loc_result: {loc_result}")
+
+    if loc_result:
+        return True
+    else:
+        return False
+
+
+#TODO: check LOC here
+# field_subject
+# field_subjects_name
+# field_geographic_subject
+# field_temporal_subject
+
+#TODO: add logic to check these are valid LOC
 # field_linked_agent fields
 
 if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in INPUT_FIELDS and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
@@ -116,12 +141,12 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
 
     print("... checking relator codes ...")
     # TO DO? could we allow title entry of relators too?
-    for x in input_dict["field_linked_agent_RELATOR"]:
-        if not validate.nan(x):
+    for relators in input_dict["field_linked_agent_RELATOR"]:
+        if not validate.nan(relators):
             # multiple options possible. split:
-            for y in x.split('|'):
+            for relator in relators.split('|'):
                 try:
-                    validate.relator_code(y)
+                    validate.relator_code(relator)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -130,6 +155,12 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
         if not validate.nan(input_dict["field_linked_agent_NAME"][i]):
             try:
                 validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_RELATOR"][i])
+
+                names = input_dict["field_linked_agent_NAME"][i].split('|')
+                for name in names:
+                    loc_valid = validate_loc(name)
+                    if not loc_valid:
+                        print(f"!! Warning - No LOC heading found for name: {name}")
             except Exception as e:
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -143,9 +174,9 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
 
     print("... checking type ...")
     for i in range(INPUT_ROW_COUNT):
-        ts = input_dict["field_linked_agent_TYPE"][i]
-        if not validate.nan(ts):
-            for t in ts.split('|'):
+        types = input_dict["field_linked_agent_TYPE"][i]
+        if not validate.nan(types):
+            for t in types.split('|'):
                 try:
                     validate.agent_type(t)
                 except Exception as e:
