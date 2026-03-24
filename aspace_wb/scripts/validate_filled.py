@@ -154,14 +154,10 @@ if not skip_loc:
             input_dict,
             "subjects", 
             loc_dict)
-        
-    print(loc_dict)
+
+    # when done checking LOC, isolate only invalid ones    
     names_invalid = {loc: values["fields"] for loc, values in loc_dict["names"].items() if values["valid"] == False}
     subjects_invalid = {loc: values["fields"] for loc, values in loc_dict["subjects"].items() if values["valid"] == False}
-    print("\n\n")
-    print(names_invalid)
-    print("\n\n")
-    print(subjects_invalid)
 
     for loc, fields_list in names_invalid.items():
         if loc in subjects_invalid:
@@ -255,11 +251,11 @@ if "field_language" in INPUT_FIELDS:
 
 
 if not skip_loc:
-    print(f"The following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
+    if loc_invalid:
+        print(f"\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
 
-    for key, value in loc_invalid.items():
-        print(f"{key} ({", ".join(value)})")
-        
-    print("\n")
+        for key, value in loc_invalid.items():
+            print(f"{key} ({", ".join(value)})")
 
-print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
+
+print("\nValidation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
