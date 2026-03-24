@@ -169,8 +169,6 @@ if not skip_loc:
 
     # merge two lists; if same LOC exists in both, keep the more complete list of fields in subjects_invalid
     loc_invalid = names_invalid | subjects_invalid
-    print("\n\n")
-    print(loc_invalid)
 
 
 # field_linked_agent fields
@@ -256,6 +254,12 @@ if "field_language" in INPUT_FIELDS:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 
+if not skip_loc:
+    print(f"The following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
 
+    for key, value in loc_invalid.items():
+        print(f"{key} ({", ".join(value)})")
+        
+    print("\n")
 
 print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
