@@ -6,7 +6,7 @@ EDTF standard defined here: https://www.loc.gov/standards/datetime/
 """
 
 import time
-from loc_authorities.api import LocAPI
+from loc_authorities.api import LocAPI, LocEntity
 
 try:
     import edtf_validate.valid_edtf
@@ -246,24 +246,33 @@ def list_is_single_value_then_empty_string(input):
 
 def validate_loc(input, authority):
     # validates that input text is a valid LOC subject heading
+    # returns true/false plus authoritative label (if this differs from value that is entered)
     # can search a specific authority or all authorities
     # case-sensitive
+    
     loc = LocAPI()
 
     # LOC currently request a max of 20 requests per minute
     # see: https://www.loc.gov/apis/json-and-yaml/working-within-limits/
     seconds_delay = 60/20
-    time.sleep(seconds_delay)
+    
     if authority:
         loc_result = loc.retrieve_label(input, authority)
     else:
         loc_result = loc.retrieve_label(input)
-    # print(f"loc_result: {loc_result}")
+    time.sleep(seconds_delay)
 
     if loc_result:
-        return True
+        entity = LocEntity(loc_result)
+        time.sleep(seconds_delay)
+
+        # if a variant label is used instead of the authoritative one, save this info
+        if str(entity.authoritative_label) == input:
+            return True, None
+        else:
+            return True, str(entity.authoritative_label)
     else:
-        return False
+        return False, None
 
 def check_loc_field(field, input_dict, authority, loc_dict):
     """
@@ -279,9 +288,10 @@ def check_loc_field(field, input_dict, authority, loc_dict):
             subjects = cell.split('|')
             for subject in subjects:
                 if subject not in loc_dict[authority]:
-                    subject_is_valid = validate_loc(subject, authority)
+                    subject_is_valid, auth_label = validate_loc(subject, authority)
 
                     loc_dict[authority][subject] = {"valid": subject_is_valid,
+                                                    "auth_label": auth_label,
                                                     "fields": [field]}
 
                     if not subject_is_valid:

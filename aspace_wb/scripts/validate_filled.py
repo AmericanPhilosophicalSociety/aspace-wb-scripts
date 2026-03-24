@@ -154,6 +154,8 @@ if not skip_loc:
             input_dict,
             "subjects", 
             loc_dict)
+        
+    # print(loc_dict)
 
     # when done checking LOC, isolate only invalid ones    
     names_invalid = {loc: values["fields"] for loc, values in loc_dict["names"].items() if values["valid"] == False}
@@ -165,6 +167,11 @@ if not skip_loc:
 
     # merge two lists; if same LOC exists in both, keep the more complete list of fields in subjects_invalid
     loc_invalid = names_invalid | subjects_invalid
+
+    # isolate LOC where version entered is not authoritative
+    names_auth = {loc: values["auth_label"] for loc, values in loc_dict["names"].items() if values["auth_label"] is not None}
+    subjects_auth = {loc: values["auth_label"] for loc, values in loc_dict["subjects"].items() if values["auth_label"] is not None}
+    loc_auth_values = names_auth | subjects_auth
 
 
 # field_linked_agent fields
@@ -256,6 +263,12 @@ if not skip_loc:
 
         for key, value in loc_invalid.items():
             print(f"{key} ({", ".join(value)})")
+
+    if loc_auth_values:
+        print(f"\nThe following Library of Congress subject headings passed validation, but you entered a variant label instead of the authoritative one. Consider making the following changes:\n")
+
+        for key, value in loc_auth_values.items():
+            print(f"{key} -> {value}")
 
 
 print("\nValidation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
