@@ -265,7 +265,7 @@ def validate_loc(input, authority):
     else:
         return False
 
-def check_subject_fields(column, authority, loc_dict):
+def check_loc_field(column, authority, loc_dict):
     """
     validates all LOC headings appearing in a single column
     column = list of all values in one column where one value can be NAN, a single LCSH, or a pipe-separated list of LCSH

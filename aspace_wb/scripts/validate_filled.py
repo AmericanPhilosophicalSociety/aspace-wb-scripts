@@ -126,29 +126,28 @@ if not skip_loc:
     }
 
     if "field_linked_agent_NAME" in INPUT_FIELDS:
-        validate.check_subject_fields(
+        validate.check_loc_field(
             input_dict["field_linked_agent_NAME"], 
             "names", 
             loc_dict)
-
     if "field_subject" in INPUT_FIELDS:
-        validate.check_subject_fields(
+        validate.check_loc_field(
             input_dict["field_subject"], 
             "subjects", 
             loc_dict)
     if "field_subjects_name" in INPUT_FIELDS:
-        validate.check_subject_fields(
+        validate.check_loc_field(
             input_dict["field_subjects_name"], 
             "names", 
             loc_dict)
     #TODO: should these search a specific authority? may need to add functionality to loc-api
     if "field_geographic_subject" in INPUT_FIELDS:
-        validate.check_subject_fields(
+        validate.check_loc_field(
             input_dict["field_geographic_subject"], 
-            None, 
+            "names", 
             loc_dict)
     if "field_temporal_subject" in INPUT_FIELDS:
-        validate.check_subject_fields(
+        validate.check_loc_field(
             input_dict["field_temporal_subject"], 
             None, 
             loc_dict)
