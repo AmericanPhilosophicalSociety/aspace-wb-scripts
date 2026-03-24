@@ -288,15 +288,15 @@ def check_loc_field(field, input_dict, authority, loc_dict):
             subjects = cell.split('|')
             for subject in subjects:
                 if subject not in loc_dict[authority]:
-                    subject_is_valid, auth_label = validate_loc(subject, authority)
+                    try:
+                        subject_is_valid, auth_label = validate_loc(subject, authority)
 
-                    loc_dict[authority][subject] = {"valid": subject_is_valid,
-                                                    "auth_label": auth_label,
-                                                    "fields": [field]}
+                        loc_dict[authority][subject] = {"valid": subject_is_valid,
+                                                        "auth_label": auth_label,
+                                                        "fields": [field]}
 
-                    if not subject_is_valid:
-                        pass
-                        # print(f"!! Warning - No LOC heading found for subject: {subject}")
+                    except Exception as e:
+                        print(f"An error occurred while checking subject heading {subject}: {e}")
 
                 elif field not in loc_dict[authority][subject]["fields"]:
                     loc_dict[authority][subject]["fields"].append(field)
