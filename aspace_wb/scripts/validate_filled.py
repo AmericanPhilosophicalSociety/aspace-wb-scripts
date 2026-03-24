@@ -112,29 +112,48 @@ if "title" in INPUT_FIELDS:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
                 print(f"!! Warning - if a Book, the following title needs a url_alias under {str(c.BOOK_TITLE_URL_ALIAS_LENGTH)} characters: {str(title)}")
 
-# check that entries in field_subject, field_subjects_name, field_geographic_subject, and field_temporal_subject are valid LOC and prints a warning if not
-
-def check_subject_fields(field, authority):
-    subjects = input_dict[field]
-    for subject in subjects:
-        if not validate.nan(subject):
-            subject_split = subject.split('|')
-            for subject_to_check in subject_split:
-                subject_is_valid = validate.validate_loc(subject_to_check, authority)
-
-                if not subject_is_valid:
-                    print(f"!! Warning - No LOC heading found for subject: {subject_to_check}")
+# check that entries in field_linked_agent_NAME, field_subject, field_subjects_name, field_geographic_subject, and field_temporal_subject are valid LOC and print a warning if not
 
 if not skip_loc:
+    print("... validating LOC subject headings ...")
+
+    # add all checked LOC to a dict to avoid checking again
+    # separate by authority to increase chance of catching errors where an LOC appears in wrong column (e.g. a name in field_subject)
+    loc_dict = {
+        "names": {},
+        "subjects": {},
+        "other": {}
+    }
+
+    if "field_linked_agent_NAME" in INPUT_FIELDS:
+        validate.check_subject_fields(
+            input_dict["field_linked_agent_NAME"], 
+            "names", 
+            loc_dict)
+
     if "field_subject" in INPUT_FIELDS:
-        check_subject_fields("field_subject", "subjects")
+        validate.check_subject_fields(
+            input_dict["field_subject"], 
+            "subjects", 
+            loc_dict)
     if "field_subjects_name" in INPUT_FIELDS:
-        check_subject_fields("field_subjects_name", "names")
+        validate.check_subject_fields(
+            input_dict["field_subjects_name"], 
+            "names", 
+            loc_dict)
     #TODO: should these search a specific authority? may need to add functionality to loc-api
     if "field_geographic_subject" in INPUT_FIELDS:
-        check_subject_fields("field_geographic_subject", None)
+        validate.check_subject_fields(
+            input_dict["field_geographic_subject"], 
+            None, 
+            loc_dict)
     if "field_temporal_subject" in INPUT_FIELDS:
-        check_subject_fields("field_temporal_subject", None)
+        validate.check_subject_fields(
+            input_dict["field_temporal_subject"], 
+            None, 
+            loc_dict)
+        
+    # print(loc_dict)
 
 
 # field_linked_agent fields
@@ -160,20 +179,6 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
                 validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_RELATOR"][i])
             except Exception as e:
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
-
-    if not skip_loc:
-        print("... checking that names are valid LOC ...")
-        for names in input_dict["field_linked_agent_NAME"]:
-            if not validate.nan(names):
-                names_split = names.split('|')
-                for name in names_split:
-                    try:
-                        loc_valid = validate.validate_loc(name, "names")
-                        if not loc_valid:
-                            print(f"!! Warning - No LOC heading found for name: {name}")
-                    except Exception as e:
-                        print("name valid")
-                        print(c.VALIDATE_ERROR_PREFIX + str(e))
 
     print("... checking that type is always empty or same length as name ...")
     for i in range(INPUT_ROW_COUNT):
