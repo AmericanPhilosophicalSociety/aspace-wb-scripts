@@ -126,32 +126,51 @@ if not skip_loc:
 
     if "field_linked_agent_NAME" in INPUT_FIELDS:
         validate.check_loc_field(
-            input_dict["field_linked_agent_NAME"], 
+            "field_linked_agent_NAME",
+            input_dict,
             "names", 
             loc_dict)
     if "field_subject" in INPUT_FIELDS:
         validate.check_loc_field(
-            input_dict["field_subject"], 
+            "field_subject",
+            input_dict,
             "subjects", 
             loc_dict)
     if "field_subjects_name" in INPUT_FIELDS:
         validate.check_loc_field(
-            input_dict["field_subjects_name"], 
+            "field_subjects_name",
+            input_dict, 
             "names", 
             loc_dict)
-    #TODO: should these search a specific authority? may need to add functionality to loc-api
     if "field_geographic_subject" in INPUT_FIELDS:
         validate.check_loc_field(
-            input_dict["field_geographic_subject"], 
+            "field_geographic_subject",
+            input_dict,
             "names", 
             loc_dict)
     if "field_temporal_subject" in INPUT_FIELDS:
         validate.check_loc_field(
-            input_dict["field_temporal_subject"], 
+            "field_temporal_subject",
+            input_dict,
             "subjects", 
             loc_dict)
         
-    # print(loc_dict)
+    print(loc_dict)
+    names_invalid = {loc: values["fields"] for loc, values in loc_dict["names"].items() if values["valid"] == False}
+    subjects_invalid = {loc: values["fields"] for loc, values in loc_dict["subjects"].items() if values["valid"] == False}
+    print("\n\n")
+    print(names_invalid)
+    print("\n\n")
+    print(subjects_invalid)
+
+    for loc, fields_list in names_invalid.items():
+        if loc in subjects_invalid:
+            subjects_invalid[loc].extend(fields_list)
+
+    # merge two lists; if same LOC exists in both, keep the more complete list of fields in subjects_invalid
+    loc_invalid = names_invalid | subjects_invalid
+    print("\n\n")
+    print(loc_invalid)
 
 
 # field_linked_agent fields
@@ -235,6 +254,8 @@ if "field_language" in INPUT_FIELDS:
                     lang_code = convert_data.lang_info_to_wb(language)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
+
+
 
 
 print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")

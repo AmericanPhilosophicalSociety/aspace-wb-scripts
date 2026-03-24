@@ -265,12 +265,15 @@ def validate_loc(input, authority):
     else:
         return False
 
-def check_loc_field(column, authority, loc_dict):
+def check_loc_field(field, input_dict, authority, loc_dict):
     """
     validates all LOC headings appearing in a single column
     column = list of all values in one column where one value can be NAN, a single LCSH, or a pipe-separated list of LCSH
     avoids checking twice by adding all headings checked to loc_dict
+    returns a list of LOC in that column that could not be validated
     """
+    column = input_dict[field]
+
     for cell in column:
         if not nan(cell):
             subjects = cell.split('|')
@@ -278,10 +281,15 @@ def check_loc_field(column, authority, loc_dict):
                 if subject not in loc_dict[authority]:
                     subject_is_valid = validate_loc(subject, authority)
 
-                    loc_dict[authority][subject] = subject_is_valid
+                    loc_dict[authority][subject] = {"valid": subject_is_valid,
+                                                    "fields": [field]}
 
                     if not subject_is_valid:
-                        print(f"!! Warning - No LOC heading found for subject: {subject}")
+                        pass
+                        # print(f"!! Warning - No LOC heading found for subject: {subject}")
+
+                elif field not in loc_dict[authority][subject]["fields"]:
+                    loc_dict[authority][subject]["fields"].append(field)
 
 
 def piped_fields_same_length(input1, input2):
