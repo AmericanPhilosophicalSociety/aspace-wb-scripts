@@ -121,8 +121,7 @@ if not skip_loc:
     # separate by authority to increase chance of catching errors where an LOC appears in wrong column (e.g. a name in field_subject)
     loc_dict = {
         "names": {},
-        "subjects": {},
-        "other": {}
+        "subjects": {}
     }
 
     if "field_linked_agent_NAME" in INPUT_FIELDS:
@@ -149,7 +148,7 @@ if not skip_loc:
     if "field_temporal_subject" in INPUT_FIELDS:
         validate.check_loc_field(
             input_dict["field_temporal_subject"], 
-            None, 
+            "subjects", 
             loc_dict)
         
     # print(loc_dict)

@@ -271,21 +271,14 @@ def check_loc_field(column, authority, loc_dict):
     column = list of all values in one column where one value can be NAN, a single LCSH, or a pipe-separated list of LCSH
     avoids checking twice by adding all headings checked to loc_dict
     """
-
-    # determine what key to put results in in loc_dict
-    if not authority:
-        authority_key = "other"
-    else:
-        authority_key = authority
-
     for cell in column:
         if not nan(cell):
             subjects = cell.split('|')
             for subject in subjects:
-                if subject not in loc_dict[authority_key]:
+                if subject not in loc_dict[authority]:
                     subject_is_valid = validate_loc(subject, authority)
 
-                    loc_dict[authority_key][subject] = subject_is_valid
+                    loc_dict[authority][subject] = subject_is_valid
 
                     if not subject_is_valid:
                         print(f"!! Warning - No LOC heading found for subject: {subject}")
