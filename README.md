@@ -13,16 +13,19 @@ For fuller explanation of the Workbench fields, see the [APS Digital Library Met
 
 [copied from David's pull request instructions. this will need to be revised for regular users who aren't doing development on the code, but leaving it until we figure out how we want the process to work]
 
-In your terminal, navigate to your Desktop and run the following command to clone this code from Github.
+1. In your terminal, navigate to your Desktop and create a folder for the code:
 
-Clone the repo for local development:
+```
+mkdir aspace-wb-scripts
+```
 
-```bash
-git clone git@github.com:AmericanPhilosophicalSociety/aspace-wb-scripts.git
+2. Navigate into the folder:
+
+```
 cd aspace-wb-scripts
 ```
 
-Create a python virtual environment and install the package for local use:
+3. Create a python virtual environment and install the package for local use:
 
 On Windows:
 
@@ -37,13 +40,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install the version for local development:
+4. Install the package from PyPI with pip:
 
 ```
-pip install -e .
+pip install aspace-wb-scripts
 ```
 
-Create the required directories ```files_to_upload``` and ```metadata```:
+5. Create the required directories ```files_to_upload``` and ```metadata```:
 
 ```
 mkdir files_to_upload
@@ -52,10 +55,10 @@ mkdir metadata
 
 ## Get updates
 
-To get the most recent version of this code, ```cd``` to the directory containing your code and run:
+To get the most recent version of this code, ```cd``` to the directory where you created the virtual environment. Activate the virtual environment (see step 2 above) and run:
 
 ```
-git pull
+pip install --upgrade aspace-wb-scripts
 ```
 
 # Usage
