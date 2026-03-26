@@ -11,8 +11,6 @@ For fuller explanation of the Workbench fields, see the [APS Digital Library Met
 
 # Installation
 
-[copied from David's pull request instructions. this will need to be revised for regular users who aren't doing development on the code, but leaving it until we figure out how we want the process to work]
-
 1. In your terminal, navigate to your Desktop and create a folder for the code:
 
 ```
