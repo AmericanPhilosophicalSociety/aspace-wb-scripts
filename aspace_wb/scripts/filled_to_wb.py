@@ -8,6 +8,7 @@ import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import convert_data, use_CSVs, validate
+import aspace_wb.utils.extract_file as extract_file
 
 
 '''
@@ -124,14 +125,14 @@ def _add_complex_fields():
 
     # field_linked_agent
     # calls function from _ConvertData on the values
-    if "field_linked_agent_NAME" and "field_linked_agent_ROLE" and "field_linked_agent_TYPE" in INPUT_FIELDS:
+    if "field_linked_agent_NAME" in INPUT_FIELDS and "field_linked_agent_RELATOR" in INPUT_FIELDS and "field_linked_agent_TYPE" in INPUT_FIELDS:
         WB_dict["field_linked_agent"] = []
         for i in range(INPUT_ROW_COUNT):
             if input_dict["field_linked_agent_NAME"][i]:
-                # supply the converted name, role, type
+                # supply the converted name, relator, type
                 WB_dict["field_linked_agent"].append(convert_data.agents_info_to_WB_agent(
                     input_dict["field_linked_agent_NAME"][i],
-                    input_dict["field_linked_agent_ROLE"][i],
+                    input_dict["field_linked_agent_RELATOR"][i],
                     input_dict["field_linked_agent_TYPE"][i]
                     ))
             else:
@@ -139,7 +140,7 @@ def _add_complex_fields():
                 WB_dict["field_linked_agent"].append("")
         # a miserable thing to do: delete these fields so they don't confuse us when we try to add other fields
         del input_dict['field_linked_agent_NAME']
-        del input_dict['field_linked_agent_ROLE']
+        del input_dict['field_linked_agent_RELATOR']
         del input_dict['field_linked_agent_TYPE']
 
 
@@ -213,22 +214,11 @@ print("... fields rearranged.")
 Export our WB csv
 '''
 # create output filename
-WB_FILENAME = f"{os.path.splitext(FILLED_FILENAME)[0]}_wb-to-wb"
-FILE_EXTENSION = ".csv"
+FILE_PREFIX = os.path.splitext(FILLED_FILENAME)[0]
+FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".csv", "wb-to-wb")
 
-# if file already exists, append a counter to prevent overwriting
-while os.path.exists(os.path.join(c.METADATA_DIR, f"{WB_FILENAME}{FILE_EXTENSION}")):
-    filename_split = WB_FILENAME.split("_")
-    if filename_split[-1].isdigit():
-        counter = int(filename_split[-1]) + 1
-        WB_FILENAME = f"{'_'.join(filename_split[:-1])}_{counter}"
-    else:
-        WB_FILENAME += "_2"
-
-FILENAME_FULL = f"{WB_FILENAME}{FILE_EXTENSION}"
-
-use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILENAME_FULL))
-print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILENAME_FULL)}")
+use_CSVs.dict_to_CSV(WB_dict_ordered, os.path.join(c.METADATA_DIR, FILE_NAME))
+print(f"SUCCESS. Generated Workbench file: {os.path.join(c.METADATA_DIR, FILE_NAME)}")
 
 '''
 Post-completion reminders to user
