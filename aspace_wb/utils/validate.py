@@ -254,7 +254,7 @@ def list_is_single_value_then_empty_string(input):
 
 def piped_fields_same_length(input1, input2):
     # returns True if two pipe-separated fields are the same length
-    # this is for cases where we mix the fields, e.g. agents (agent_name, agent_role)
+    # this is for cases where we mix the fields, e.g. agents (agent_name, agent_relator)
     if len(input1.split("|")) == len(input2.split("|")):
         return True
     else:
