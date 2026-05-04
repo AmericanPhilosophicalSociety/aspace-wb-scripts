@@ -23,6 +23,7 @@ def create_args():
         optional: --fields name of fields file to use
         optional: --AS AS file to aid in populating metadata
         optional: --files alternate file path
+        optional: --blank creates a blank Workbench sheet using only the specified fields and field descriptions
     '''
 
     # parse arguments - see above for listing
