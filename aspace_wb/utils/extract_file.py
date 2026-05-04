@@ -86,7 +86,7 @@ def construct_output_filename(orig_name, extension, script):
         # check that num < 20 as a rough heuristic to avoid changing numbers in file names that end with _{date} or _{node}
         if name_split[-1].isdigit() and int(name_split[-1]) < 20:
             counter = int(name_split[-1]) + 1
-            new_name = f"{"_".join(name_split[:-1])}_{counter}"
+            new_name = f"{'_'.join(name_split[:-1])}_{counter}"
         else:
             new_name += "_2"
             

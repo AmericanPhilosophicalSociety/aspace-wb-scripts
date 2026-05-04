@@ -262,7 +262,7 @@ if not skip_loc:
         print(f"\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
 
         for key, value in loc_invalid.items():
-            print(f"{key} ({", ".join(value)})")
+            print(f"{key} ({', '.join(value)})")
 
     if loc_auth_values:
         print(f"\nThe following Library of Congress subject headings passed validation, but you entered a variant label instead of the authoritative one. Consider making the following changes:\n")
