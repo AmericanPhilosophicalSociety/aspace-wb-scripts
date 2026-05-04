@@ -1,6 +1,6 @@
 [project]
 name = "aspace-wb-scripts"
-version = "0.1.1"
+version = "0.2.0"
 description = "Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingesting files into Islandora 8 using Workbench"
 readme = "README.md"
 license = {text = "MIT"}
