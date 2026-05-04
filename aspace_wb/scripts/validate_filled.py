@@ -42,7 +42,7 @@ WB_type = cl_args.type
 # FILLED_FILENAME from filled_file
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
-    raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
+    raise FileNotFoundError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access

@@ -77,7 +77,7 @@ def process_args(cl_args):
         AS_FILENAME = cl_args.AS
         # confirm the file exists as stated
         if not os.path.exists(os.path.join(c.METADATA_DIR, AS_FILENAME)):
-            raise OSError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
+            raise FileNotFoundError(f"ArchivesSpace bulk update spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
     else:
         use_AS = False
         AS_FILENAME = None
@@ -87,9 +87,9 @@ def process_args(cl_args):
         FILES_DIR = cl_args.files
         # confirm the directory exists
         if not os.path.exists(FILES_DIR):
-            raise OSError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
+            raise FileNotFoundError(f"Cannot find your folder of media files at the path you specified: {FILES_DIR}. Check location of your media files and try again.")
         if not os.path.isdir(FILES_DIR):
-            raise OSError(f"The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
+            raise FileNotFoundError(f"The path you gave to your media files, {FILES_DIR}, is not a directory. Check your path and try again.")
     else:
         FILES_DIR = c.FILESTOUPLOAD_DIR
 

@@ -69,13 +69,13 @@ def directory_contains_only_subdirectories(directory_path):
     Returns True if directory contains only subdirectories, and is not empty
     """
     if extract_dir.subdirectories_count(directory_path) == 0:
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains no directories. Please put your directories with their files in."
         )
     elif extract_dir.file_count(directory_path):
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains files, not just folders. Move files into book subfolders."
@@ -89,7 +89,7 @@ def directory_contains_only_files(directory_path):
     Returns True if directory contains only files, and is not empty
     """
     if extract_dir.file_count(directory_path) == 0:
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains no files. Please place files there."

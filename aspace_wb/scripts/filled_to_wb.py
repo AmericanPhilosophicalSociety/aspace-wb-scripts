@@ -35,7 +35,7 @@ WB_type = cl_args.type
 FILLED_FILENAME = cl_args.filled_file
 # check existence
 if not os.path.exists(os.path.join(c.METADATA_DIR, FILLED_FILENAME)):
-    raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
+    raise FileNotFoundError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 
 print('... command line arguments parsed ...')
 
