@@ -69,13 +69,13 @@ def directory_contains_only_subdirectories(directory_path):
     Returns True if directory contains only subdirectories, and is not empty
     """
     if extract_dir.subdirectories_count(directory_path) == 0:
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains no directories. Please put your directories with their files in."
         )
     elif extract_dir.file_count(directory_path):
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains files, not just folders. Move files into book subfolders."
@@ -89,7 +89,7 @@ def directory_contains_only_files(directory_path):
     Returns True if directory contains only files, and is not empty
     """
     if extract_dir.file_count(directory_path) == 0:
-        raise OSError(
+        raise FileNotFoundError(
             "Folder "
             + str(directory_path)
             + " contains no files. Please place files there."
@@ -254,7 +254,7 @@ def list_is_single_value_then_empty_string(input):
 
 def piped_fields_same_length(input1, input2):
     # returns True if two pipe-separated fields are the same length
-    # this is for cases where we mix the fields, e.g. agents (agent_name, agent_role)
+    # this is for cases where we mix the fields, e.g. agents (agent_name, agent_relator)
     if len(input1.split("|")) == len(input2.split("|")):
         return True
     else:

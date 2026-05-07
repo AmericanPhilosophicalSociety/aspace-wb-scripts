@@ -28,7 +28,6 @@ Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-print('Checking command line arguments - expected: [single/book] [filled file.xlsx] ...')
 
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
@@ -43,9 +42,7 @@ WB_type = cl_args.type
 # FILLED_FILENAME from filled_file
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
-    raise OSError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
-
-print("... command line arguments okay.")
+    raise FileNotFoundError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access
@@ -114,12 +111,12 @@ if "title" in INPUT_FIELDS:
 
 # field_linked_agent fields
 
-if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
+if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in INPUT_FIELDS and 'field_linked_agent_TYPE' in INPUT_FIELDS: #swap for a reference to c
     print("Checking field_linked_agent fields ...")
 
-    print("... checking role (relator) codes ...")
+    print("... checking relator codes ...")
     # TO DO? could we allow title entry of relators too?
-    for x in input_dict["field_linked_agent_ROLE"]:
+    for x in input_dict["field_linked_agent_RELATOR"]:
         if not validate.nan(x):
             # multiple options possible. split:
             for y in x.split('|'):
@@ -128,11 +125,11 @@ if 'field_linked_agent_NAME' and 'field_linked_agent_ROLE' and 'field_linked_age
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
-    print("... checking that name and role are same lengths ...")
+    print("... checking that name and relator are same lengths ...")
     for i in range(INPUT_ROW_COUNT):
         if not validate.nan(input_dict["field_linked_agent_NAME"][i]):
             try:
-                validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_ROLE"][i])
+                validate.piped_fields_same_length(input_dict["field_linked_agent_NAME"][i], input_dict["field_linked_agent_RELATOR"][i])
             except Exception as e:
                 print(c.VALIDATE_ERROR_PREFIX + str(e))
 

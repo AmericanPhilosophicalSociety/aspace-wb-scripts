@@ -8,12 +8,12 @@ import argparse
 from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import convert_data
 from aspace_wb.utils import use_CSVs
+import aspace_wb.utils.extract_file as extract_file
 
 '''
 Parse command line arguments
     required, positional: nodes file (csv)
 '''
-print('Checking command line arguments - expected: [nodes csv file] ...')
 
 cl_parser = argparse.ArgumentParser()
 cl_parser.add_argument('nodes_file', type=str, help="Name of your Workbench output CSV (with .csv extension)")
@@ -22,9 +22,7 @@ NODES_FILE = cl_args.nodes_file
 
 # check existence of file
 if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
-    raise OSError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
-
-print("... command line arguments okay ...")
+    raise FileNotFoundError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
 
 '''
 Load the nodes
@@ -83,19 +81,9 @@ Generate output xlsx
 output_pandas_DF = pandas.DataFrame(data=output_dict)
 
 # create output filename
-OUTPUT_FILENAME = f"{os.path.splitext(NODES_FILE)[0]}_wb-create-dos"
-OUTPUT_EXTENSION = ".xlsx"
+FILE_PREFIX = os.path.splitext(NODES_FILE)[0]
+FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-create-dos")
 
-# if file already exists, append a counter to prevent overwriting
-while os.path.exists(os.path.join(c.METADATA_DIR, f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}")):
-    filename_split = OUTPUT_FILENAME.split("_")
-    if filename_split[-1].isdigit():
-        counter = int(filename_split[-1]) + 1
-        OUTPUT_FILENAME = f"{'_'.join(filename_split[:-1])}_{counter}"
-    else:
-        OUTPUT_FILENAME += "_2"
+output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, FILE_NAME), index=False)
 
-filename = f"{OUTPUT_FILENAME}{OUTPUT_EXTENSION}"
-output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, filename), index=False)
-
-print(f'Done. Created file: {os.path.join(c.METADATA_DIR, filename)}')
+print(f'Done. Created file: {os.path.join(c.METADATA_DIR, FILE_NAME)}')
