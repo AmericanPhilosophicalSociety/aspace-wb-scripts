@@ -33,6 +33,7 @@ cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
 cl_parser.add_argument('filled_file', type=str, help="Name (with .xlsx extension) of your simplified Workbench sheet")
 cl_parser.add_argument('--skiploc', action='store_true', help="Skip validation of LOC headings. Use if you've already run LOC validation and want wb-validate to run faster")
+cl_parser.add_argument('--urlalias', action='store_true', help="Check whether URL aliases need to be created for any rows.")
 cl_args = cl_parser.parse_args()
 
 # assign arguments
@@ -47,6 +48,7 @@ if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True)
 
 # skip_loc from --skip-loc
 skip_loc = cl_args.skiploc
+validate_urls = cl_args.urlalias
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access
@@ -102,7 +104,7 @@ if "title" in INPUT_FIELDS:
     titles = input_dict["title"]
     if validate.list_is_all_empty(titles):
         print(c.VALIDATE_ERROR_PREFIX + "Titles appear to be empty")
-    else:
+    elif "url_alias" in INPUT_FIELDS or validate_urls:
         print("Checking that all titles are unique...")
         # uses set() to remove duplicate values
         if len(titles) != len(set(titles)):

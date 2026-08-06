@@ -206,13 +206,13 @@ Define functions to call for populating our dictionary
 def _file_metadata_to_WB_fields_SINGLE():
     '''
     fills the following fields from file metadata:
-    file, field_model, field_resource_type, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
+    file, field_model, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
     '''
 
     # file
     prepop_dict['file'] = media_list
 
-    # extent, field_model, field_access_terms, field_display_hints, field_resource_type, field_internet_media_type
+    # extent, field_model, field_access_terms, field_display_hints, field_internet_media_type
     # all from c.extension_to_WB_field
     for d in c.extension_to_WB_field:
         # find the dictionary containing the correct extension
