@@ -48,9 +48,7 @@ def construct_language_dict():
 LANGUAGE_DICT = construct_language_dict()
 
 CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
-# CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, CNAIR_SUBJECTS_FILENAME), 0)
 RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(RELATOR_CODES_FILENAME), 0)
-# RELATOR_CODES = use_CSVs.CSV_col_to_list(os.path.join(CV_DIR, RELATOR_CODES_FILENAME), 0)
 
 # other
 VALIDATE_ERROR_PREFIX = "!! ERROR - "
@@ -87,19 +85,7 @@ WB_FIELDS_REQUIRED_AT_INPUT_SINGLE = (
     'field_reformatting_quality',
 )
 
-WB_FIELDS_REQUIRED_AT_INPUT_BOOK = (
-    'file',
-    'field_resource_type',
-    'field_model',
-    'field_member_of',
-    'title',
-    'field_digital_origin',
-    'field_parent_collection_call_num',
-    'field_collection2',
-    'field_collection_url',
-    'field_reformatting_quality',
-    'total_scans'
-)
+WB_FIELDS_REQUIRED_AT_INPUT_BOOK = WB_FIELDS_REQUIRED_AT_INPUT_SINGLE + ('total_scans',)
 
 # fields that will fill downwards through gaps
 WB_FIELDS_DOWNFILLING = (
@@ -115,12 +101,8 @@ WB_FIELDS_EXPORT_KEEP_EMPTY_SINGLE = (
     'parent_id'
 )
 
-WB_FIELDS_EXPORT_KEEP_EMPTY_BOOK = (
-    'field_member_of',
-    'parent_id',
-    'field_weight',
-    'field_display_hints'
-)
+WB_FIELDS_EXPORT_KEEP_EMPTY_BOOK = WB_FIELDS_EXPORT_KEEP_EMPTY_SINGLE + ('field_weight', 'field_display_hints')
+
 
 # fields that field_linked_agent gets split into and reformed from
 # this is only called once out of several places it could be called (in which individual field names are typed out)
