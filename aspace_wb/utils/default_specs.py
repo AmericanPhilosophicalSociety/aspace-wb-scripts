@@ -2,6 +2,7 @@
 File defining constants, Workbench fields, and mappings between different fields
 '''
 from aspace_wb.utils import use_CSVs
+from importlib import resources
 from importlib.resources import files as import_file
 from aspace_wb.data import vocabularies
 import csv
@@ -21,10 +22,16 @@ ISO639_FILENAME = "iso639.csv"
 CNAIR_SUBJECTS_FILENAME = "cnair_subject.csv"
 RELATOR_CODES_FILENAME = "relator.csv"
 
-# controlled vocabularies, from the above
-LANGUAGE_NAMES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 0)
-LANGUAGE_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(ISO639_FILENAME), 1)
+# Package data paths
+def get_package_data_path(data_type: str, filename: str) -> str:
+    """Get path to package data file"""
+    import aspace_wb
 
+    return str(
+        resources.files(aspace_wb.__name__).joinpath("data", data_type, filename)
+    )
+
+# controlled vocabularies, from the above
 def construct_language_dict():
     LANGUAGE_PATH = import_file(vocabularies).joinpath(ISO639_FILENAME)
     dict = {}
