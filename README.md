@@ -167,6 +167,7 @@ Validates that certain fields have been entered correctly in ```output_wb-fillab
 | Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | | book |
 | Name of your simplified workbench sheet | Name (with .xlsx extension) of your simplified Workbench sheet | Yes | | output_wb-filled.xlsx |
 | Skip LOC validation? | Use this flag if you want to skip validation of Library of Congress subject headings, speeding up processing time (validation takes 3 seconds/heading). This flag does not take any input. | No | ```--skiploc``` |  |
+| Run URL alias checks? | Use this flag if you want to check titles for uniqueness and length and flag any that may need a URL alias to be entered manually. This flag does not take any input. | No | ```--urlalias``` |  |
 
 Run ```wb-validate```, including LOC validation:
 
