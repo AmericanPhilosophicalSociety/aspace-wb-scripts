@@ -22,7 +22,7 @@ NODES_FILE = cl_args.nodes_file
 
 # check existence of file
 if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
-    raise OSError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
+    raise FileNotFoundError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
 
 '''
 Load the nodes
