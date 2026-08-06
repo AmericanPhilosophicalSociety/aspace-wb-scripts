@@ -142,7 +142,7 @@ Fill out the remaining fields according to standard Workbench guidelines, with a
 
 + ```id```, ```parent_id```, ```field_weight```, ```field_display_hints```, and ```field_metadata_title``` are omitted in ```output_wb_fillable``` because they will be filled in automatically later by ```wb-to-wb```
 + For any field marked "Fills down," you can fill in a value only once and it will be auto-filled to any blank cell below it in that column
-+ ```field_language``` can be entered as an ISO639 language name or code
++ ```field_language``` can be entered as an ISO639 language name, code, or combination of the two (e.g. "English (eng)")
 + ```field_linked_agent``` is broken out into ```field_linked_agent_NAME```, ```field_linked_agent_RELATOR```, and ```field_linked_agent_TYPE```, making it possible to enter these pieces of information separately. If there are multiple linked agents, entries should be pipe-separated.
 
 For example, consider the following ```field_linked_agent``` entry from a standard Workbench sheet:
