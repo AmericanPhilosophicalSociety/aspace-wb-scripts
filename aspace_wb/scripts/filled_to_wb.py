@@ -16,7 +16,7 @@ Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-print("(Make sure you ran Validate_Filled.py before performing this. Go back and run that if you didn't.)")
+print("(Make sure you ran wb-validate before performing this. Go back and run that if you didn't.)")
 
 # parse arguments
 

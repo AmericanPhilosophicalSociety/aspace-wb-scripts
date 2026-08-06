@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 __author__ = "American Philosophical Society"
 __email__ = "cds@amphilsoc.org"
 
-from .core.specs import *
+from .utils.default_specs import *
 
 __all__ = [
     "FILESTOUPLOAD_DIR",
