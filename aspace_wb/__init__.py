@@ -31,7 +31,6 @@ __all__ = [
     "field_digital_origin",
     "field_reformatting_quality",
     "field_model_BOOK",
-    "field_resource_type_BOOK",
     "file_SINGLE_PREFIX",
     "url_alias_PREFIX",
     "WB_FIELDS_REQUIRED_AT_INPUT_SINGLE",

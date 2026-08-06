@@ -220,7 +220,6 @@ def _file_metadata_to_WB_fields_SINGLE():
             # from this dictionary, populate ...
             # required fields
             prepop_dict['field_model'] = [d['field_model'] for i in range(records_count)]
-            prepop_dict['field_resource_type'] = [d['field_resource_type'] for i in range(records_count)]
             
             # optional fields dependent on extension
             if d['field_access_terms']:
@@ -258,7 +257,7 @@ def _file_metadata_to_WB_fields_SINGLE():
 def _file_metadata_to_WB_fields_BOOK():
     '''
     fills the following fields from file metadata:
-        file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
+        file, field_model, field_internet_media_type, total_scans, field_extent, field_date_digitized
     skipped because we do not need these for book:
         field_access_terms, field_display_hints
     '''
@@ -268,9 +267,6 @@ def _file_metadata_to_WB_fields_BOOK():
 
     # field_model
     prepop_dict['field_model'] = [c.field_model_BOOK for i in range(records_count)]
-
-    # field_resource_type
-    prepop_dict['field_resource_type'] = [c.field_resource_type_BOOK for i in range(records_count)]
 
     # field_internet_media_type
     for d in c.extension_to_WB_field:
