@@ -261,13 +261,13 @@ if "field_language" in INPUT_FIELDS:
 
 if not skip_loc:
     if loc_invalid:
-        print(f"\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
+        print("\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
 
         for key, value in loc_invalid.items():
             print(f"{key} ({', '.join(value)})")
 
     if loc_auth_values:
-        print(f"\nThe following Library of Congress subject headings passed validation, but you entered a variant label instead of the authoritative one. Consider making the following changes:\n")
+        print("\nThe following Library of Congress subject headings passed validation, but you entered a variant label instead of the authoritative one. Consider making the following changes:\n")
 
         for key, value in loc_auth_values.items():
             print(f"{key} -> {value}")
