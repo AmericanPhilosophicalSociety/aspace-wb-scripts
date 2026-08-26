@@ -343,3 +343,9 @@ def string_is_numeric(input):
         return True
     else:
         return False
+
+def access_terms(input):
+    # empty string should pass validation
+    if input:
+        if input not in c.VALID_ACCESS_TERMS:
+            raise ValueError(f"Invalid value entered in field_access_terms: {input}")

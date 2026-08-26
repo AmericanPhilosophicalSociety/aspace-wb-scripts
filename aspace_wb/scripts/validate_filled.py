@@ -259,6 +259,15 @@ if "field_language" in INPUT_FIELDS:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 
+# field_access_terms
+if "field_access_terms" in INPUT_FIELDS:
+    for value in input_dict["field_access_terms"]:
+        try:
+            validate.access_terms(input)
+        except Exception as e:
+            print(c.VALIDATE_ERROR_PREFIX + str(e))
+
+
 if not skip_loc:
     if loc_invalid:
         print("\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")

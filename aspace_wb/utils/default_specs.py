@@ -266,6 +266,17 @@ extension_to_WB_field = (
 # list of extensions, for simple access
 EXTENSIONS = [x['extension'] for x in extension_to_WB_field]
 
+# list of valid inputs for field_access_terms
+VALID_ACCESS_TERMS = [
+    "N/A",
+    "Admin-only access",
+    "Differential access - limited",
+    "Differential access - open",
+    "Limited access",
+    "Reading Room",
+    "Restricted Audio",
+]
+
 '''
 Check that runs on any use, to validate that all Workbench fields referenced are in WB_FIELDS_ALL
 this will flag an error if we update the fields but forget something
