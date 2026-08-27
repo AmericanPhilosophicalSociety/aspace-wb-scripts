@@ -345,7 +345,8 @@ def string_is_numeric(input):
         return False
 
 def access_terms(input):
+    valid_inputs = ", ".join(c.VALID_ACCESS_TERMS)
     # empty string should pass validation
-    if input:
+    if input and not nan(input):
         if input not in c.VALID_ACCESS_TERMS:
-            raise ValueError(f"Invalid value entered in field_access_terms: {input}")
+            raise ValueError(f"Invalid value entered in field_access_terms: {input}. Choose from the following values: {valid_inputs}")

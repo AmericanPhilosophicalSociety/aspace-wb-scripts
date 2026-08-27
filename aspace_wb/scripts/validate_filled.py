@@ -263,7 +263,7 @@ if "field_language" in INPUT_FIELDS:
 if "field_access_terms" in INPUT_FIELDS:
     for value in input_dict["field_access_terms"]:
         try:
-            validate.access_terms(input)
+            validate.access_terms(value)
         except Exception as e:
             print(c.VALIDATE_ERROR_PREFIX + str(e))
 
