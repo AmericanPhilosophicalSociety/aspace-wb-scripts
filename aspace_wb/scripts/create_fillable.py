@@ -237,8 +237,6 @@ def _file_metadata_to_WB_fields_SINGLE():
                     convert_data.seconds_to_HHMMSS(extract_file.audio_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
 
-                # auto-fill restrictions for audio
-                prepop_dict['field_access_terms'] = 'Restricted Audio'
             elif d['field_model'] == 'Video':
                 # get video duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
