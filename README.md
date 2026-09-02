@@ -143,7 +143,7 @@ Fill out the remaining fields according to standard Workbench guidelines, with a
 
 + ```id```, ```parent_id```, ```field_weight```, ```field_display_hints```, and ```field_metadata_title``` are omitted in ```output_wb_fillable``` because they will be filled in automatically later by ```wb-to-wb```
 + For any field marked "Fills down," you can fill in a value only once and it will be auto-filled to any blank cell below it in that column
-+ ```field_language``` can be entered as an ISO639 language name or code
++ ```field_language``` can be entered as an ISO639 language name, code, or combination of the two (e.g. "English (eng)")
 + ```field_linked_agent``` is broken out into ```field_linked_agent_NAME```, ```field_linked_agent_RELATOR```, and ```field_linked_agent_TYPE```, making it possible to enter these pieces of information separately. If there are multiple linked agents, entries should be pipe-separated.
 
 For example, consider the following ```field_linked_agent``` entry from a standard Workbench sheet:
@@ -163,15 +163,23 @@ The examples below show how this same data would be entered into ```output_wb-fi
 
 Validates that certain fields have been entered correctly in ```output_wb-fillable```.
 
-| Information | Acceptable input | Required? | Example |
-| --- | --- | --- | --- |
-| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes |  book |
-| Name of your simplified workbench sheet | Name (with .xlsx extension) of your simplified Workbench sheet | Yes |  output_wb-filled.xlsx |
+| Information | Acceptable input | Required? | Flag | Example |
+| --- | --- | --- | --- | --- |
+| Workbench upload type | ```book``` (an object with multiple pages) or ```single``` (a graphic, audio, or video object) | Yes | | book |
+| Name of your simplified workbench sheet | Name (with .xlsx extension) of your simplified Workbench sheet | Yes | | output_wb-filled.xlsx |
+| Skip LOC validation? | Use this flag if you want to skip validation of Library of Congress subject headings, speeding up processing time (validation takes 3 seconds/heading). This flag does not take any input. | No | ```--skiploc``` |  |
+| Run URL alias checks? | Use this flag if you want to check titles for uniqueness and length and flag any that may need a URL alias to be entered manually. This flag does not take any input. | No | ```--urlalias``` |  |
 
-Run ```wb-validate```:
+Run ```wb-validate```, including LOC validation:
 
 ```bash
 wb-validate book output_wb-filled.xlsx
+```
+
+Run ```wb-validate```, skipping LOC validation:
+
+```bash
+wb-validate book output_wb-filled.xlsx --skiploc
 ```
 
 This process will check the following:
@@ -179,6 +187,7 @@ This process will check the following:
 + All field names are valid
 + Titles are unique
 + If any titles need a URL alias, you will be prompted to enter one (NOTE: script does not check whether a URL alias has been entered already, or whether that URL alias is valid)
++ ```field_subject```, ```field_subjects_name```, ```field_geographic_subject```, ```field_temporal_subject```, and ```field_linked_agent_NAME``` contain valid Library of Congress subject headings, and use the authoritative labels for these headings. (NOTE: this works by querying the [Library of Congress API](https://www.loc.gov/apis/json-and-yaml/), searching the [names authority](https://id.loc.gov/authorities/names.html) (for ```field_subjects_name```, ```field_geographic_subject```, and ```field_linked_agent_NAME```) or the [subjects authority](https://id.loc.gov/authorities/subjects.html) (for ```field_subject``` and ```field_temporal_subject```). In certain cases, valid subject headings--especially complex subject headings--may show as invalid. Search is case-sensitive. Headings from other authorities will need to be checked manually.)
 + Relator codes and linked agent types are valid, and match the number of names listed in ```field_linked_agent_NAME```
 + Dates in ```field_edtf_date_created``` are valid
 + Correct control terms are used in ```field_cnair_subject``` and ```field_language```

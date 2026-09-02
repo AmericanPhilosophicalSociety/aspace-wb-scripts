@@ -21,7 +21,7 @@ import os
 import pandas
 from argparse import ArgumentParser
 from aspace_wb.utils import default_specs as c
-from aspace_wb.utils import extract_dir, validate
+from aspace_wb.utils import extract_dir, validate, convert_data
 
 '''
 Parse command line arguments
@@ -32,6 +32,8 @@ Parse command line arguments
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
 cl_parser.add_argument('filled_file', type=str, help="Name (with .xlsx extension) of your simplified Workbench sheet")
+cl_parser.add_argument('--skiploc', action='store_true', help="Skip validation of LOC headings. Use if you've already run LOC validation and want wb-validate to run faster")
+cl_parser.add_argument('--urlalias', action='store_true', help="Check whether URL aliases need to be created for any rows.")
 cl_args = cl_parser.parse_args()
 
 # assign arguments
@@ -43,6 +45,10 @@ WB_type = cl_args.type
 FILLED_FILENAME = cl_args.filled_file
 if FILLED_FILENAME not in extract_dir.file_list(c.METADATA_DIR, extensions=True):
     raise FileNotFoundError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
+
+# skip_loc from --skip-loc
+skip_loc = cl_args.skiploc
+validate_urls = cl_args.urlalias
 
 '''
 Load input file xlsx to Pandas DataFrame then make it a dict for ease of access
@@ -98,7 +104,7 @@ if "title" in INPUT_FIELDS:
     titles = input_dict["title"]
     if validate.list_is_all_empty(titles):
         print(c.VALIDATE_ERROR_PREFIX + "Titles appear to be empty")
-    else:
+    elif "url_alias" in INPUT_FIELDS or validate_urls:
         print("Checking that all titles are unique...")
         # uses set() to remove duplicate values
         if len(titles) != len(set(titles)):
@@ -108,6 +114,67 @@ if "title" in INPUT_FIELDS:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
                 print(f"!! Warning - if a Book, the following title needs a url_alias under {str(c.BOOK_TITLE_URL_ALIAS_LENGTH)} characters: {str(title)}")
 
+# check that entries in field_linked_agent_NAME, field_subject, field_subjects_name, field_geographic_subject, and field_temporal_subject are valid LOC and print a warning if not
+
+if not skip_loc:
+    print("... validating LOC subject headings ...")
+
+    # add all checked LOC to a dict to avoid checking again
+    # separate by authority to increase chance of catching errors where an LOC appears in wrong column (e.g. a name in field_subject)
+    loc_dict = {
+        "names": {},
+        "subjects": {}
+    }
+
+    if "field_linked_agent_NAME" in INPUT_FIELDS:
+        validate.check_loc_field(
+            "field_linked_agent_NAME",
+            input_dict,
+            "names", 
+            loc_dict)
+    if "field_subject" in INPUT_FIELDS:
+        validate.check_loc_field(
+            "field_subject",
+            input_dict,
+            "subjects", 
+            loc_dict)
+    if "field_subjects_name" in INPUT_FIELDS:
+        validate.check_loc_field(
+            "field_subjects_name",
+            input_dict, 
+            "names", 
+            loc_dict)
+    if "field_geographic_subject" in INPUT_FIELDS:
+        validate.check_loc_field(
+            "field_geographic_subject",
+            input_dict,
+            "names", 
+            loc_dict)
+    if "field_temporal_subject" in INPUT_FIELDS:
+        validate.check_loc_field(
+            "field_temporal_subject",
+            input_dict,
+            "subjects", 
+            loc_dict)
+        
+    # print(loc_dict)
+
+    # when done checking LOC, isolate only invalid ones    
+    names_invalid = {loc: values["fields"] for loc, values in loc_dict["names"].items() if values["valid"] == False}
+    subjects_invalid = {loc: values["fields"] for loc, values in loc_dict["subjects"].items() if values["valid"] == False}
+
+    for loc, fields_list in names_invalid.items():
+        if loc in subjects_invalid:
+            subjects_invalid[loc].extend(fields_list)
+
+    # merge two lists; if same LOC exists in both, keep the more complete list of fields in subjects_invalid
+    loc_invalid = names_invalid | subjects_invalid
+
+    # isolate LOC where version entered is not authoritative
+    names_auth = {loc: values["auth_label"] for loc, values in loc_dict["names"].items() if values["auth_label"] is not None}
+    subjects_auth = {loc: values["auth_label"] for loc, values in loc_dict["subjects"].items() if values["auth_label"] is not None}
+    loc_auth_values = names_auth | subjects_auth
+
 
 # field_linked_agent fields
 
@@ -116,12 +183,12 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
 
     print("... checking relator codes ...")
     # TO DO? could we allow title entry of relators too?
-    for x in input_dict["field_linked_agent_RELATOR"]:
-        if not validate.nan(x):
+    for relators in input_dict["field_linked_agent_RELATOR"]:
+        if not validate.nan(relators):
             # multiple options possible. split:
-            for y in x.split('|'):
+            for relator in relators.split('|'):
                 try:
-                    validate.relator_code(y)
+                    validate.relator_code(relator)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
@@ -143,9 +210,9 @@ if 'field_linked_agent_NAME' in INPUT_FIELDS and 'field_linked_agent_RELATOR' in
 
     print("... checking type ...")
     for i in range(INPUT_ROW_COUNT):
-        ts = input_dict["field_linked_agent_TYPE"][i]
-        if not validate.nan(ts):
-            for t in ts.split('|'):
+        types = input_dict["field_linked_agent_TYPE"][i]
+        if not validate.nan(types):
+            for t in types.split('|'):
                 try:
                     validate.agent_type(t)
                 except Exception as e:
@@ -180,17 +247,39 @@ if "field_cnair_subject" in INPUT_FIELDS:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 # field_language
-
 if "field_language" in INPUT_FIELDS:
     print("Checking field_language...")
-    for x in input_dict["field_language"]:
-        if not validate.nan(x):
-            # multiple options possible. split:
-            for y in x.split('|'):
+    for value in input_dict["field_language"]:
+        if not validate.nan(value):
+            languages = value.split("|")
+            for language in languages:
                 try:
-                    validate.language(y)
+                    lang_code = convert_data.lang_info_to_wb(language)
                 except Exception as e:
                     print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 
-print("Validation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")
+# field_access_terms
+if "field_access_terms" in INPUT_FIELDS:
+    for value in input_dict["field_access_terms"]:
+        try:
+            validate.access_terms(value)
+        except Exception as e:
+            print(c.VALIDATE_ERROR_PREFIX + str(e))
+
+
+if not skip_loc:
+    if loc_invalid:
+        print("\nThe following Library of Congress subject headings could not be validated. You may wish to check these manually:\n")
+
+        for key, value in loc_invalid.items():
+            print(f"{key} ({', '.join(value)})")
+
+    if loc_auth_values:
+        print("\nThe following Library of Congress subject headings passed validation, but you entered a variant label instead of the authoritative one. Consider making the following changes:\n")
+
+        for key, value in loc_auth_values.items():
+            print(f"{key} -> {value}")
+
+
+print("\nValidation of the above fields complete. This does not catch many fields. Resolve any errors noted above.")

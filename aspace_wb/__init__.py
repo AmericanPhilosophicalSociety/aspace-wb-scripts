@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 __author__ = "American Philosophical Society"
 __email__ = "cds@amphilsoc.org"
 
-from .core.specs import *
+from .utils.default_specs import *
 
 __all__ = [
     "FILESTOUPLOAD_DIR",
@@ -21,8 +21,7 @@ __all__ = [
     "ISO639_FILENAME",
     "CNAIR_SUBJECTS_FILENAME",
     "RELATOR_CODES_FILENAME",
-    "LANGUAGE_NAMES",
-    "LANGUAGE_CODES",
+    "LANGUAGE_DICT",
     "CNAIR_SUBJECTS",
     "RELATOR_CODES",
     "VALIDATE_ERROR_PREFIX",
@@ -32,7 +31,6 @@ __all__ = [
     "field_digital_origin",
     "field_reformatting_quality",
     "field_model_BOOK",
-    "field_resource_type_BOOK",
     "file_SINGLE_PREFIX",
     "url_alias_PREFIX",
     "WB_FIELDS_REQUIRED_AT_INPUT_SINGLE",

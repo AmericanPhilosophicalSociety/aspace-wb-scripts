@@ -5,6 +5,9 @@ These all take a single instance of something
 EDTF standard defined here: https://www.loc.gov/standards/datetime/
 """
 
+import time
+from loc_authorities.api import LocAPI, LocEntity
+
 try:
     import edtf_validate.valid_edtf
 except ImportError:
@@ -17,7 +20,8 @@ try:
 except ImportError:
     pandas = None
 import os
-from aspace_wb.core import specs as c
+# from aspace_wb.core import specs as c
+from aspace_wb.utils import default_specs as c
 from aspace_wb.utils import extract_dir, extract_file
 
 """
@@ -193,18 +197,6 @@ def ISO8601_date(input):
         )
 
 
-def language(input):
-    """
-    Supply code OR language, validate these
-    """
-    if input in c.LANGUAGE_CODES:
-        return True
-    elif input in c.LANGUAGE_NAMES:
-        return True
-    else:
-        raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")
-
-
 def list_is_all_empty(input):
     # for each item in the input list, check it's not a NaN and then check if it's anything
     # if any are anything, return false, else return true (list is all empty)
@@ -252,10 +244,68 @@ def list_is_single_value_then_empty_string(input):
         return False
 
 
+def validate_loc(input, authority):
+    # validates that input text is a valid LOC subject heading
+    # returns true/false plus authoritative label (if this differs from value that is entered)
+    # can search a specific authority or all authorities
+    # case-sensitive
+    
+    loc = LocAPI()
+
+    # LOC currently request a max of 20 requests per minute
+    # see: https://www.loc.gov/apis/json-and-yaml/working-within-limits/
+    seconds_delay = 60/20
+    
+    if authority:
+        loc_result = loc.retrieve_label(input, authority)
+    else:
+        loc_result = loc.retrieve_label(input)
+    time.sleep(seconds_delay)
+
+    if loc_result:
+        entity = LocEntity(loc_result)
+        time.sleep(seconds_delay)
+
+        # if a variant label is used instead of the authoritative one, save this info
+        if str(entity.authoritative_label) == input:
+            return True, None
+        else:
+            return True, str(entity.authoritative_label)
+    else:
+        return False, None
+
+def check_loc_field(field, input_dict, authority, loc_dict):
+    """
+    validates all LOC headings appearing in a single column
+    column = list of all values in one column where one value can be NAN, a single LCSH, or a pipe-separated list of LCSH
+    avoids checking twice by adding all headings checked to loc_dict
+    returns a list of LOC in that column that could not be validated
+    """
+    column = input_dict[field]
+
+    for cell in column:
+        if not nan(cell):
+            subjects = cell.split('|')
+            for subject in subjects:
+                if subject not in loc_dict[authority]:
+                    try:
+                        subject_is_valid, auth_label = validate_loc(subject, authority)
+
+                        loc_dict[authority][subject] = {"valid": subject_is_valid,
+                                                        "auth_label": auth_label,
+                                                        "fields": [field]}
+
+                    except Exception as e:
+                        print(f"An error occurred while checking subject heading {subject}: {e}")
+
+                elif field not in loc_dict[authority][subject]["fields"]:
+                    loc_dict[authority][subject]["fields"].append(field)
+
+
 def piped_fields_same_length(input1, input2):
     # returns True if two pipe-separated fields are the same length
     # this is for cases where we mix the fields, e.g. agents (agent_name, agent_relator)
-    if len(input1.split("|")) == len(input2.split("|")):
+    if not nan(input1) and not nan(input2) and len(input1.split("|")) == len(input2.split("|")):
         return True
     else:
         raise ValueError(
@@ -293,3 +343,10 @@ def string_is_numeric(input):
         return True
     else:
         return False
+
+def access_terms(input):
+    valid_inputs = ", ".join(c.VALID_ACCESS_TERMS)
+    # empty string should pass validation
+    if input and not nan(input):
+        if input not in c.VALID_ACCESS_TERMS:
+            raise ValueError(f"Invalid value entered in field_access_terms: {input}. Choose from the following values: {valid_inputs}")

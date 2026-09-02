@@ -15,7 +15,6 @@ import aspace_wb.utils.use_CSVs as use_CSVs
 import aspace_wb.utils.validate as validate
 from aspace_wb.data import fields
 
-
 def create_args():
     '''
     Parse command line arguments
@@ -208,13 +207,13 @@ Define functions to call for populating our dictionary
 def _file_metadata_to_WB_fields_SINGLE():
     '''
     fills the following fields from file metadata:
-    file, field_model, field_resource_type, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
+    file, field_model, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
     '''
 
     # file
     prepop_dict['file'] = media_list
 
-    # extent, field_model, field_access_terms, field_display_hints, field_resource_type, field_internet_media_type
+    # extent, field_model, field_access_terms, field_display_hints, field_internet_media_type
     # all from c.extension_to_WB_field
     for d in c.extension_to_WB_field:
         # find the dictionary containing the correct extension
@@ -222,7 +221,6 @@ def _file_metadata_to_WB_fields_SINGLE():
             # from this dictionary, populate ...
             # required fields
             prepop_dict['field_model'] = [d['field_model'] for i in range(records_count)]
-            prepop_dict['field_resource_type'] = [d['field_resource_type'] for i in range(records_count)]
             
             # optional fields dependent on extension
             if d['field_access_terms']:
@@ -238,6 +236,7 @@ def _file_metadata_to_WB_fields_SINGLE():
                 prepop_dict['field_extent'] = [
                     convert_data.seconds_to_HHMMSS(extract_file.audio_duration_seconds(os.path.join(FILES_DIR, file))) for file in media_list
                 ]
+
             elif d['field_model'] == 'Video':
                 # get video duration in seconds, convert to hh:mm:ss representation
                 prepop_dict['field_extent'] = [
@@ -260,7 +259,7 @@ def _file_metadata_to_WB_fields_SINGLE():
 def _file_metadata_to_WB_fields_BOOK():
     '''
     fills the following fields from file metadata:
-        file, field_model, field_resource_type, field_internet_media_type, total_scans, field_extent, field_date_digitized
+        file, field_model, field_internet_media_type, total_scans, field_extent, field_date_digitized
     skipped because we do not need these for book:
         field_access_terms, field_display_hints
     '''
@@ -270,9 +269,6 @@ def _file_metadata_to_WB_fields_BOOK():
 
     # field_model
     prepop_dict['field_model'] = [c.field_model_BOOK for i in range(records_count)]
-
-    # field_resource_type
-    prepop_dict['field_resource_type'] = [c.field_resource_type_BOOK for i in range(records_count)]
 
     # field_internet_media_type
     for d in c.extension_to_WB_field:

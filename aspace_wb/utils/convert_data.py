@@ -20,12 +20,6 @@ AGENTS_AGENTS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 0)
 AGENTS_TITLES = use_CSVs.CSV_col_to_list(AGENTS_PATH, 1)
 AGENTS_REFIDS = use_CSVs.CSV_col_to_list(AGENTS_PATH, 2)
 
-# language
-# CSV is formatted language name, code. get two options for easy lookup.
-LANGUAGES_PATH = import_file(vocabularies).joinpath(c.ISO639_FILENAME)
-languages_name_first = use_CSVs.two_col_CSV_to_dict(LANGUAGES_PATH)
-languages_code_first = {value: key for key, value in languages_name_first.items()}
-
 '''
 time/date functions
 
@@ -260,22 +254,25 @@ def diglib_node_to_AS_DO(input):
     }
     return digital_object
 
-def language_info_to_WB_language_string(language_name, code):
-    '''
-    takes language name and ISO639 code and returns WB format: language (code)
-    '''
-    return str(language_name + " (" + code + ")")
-
-def language_name_or_ISO639_code_to_WB_language(input):
-    '''
-    takes a language name OR an ISO639 code and returns a WB language string
-    optionally allow wrong case too?
-    '''
-    if input in languages_name_first.keys():
-        return language_info_to_WB_language_string(input, languages_name_first[input])
-    elif input in languages_code_first.keys():
-        return language_info_to_WB_language_string(languages_code_first[input], input)
-
+def lang_info_to_wb(input):
+    """
+    Input ISO code, language name, or both
+    returns Workbench name for language in format Name (code), or None if value not found in language dict
+    """
+    
+    language_dict = c.LANGUAGE_DICT
+    
+    # if input is an ISO code, it will appear as a key in language_dict
+    if input in language_dict:
+        return language_dict[input]["wb_code"]
+    
+    # if input is the language name or full WB entry, it will appear as a value in language_dict
+    for individual_language in language_dict.values():
+        if individual_language["name"] == input or individual_language["wb_code"] == input:
+            return individual_language["wb_code"]
+    
+    # else, input is not valid and cannot be returned as full WB entry
+    raise ValueError("Language code or name " + str(input) + " not in ISO639 file.")    
 
 def pipe_to_semicolon(input):
     '''

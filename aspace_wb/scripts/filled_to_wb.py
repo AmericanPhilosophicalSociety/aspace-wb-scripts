@@ -16,8 +16,7 @@ Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-print("(Make sure you ran Validate_Filled.py before performing this. Go back and run that if you didn't.)")
-print('Checking command line arguments - expected: [single/book] [filled file.xlsx]...')
+print("(Make sure you ran wb-validate before performing this. Go back and run that if you didn't.)")
 
 # parse arguments
 
@@ -36,8 +35,6 @@ FILLED_FILENAME = cl_args.filled_file
 # check existence
 if not os.path.exists(os.path.join(c.METADATA_DIR, FILLED_FILENAME)):
     raise FileNotFoundError(f"Workbench sheet {FILLED_FILENAME} not found in folder {c.METADATA_DIR}. Check file name and location and try again.")
-
-print('... command line arguments parsed ...')
 
 '''
 Load xlsx to pandas DataFrame then dictionary
@@ -117,8 +114,11 @@ def _add_complex_fields():
         for i in range(INPUT_ROW_COUNT):
             if input_dict["field_language"][i]:
                 #languages = input_dict["field_language"][i].split("|")
+                # WB_dict["field_language"].append(
+                #     "|".join([convert_data.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
+                # )
                 WB_dict["field_language"].append(
-                    "|".join([convert_data.language_name_or_ISO639_code_to_WB_language(language) for language in input_dict["field_language"][i].split("|")])
+                    "|".join([convert_data.lang_info_to_wb(language) for language in input_dict["field_language"][i].split("|")])
                 )
             else:
                 WB_dict["field_language"].append("")
