@@ -49,7 +49,7 @@ def agent_type(input):
 
 
 def CNAIR_culture(input):
-    if input in c.CNAIR_SUBJECTS:
+    if input in c.CNAIR_SUBJECTS.keys():
         return True
     else:
         raise ValueError(

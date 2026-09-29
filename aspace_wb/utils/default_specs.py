@@ -47,7 +47,28 @@ def construct_language_dict():
 
 LANGUAGE_DICT = construct_language_dict()
 
-CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
+def construct_cnair_dict():
+    CNAIR_PATH = import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME)
+    dict = {}
+    with open(CNAIR_PATH, mode='r', newline='', encoding='utf-8-sig') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            # skip over blank row that appears in Airtable export
+            if row["subject"]:
+                if row["alternates"]:
+                    alternates = [x.strip() for x in row["alternates"].split(";")]
+                else:
+                    alternates = []
+                parent = row["parent (lookup)"]
+                
+                dict[row["subject"]] = {"alternates": alternates,
+                                "parent": parent}
+    # print(dict)
+    return dict
+
+CNAIR_SUBJECTS = construct_cnair_dict()
+
+# CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
 RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(RELATOR_CODES_FILENAME), 0)
 
 # other
