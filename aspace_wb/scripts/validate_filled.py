@@ -239,11 +239,11 @@ if "field_cnair_subject" in INPUT_FIELDS:
     for x in input_dict["field_cnair_subject"]:
         if not validate.nan(x):
             # multiple options possible. split:
-            for y in x.split('|'):
-                try:
-                    validate.CNAIR_culture(y)
-                except Exception as e:
-                    print(c.VALIDATE_ERROR_PREFIX + str(e))
+            # for y in x.split('|'):
+            try:
+                validate.CNAIR_culture(x)
+            except Exception as e:
+                print(c.VALIDATE_ERROR_PREFIX + str(e))
 
 # field_language
 if "field_language" in INPUT_FIELDS:

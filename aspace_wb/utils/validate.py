@@ -48,15 +48,28 @@ def agent_type(input):
         raise ValueError("field_linked_agent_TYPE not valid: " + str(input))
 
 
+# def CNAIR_culture(input):
+#     if input in c.CNAIR_SUBJECTS.keys():
+#         return True
+#     else:
+#         raise ValueError(
+#             "CNAIR subject "
+#             + str(input)
+#             + " not in current csv. CSV may be outdated. If a new term, contact CNAIR."
+#         )
+
+
 def CNAIR_culture(input):
-    if input in c.CNAIR_SUBJECTS.keys():
-        return True
-    else:
-        raise ValueError(
-            "CNAIR subject "
-            + str(input)
-            + " not in current csv. CSV may be outdated. If a new term, contact CNAIR."
-        )
+    for culture in input.split("|"):
+        if culture in c.CNAIR_SUBJECTS.keys():
+            if c.CNAIR_SUBJECTS[culture]["parent"]:
+                if c.CNAIR_SUBJECTS[culture]["parent"] in input:
+                    pass
+                else:
+                    raise ValueError(f"{c.CNAIR_SUBJECTS[culture]["parent"]}, the parent term of CNAIR subject {culture}, needs to be added.")
+            pass
+        else:
+            raise ValueError(f"CNAIR subject {culture} not in current csv. CSV may be outdated. If a new term, contact CNAIR.")
 
 
 def EDTF(input):

@@ -68,7 +68,6 @@ def construct_cnair_dict():
 
 CNAIR_SUBJECTS = construct_cnair_dict()
 
-# CNAIR_SUBJECTS = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(CNAIR_SUBJECTS_FILENAME), 0)
 RELATOR_CODES = use_CSVs.CSV_col_to_list(import_file(vocabularies).joinpath(RELATOR_CODES_FILENAME), 0)
 
 # other
