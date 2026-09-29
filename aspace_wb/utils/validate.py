@@ -48,28 +48,23 @@ def agent_type(input):
         raise ValueError("field_linked_agent_TYPE not valid: " + str(input))
 
 
-# def CNAIR_culture(input):
-#     if input in c.CNAIR_SUBJECTS.keys():
-#         return True
-#     else:
-#         raise ValueError(
-#             "CNAIR subject "
-#             + str(input)
-#             + " not in current csv. CSV may be outdated. If a new term, contact CNAIR."
-#         )
-
-
 def CNAIR_culture(input):
-    for culture in input.split("|"):
-        if culture in c.CNAIR_SUBJECTS.keys():
-            if c.CNAIR_SUBJECTS[culture]["parent"]:
-                if c.CNAIR_SUBJECTS[culture]["parent"] in input:
-                    pass
-                else:
-                    raise ValueError(f"{c.CNAIR_SUBJECTS[culture]["parent"]}, the parent term of CNAIR subject {culture}, needs to be added.")
-            pass
-        else:
-            raise ValueError(f"CNAIR subject {culture} not in current csv. CSV may be outdated. If a new term, contact CNAIR.")
+    cultures = input.split("|")
+    for culture in cultures:
+        try:
+            # print(culture)
+            culture_dict = c.CNAIR_SUBJECTS[culture]
+            if culture_dict["parent"]:
+                parent_index = cultures.index(culture_dict["parent"])
+        except KeyError:
+            # check if invalid culture term is listed somewhere as an alternates
+            preferred_term = next((k for k, v in c.CNAIR_SUBJECTS.items() if culture in v["alternates"]), None)
+            if preferred_term:
+                print(f"{c.VALIDATE_ERROR_PREFIX} CNAIR subject {culture} is listed as an alternate term. Consider replacing with the preferred term: {preferred_term}.")
+            else:
+                print(f"{c.VALIDATE_ERROR_PREFIX} CNAIR subject {culture} not in current CSV. CSV may be outdated. If a new term, contact CNAIR.")
+        except ValueError:
+            print(f"{c.VALIDATE_ERROR_PREFIX} {culture_dict["parent"]}, the parent term of CNAIR subject {culture}, needs to be added.")
 
 
 def EDTF(input):
