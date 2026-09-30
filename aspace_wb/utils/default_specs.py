@@ -253,6 +253,13 @@ extension_to_WB_field = (
         'field_display_hints': 'Open Seadragon',
         'field_internet_media_type': 'image/jpeg'
     },
+        {
+        'extension': '.png',
+        'field_model': 'Image',
+        'field_access_terms': None,
+        'field_display_hints': 'Open Seadragon',
+        'field_internet_media_type': 'image/png'
+    },
     {
         'extension': '.jp2',
         'field_model': 'Image',
