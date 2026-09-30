@@ -49,14 +49,25 @@ def agent_type(input):
 
 
 def CNAIR_culture(input):
-    if input in c.CNAIR_SUBJECTS:
-        return True
-    else:
-        raise ValueError(
-            "CNAIR subject "
-            + str(input)
-            + " not in current csv. CSV may be outdated. If a new term, contact CNAIR."
-        )
+    cultures = input.split("|")
+    for culture in cultures:
+        try:
+            # check whether culture term is valid
+            culture_dict = c.CNAIR_SUBJECTS[culture]
+            # if valid culture term has a parent, check that this parent term is included in input
+            if culture_dict["parent"]:
+                parent_index = cultures.index(culture_dict["parent"])
+        # triggered if culture term can't be found in dict
+        except KeyError:
+            # check if invalid culture term is listed somewhere as an alternate
+            preferred_term = next((k for k, v in c.CNAIR_SUBJECTS.items() if culture in v["alternates"]), None)
+            if preferred_term:
+                print(f"{c.VALIDATE_ERROR_PREFIX} CNAIR subject {culture} is listed as an alternate term. Consider replacing with the preferred term: {preferred_term}.")
+            else:
+                print(f"{c.VALIDATE_ERROR_PREFIX} CNAIR subject {culture} not in current CSV. CSV may be outdated. If a new term, contact CNAIR.")
+        # triggered if culture term has a parent not appearing in input
+        except ValueError:
+            print(f"{c.VALIDATE_ERROR_PREFIX} {culture_dict["parent"]}, the parent term of CNAIR subject {culture}, needs to be added.")
 
 
 def EDTF(input):
