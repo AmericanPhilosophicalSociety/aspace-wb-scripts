@@ -28,7 +28,6 @@ Parse command line arguments
     required, positional: Workbench upload type (single/book)
     required, positional: filled file
 '''
-
 cl_parser = ArgumentParser()
 cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)")
 cl_parser.add_argument('filled_file', type=str, help="Name (with .xlsx extension) of your simplified Workbench sheet")
@@ -239,12 +238,7 @@ if "field_cnair_subject" in INPUT_FIELDS:
     print("Checking field_cnair_subject...")
     for x in input_dict["field_cnair_subject"]:
         if not validate.nan(x):
-            # multiple options possible. split:
-            for y in x.split('|'):
-                try:
-                    validate.CNAIR_culture(y)
-                except Exception as e:
-                    print(c.VALIDATE_ERROR_PREFIX + str(e))
+            validate.CNAIR_culture(x)
 
 # field_language
 if "field_language" in INPUT_FIELDS:
