@@ -352,6 +352,8 @@ def write_file(df):
     # close to write the file
     pd_ExcelWriter.close()
 
-if __name__ == "__main__":
+def run_script():
     df = create_wb_dicts()
     write_file(df)
+
+run_script()

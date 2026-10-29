@@ -28,6 +28,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "archivessnake>=0.10.1",
     "certifi==2024.12.14",
     "charset-normalizer==3.4.1",
     "colorama==0.4.6",
@@ -70,6 +71,7 @@ wb-fillable = "aspace_wb.cli.create_fillable:main"
 wb-validate = "aspace_wb.cli.validate_filled:main"
 wb-to-wb = "aspace_wb.cli.filled_to_wb:main"
 wb-create-dos = "aspace_wb.cli.create_aspace_dos:main"
+wb-from-api = "aspace_wb.cli.fillable_from_api:main"
 
 [build-system]
 requires = ["hatchling"]
