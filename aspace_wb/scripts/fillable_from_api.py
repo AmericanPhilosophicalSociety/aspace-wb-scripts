@@ -7,15 +7,17 @@ import time
 import csv
 import pandas as pd
 import aspace_wb.utils.default_specs as c
+import aspace_wb.utils.validate as validate
 
 """
 TO DO
 
 preserve any columns already entered
 populate fields from fields list (if nothing entered, use all)
-at end: *sort columns into preferred order
 
-sort as it will be in file system? does it matter?
+get rid of column sorting? (the original doesn't do this)
+get rid of as_ref column, change to as_url?
+
 try getting rid of ASnake dependency
 
 CURRENTLY USED IN CREATE_FILLABLE
@@ -38,14 +40,8 @@ NEXT STEPS
 
 how does this work for subseries/subcollection?
 
-get this integrated into aspace-wb-scripts
-rework some fields to use Paul's logic (date validation, esp. field_note)
-
-try on backlog?
-
-PR
-
 do version that gets all child nodes for a collection/series
+have this also sort by order in file system
 """
 
 # presets - copy into aspace-wb-scripts presets
@@ -67,25 +63,43 @@ aspace = ASpace()
 
 # HELPER FUNCTIONS
 
-def get_date(record):
+def get_date(record, wb_dict):
     #TODO: can a record have multiple dates? necessary to iterate through?
     #TODO: can a record have non-EDTF dates that would appear in field_date_created_text?
     # Paul wrote logic for this already- see AS_date_to_WB_date in convert_data
-    if "dates" in record:
+    if "dates" not in record:
+        date = None
+    else:
         if len(record["dates"]) > 1:
             print("WARNING: more than one date present in record. Only the first will be processed.")
-        elif len(record["dates"]) == 0:
-            return None
-
-        if record["dates"][0]["date_type"] == "single":
-            return record["dates"][0]["expression"]
+        
+        if len(record["dates"]) == 0:
+            date = None
+        elif record["dates"][0]["date_type"] == "single":
+            date = record["dates"][0]["expression"]
         elif record["dates"][0]["date_type"] == "inclusive":
-            return f"{record["dates"][0]["begin"]}/{record["dates"][0]["end"]}"
+            # attempt to construct valid EDTF from date range
+            date = f"{record["dates"][0]["begin"]}/{record["dates"][0]["end"]}"
         else:
-            print("WARNING: date present in record but could not be processed.")
-            return None
+            print("WARNING: Weird date type detected! Check manually")
+            date = None
+
+    # if date is valid EDTF, fill to field_edtf_date_created
+    if date:
+        try:
+            validate.EDTF(date)
+            field_edtf_date_created = date
+            field_date_created_text = None
+        # if not valid EDTF, fill to field_date_created_text
+        except:
+            field_edtf_date_created = None
+            field_date_created_text = date
     else:
-        return None
+        field_edtf_date_created = None
+        field_date_created_text = None
+
+    wb_dict["field_edtf_date_created"] = field_edtf_date_created
+    wb_dict["field_date_created_text"] = field_date_created_text
 
 def get_collection_id(record):
     ancestors = record["ancestors"]
@@ -241,7 +255,7 @@ def get_record_info(record_id):
     # TODO: should this be title instead? difference is that display_string includes a date at the end
     wb_dict["title"] = record["display_string"]
 
-    wb_dict["date"] = get_date(record)
+    get_date(record, wb_dict)
 
     # TODO: check if this exists in the data
     if "component_id" in record:
@@ -300,7 +314,6 @@ def create_wb_dicts():
 
     # order by order in all_fields
     fields_in_use = df.columns.tolist()
-    print(fields_in_use)
 
     final_field_order = []
 
