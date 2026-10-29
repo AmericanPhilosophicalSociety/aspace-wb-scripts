@@ -107,7 +107,7 @@ if "title" in INPUT_FIELDS:
         print("Checking that all titles are unique...")
         # uses set() to remove duplicate values
         if len(titles) != len(set(titles)):
-            print("!! Warning - one or more titles are not unique, which will cause redirect errors. Ensure use of url_alias.")
+            print("!! Wa rning - one or more titles are not unique, which will cause redirect errors. Ensure use of url_alias.")
         print("Checking lengths of titles...")
         for title in titles:
             if len(title) >= c.BOOK_TITLE_URL_ALIAS_LENGTH:
