@@ -164,7 +164,7 @@ WB_FIELDS_ORDERED_WITH_DESCRIPTION = (
     ('field_physical_form',BLANK_DESCRIPTION),
     ('field_edtf_date_created',"Date in EDTF format (enter either here or in field_date_created_text; don't enter in both)"),
     ('field_date_created_text',"Date as freeform text (enter either here or infield_edtf_date_created; don't enter in both)"),
-    ('field_subject',BLANK_DESCRIPTION),
+    ('field_subject','Library of Congress or other controlled  vocabulary. Pipe-separated'),
     ('field_cnair_subject','Controlled vocabulary: consult vocabularies/cnair_subject.csv, Airtable, or Indigenous Subject Guide'),
     ('field_local_subject',BLANK_DESCRIPTION),
     ('field_subject_olac','Legacy CNAIR only. Not for new materials.'),

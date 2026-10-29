@@ -6,17 +6,14 @@ import pprint
 import time
 import csv
 import pandas as pd
+import aspace_wb.utils.default_specs as c
 
 """
 TO DO
 
-port to as-wb-scripts
-get actual descriptions from as-wb-scripts files
 preserve any columns already entered
 populate fields from fields list (if nothing entered, use all)
-at end: sort columns into preferred order
-
-get it working in command line
+at end: *sort columns into preferred order
 
 sort as it will be in file system? does it matter?
 try getting rid of ASnake dependency
@@ -252,15 +249,15 @@ def get_record_info(record_id):
     else:
         wb_dict["field_local_identifier"] = None
 
-    wb_dict["collection_id"], wb_dict["collection_url"] = get_collection_id(record)
+    wb_dict["as_ref"], wb_dict["field_collection_url"] = get_collection_id(record)
 
-    wb_dict["field_collection2"], wb_dict["field_parent_collection_call_num"] = get_collection_name(wb_dict["collection_id"])
+    wb_dict["field_collection2"], wb_dict["field_parent_collection_call_num"] = get_collection_name(wb_dict["as_ref"])
 
     wb_dict["field_access_terms"] = get_field_access_terms(record)
 
     wb_dict["field_description_long"] = get_description(record)
 
-    wb_dict["subjects"] = get_subjects(record)
+    wb_dict["field_subject"] = get_subjects(record)
 
     get_linked_agents(record, wb_dict)
 
@@ -286,13 +283,43 @@ def create_wb_dicts():
 
     # populate description for each field
     descriptions_dict = {}
+    all_descriptions = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
+    all_fields = c.WB_FIELDS_ALL
+    print(all_fields)
+
+    # iterate through one example dict to get a description for each field
     for key in records[0].keys():
-        descriptions_dict[key] = "Dummy description"
+        if key in all_descriptions:
+            descriptions_dict[key] = all_descriptions[key]
+        else:
+            descriptions_dict[key] = None
 
     records.insert(0, descriptions_dict)
 
     df = pd.DataFrame(records)
-    # df = df.fillna(None)
+
+    # order by order in all_fields
+    fields_in_use = df.columns.tolist()
+    print(fields_in_use)
+
+    final_field_order = []
+
+    for field in c.WB_FIELDS_ALL:
+        if field in fields_in_use:
+            final_field_order.append(field)
+
+    for field in fields_in_use:
+        if field not in final_field_order:
+            final_field_order.append(field)
+
+    # iterate through all_fields
+    # if field in fields_in_use, add to list
+    # if anything left over in fields_in_use, add it at the end
+
+    # OR
+    # iterate through fields_in_use
+    # associate each item with 
+    df = df.reindex(columns=final_field_order)
     print(df)
 
     return df
