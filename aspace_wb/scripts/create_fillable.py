@@ -123,7 +123,7 @@ def process_fields(WB_type, fields_filename):
     return fields_in_use
 
 
-def check_files(WB_type):
+def check_files(WB_type, FILES_DIR):
     '''
     Check our files and generate:
     - media_list, which is list of folder names if WB_type book
@@ -183,7 +183,7 @@ def check_files(WB_type):
     return media_list, EXTENSION
 
 
-def process_AS(media_list):
+def process_AS(media_list, AS_FILENAME, FILES_DIR):
     '''
     If using ArchivesSpace file, check that this file looks okay by comparing to media_list
     Put number of records into records_count for easy access
@@ -204,7 +204,7 @@ def process_AS(media_list):
 Define functions to call for populating our dictionary
 '''
 
-def _file_metadata_to_WB_fields_SINGLE():
+def _file_metadata_to_WB_fields_SINGLE(prepop_dict, media_list, EXTENSION, records_count, FILES_DIR):
     '''
     fills the following fields from file metadata:
     file, field_model, field_access_terms, field_display_hints, field_internet_media_type, field_extent, field_date_digitized
@@ -256,7 +256,7 @@ def _file_metadata_to_WB_fields_SINGLE():
     ]
 
     
-def _file_metadata_to_WB_fields_BOOK():
+def _file_metadata_to_WB_fields_BOOK(prepop_dict, media_list, EXTENSION, records_count, FILES_DIR):
     '''
     fills the following fields from file metadata:
         file, field_model, field_internet_media_type, total_scans, field_extent, field_date_digitized
@@ -295,7 +295,7 @@ def _file_metadata_to_WB_fields_BOOK():
     prepop_dict['field_date_digitized'] = _field_date_digitized
 
 
-def _AS_metadata_to_WB_fields():
+def _AS_metadata_to_WB_fields(fields_in_use, prepop_dict, AS_dict, records_count):
     '''
     fills the following fields from ArchivesSpace metadata:
     field_local_identifier, title, field_related_materials_note, field_edtf_date_created, field_date_created_text, field_description_long, field_note, field_linked_agent
@@ -379,7 +379,7 @@ def _AS_metadata_to_WB_fields():
         print('!! WARNING !! One or more records contain an access restriction note in ArchivesSpace. Check the ArchivesSpace xlsx file to determine if any of the objects need to be restricted from public view.')
 
 
-def _WB_uniform_fields():
+def _WB_uniform_fields(fields_in_use, prepop_dict, records_count):
     '''
     fills the following fields from uniform values:
     field_digital_origin, field_reformatting_quality
@@ -392,7 +392,7 @@ def _WB_uniform_fields():
         prepop_dict['field_reformatting_quality'] = [c.field_reformatting_quality for i in range(records_count)]
 
 
-def write_file(final_dict, use_AS):
+def write_file(final_dict, use_AS, AS_FILENAME):
     '''
     Create Pandas dataframe from final_dict, then write to Excel sheet
     '''
@@ -480,7 +480,7 @@ def run_script():
             key: [''] for key in fields_in_use
         }
     else:
-        media_list, EXTENSION = check_files(WB_type)
+        media_list, EXTENSION = check_files(WB_type, FILES_DIR)
 
         # if WB_type == "book":
         #     media_list, EXTENSION = check_files_book()
@@ -488,21 +488,21 @@ def run_script():
         #     media_list, EXTENSION = check_files_single()
 
         if use_AS:
-            records_count, AS_dict = process_AS(media_list)
+            records_count, AS_dict = process_AS(media_list, AS_FILENAME, FILES_DIR)
         else:
             records_count = len(media_list)
 
         print('Populating fields ...')
 
         if WB_type == 'single':
-            _file_metadata_to_WB_fields_SINGLE()
+            _file_metadata_to_WB_fields_SINGLE(prepop_dict, media_list, EXTENSION, records_count, FILES_DIR)
         elif WB_type == 'book':
-            _file_metadata_to_WB_fields_BOOK()
+            _file_metadata_to_WB_fields_BOOK(prepop_dict, media_list, EXTENSION, records_count, FILES_DIR)
             
         if use_AS:
-            _AS_metadata_to_WB_fields()
+            _AS_metadata_to_WB_fields(fields_in_use, prepop_dict, AS_dict, records_count)
             
-        _WB_uniform_fields()
+        _WB_uniform_fields(fields_in_use, prepop_dict, records_count)
 
         print('... fields populated ...')
 
@@ -524,7 +524,7 @@ def run_script():
     for k, v in final_dict.items():
         v.insert(0, fields_descriptions_dict[k])
 
-    write_file(final_dict, use_AS)
+    write_file(final_dict, use_AS, AS_FILENAME)
     '''
     Post-completion reminders to user
     '''
@@ -534,4 +534,4 @@ def run_script():
         print("\tIf there is a difference, reorder the ArchivesSpace spreadsheet rows and run again.")
 
 if __name__ == "__main__":
-    run_script
+    run_script()
