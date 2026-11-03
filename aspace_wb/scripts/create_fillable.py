@@ -54,7 +54,7 @@ def process_args(cl_args):
     # make into a list, and make FIELDS_TITLE for reference later in making our output file
     if cl_args.fields:
         FIELDS_TITLE = cl_args.fields
-        fields_in_use = process_fields(WB_type)
+        fields_in_use = process_fields(WB_type, cl_args.fields)
     else:
         # give all fields if no --fields argument
         FIELDS_TITLE = 'all_fields'
@@ -103,8 +103,8 @@ def process_args(cl_args):
     return WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank
 
 
-def process_fields(WB_type):
-    fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(cl_args.fields + ".csv"), 0)
+def process_fields(WB_type, fields_filename):
+    fields_in_use = use_CSVs.CSV_col_to_list(import_file(fields).joinpath(fields_filename + ".csv"), 0)
 
     # validate fields following type
     if WB_type == 'single':
@@ -463,72 +463,75 @@ def write_file(final_dict, use_AS):
     print(f'Done. Created file: {c.METADATA_DIR}\\{FILE_NAME}')
 
 
+def run_script():
+    '''
+    Execute functions to fill out the dictionary
+    results in filled prepop_dict
+    '''
 
-'''
-Execute functions to fill out the dictionary
-results in filled prepop_dict
-'''
+    cl_args = create_args()
 
-cl_args = create_args()
+    WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank = process_args(cl_args)
 
-WB_type, fields_in_use, FIELDS_TITLE, use_AS, AS_FILENAME, FILES_DIR, blank = process_args(cl_args)
+    prepop_dict = {}
 
-prepop_dict = {}
-
-if blank:
-    final_dict = {
-        key: [''] for key in fields_in_use
-    }
-else:
-    media_list, EXTENSION = check_files(WB_type)
-
-    # if WB_type == "book":
-    #     media_list, EXTENSION = check_files_book()
-    # elif WB_type == "single":
-    #     media_list, EXTENSION = check_files_single()
-
-    if use_AS:
-        records_count, AS_dict = process_AS(media_list)
+    if blank:
+        final_dict = {
+            key: [''] for key in fields_in_use
+        }
     else:
-        records_count = len(media_list)
+        media_list, EXTENSION = check_files(WB_type)
 
-    print('Populating fields ...')
+        # if WB_type == "book":
+        #     media_list, EXTENSION = check_files_book()
+        # elif WB_type == "single":
+        #     media_list, EXTENSION = check_files_single()
 
-    if WB_type == 'single':
-        _file_metadata_to_WB_fields_SINGLE()
-    elif WB_type == 'book':
-        _file_metadata_to_WB_fields_BOOK()
-        
+        if use_AS:
+            records_count, AS_dict = process_AS(media_list)
+        else:
+            records_count = len(media_list)
+
+        print('Populating fields ...')
+
+        if WB_type == 'single':
+            _file_metadata_to_WB_fields_SINGLE()
+        elif WB_type == 'book':
+            _file_metadata_to_WB_fields_BOOK()
+            
+        if use_AS:
+            _AS_metadata_to_WB_fields()
+            
+        _WB_uniform_fields()
+
+        print('... fields populated ...')
+
+        '''
+        Expand prepop_dict to include all fields, and adding description row, resulting in final_dict
+        '''
+
+        # create a dictionary of all fields from fields_in_use, copying the structure of prepop_dict, with appropriate number of records
+        final_dict = {
+            key: ['' for i in range(records_count)] for key in fields_in_use
+        }
+        # merge this with prepop_dict, keeping prepop_dict values
+        final_dict.update(prepop_dict)
+
+    # now that we have a merged dictionary, add definitions row
+    # first, get our field:description tuples as a dictionary
+    fields_descriptions_dict = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
+    # then for each key in prepop_dict, insert the description into the value list
+    for k, v in final_dict.items():
+        v.insert(0, fields_descriptions_dict[k])
+
+    write_file(final_dict, use_AS)
+    '''
+    Post-completion reminders to user
+    '''
     if use_AS:
-        _AS_metadata_to_WB_fields()
-        
-    _WB_uniform_fields()
+        print("REMINDER:")
+        print("\tFirst check that the file order ('file') matches the ArchivesSpace metadata order, because sometimes there is a difference between how Python and Windows Explorer alphabetize the 'file' field.")
+        print("\tIf there is a difference, reorder the ArchivesSpace spreadsheet rows and run again.")
 
-    print('... fields populated ...')
-
-    '''
-    Expand prepop_dict to include all fields, and adding description row, resulting in final_dict
-    '''
-
-    # create a dictionary of all fields from fields_in_use, copying the structure of prepop_dict, with appropriate number of records
-    final_dict = {
-        key: ['' for i in range(records_count)] for key in fields_in_use
-    }
-    # merge this with prepop_dict, keeping prepop_dict values
-    final_dict.update(prepop_dict)
-
-# now that we have a merged dictionary, add definitions row
-# first, get our field:description tuples as a dictionary
-fields_descriptions_dict = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
-# then for each key in prepop_dict, insert the description into the value list
-for k, v in final_dict.items():
-    v.insert(0, fields_descriptions_dict[k])
-
-write_file(final_dict, use_AS)
-'''
-Post-completion reminders to user
-'''
-if use_AS:
-    print("REMINDER:")
-    print("\tFirst check that the file order ('file') matches the ArchivesSpace metadata order, because sometimes there is a difference between how Python and Windows Explorer alphabetize the 'file' field.")
-    print("\tIf there is a difference, reorder the ArchivesSpace spreadsheet rows and run again.")
+if __name__ == "__main__":
+    run_script

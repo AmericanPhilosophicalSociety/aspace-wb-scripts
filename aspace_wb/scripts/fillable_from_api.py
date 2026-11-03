@@ -8,6 +8,10 @@ import csv
 import pandas as pd
 import aspace_wb.utils.default_specs as c
 import aspace_wb.utils.validate as validate
+from argparse import ArgumentParser
+from importlib.resources import files as import_file
+from aspace_wb.data import fields
+from aspace_wb.scripts.create_fillable import process_fields
 
 """
 TO DO
@@ -63,10 +67,58 @@ aspace = ASpace()
 
 # HELPER FUNCTIONS
 
+def create_args():
+    #TODO: is book/single relevant here?
+    '''
+    Parse command line arguments
+        optional: --fields name of fields file to use
+    '''
+
+    cl_parser = ArgumentParser()
+
+    FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
+    FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
+    cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
+
+    return cl_parser.parse_args()
+
+
+def process_args(cl_args):
+    # fields_in_use from 'fields'
+    # make into a list, and make FIELDS_TITLE for reference later in making our output file
+    if cl_args.fields:
+        #TODO: allow book/single input
+        fields_in_use = process_fields("book", cl_args.fields)
+    else:
+        # give all fields if no --fields argument
+        fields_in_use = c.WB_FIELDS_ALL
+        
+    print('... command line arguments parsed ...')
+
+    print("fields_in_use:")
+    print(fields_in_use)
+
+    return fields_in_use
+
+# create a dict representing one row, with a key for each field
+def create_one_row(fields_in_use):
+    row_dict = {}
+
+    # modify fields_in_use so that, if present, field_linked_agent gets split into its components
+    if 'field_linked_agent' in fields_in_use:
+        insert_index = fields_in_use.index('field_linked_agent')
+        fields_in_use.insert(insert_index, 'field_linked_agent_NAME')
+        fields_in_use.insert(insert_index + 1, 'field_linked_agent_RELATOR')
+        fields_in_use.insert(insert_index + 2, 'field_linked_agent_TYPE')
+        fields_in_use.remove('field_linked_agent')
+
+    for field in fields_in_use:
+        row_dict[field] = None
+
+    return row_dict
+
 def get_date(record, wb_dict):
     #TODO: can a record have multiple dates? necessary to iterate through?
-    #TODO: can a record have non-EDTF dates that would appear in field_date_created_text?
-    # Paul wrote logic for this already- see AS_date_to_WB_date in convert_data
     if "dates" not in record:
         date = None
     else:
@@ -246,11 +298,12 @@ def get_linked_agents(record, wb_dict):
     #         "field_linked_agent_TYPE": "|".join(types)
     #     }
 
-def get_record_info(record_id):
+
+def get_record_info(record_id, wb_dict_template):
     record = aspace.repositories(2).archival_objects(record_id).json()
+    wb_dict = wb_dict_template.copy()
     # print(record)
     # print(type(record))
-    wb_dict = {}
 
     # TODO: should this be title instead? difference is that display_string includes a date at the end
     wb_dict["title"] = record["display_string"]
@@ -281,15 +334,18 @@ def get_record_info(record_id):
 
     return wb_dict
 
-def create_wb_dicts():
+def create_df(fields_in_use):
     records = []
+    wb_dict_template = create_one_row(fields_in_use)
+    print(wb_dict_template)
 
     with open('as-refs.csv', mode='r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
 
         for row in reader:
             try:
-                records.append(get_record_info(row['as_ref']))
+                new_record = get_record_info(row['as_ref'], wb_dict_template)
+                records.append(new_record)
             except Exception as e:
                 print(f"Something went wrong while processing row {row['as_ref']}: {e}")
 
@@ -313,26 +369,18 @@ def create_wb_dicts():
     df = pd.DataFrame(records)
 
     # order by order in all_fields
-    fields_in_use = df.columns.tolist()
+    # fields_in_df = df.columns.tolist()
+    # final_field_order = []
 
-    final_field_order = []
+    # for field in c.WB_FIELDS_ALL:
+    #     if field in fields_in_use:
+    #         final_field_order.append(field)
 
-    for field in c.WB_FIELDS_ALL:
-        if field in fields_in_use:
-            final_field_order.append(field)
+    # for field in fields_in_use:
+    #     if field not in final_field_order:
+    #         final_field_order.append(field)
 
-    for field in fields_in_use:
-        if field not in final_field_order:
-            final_field_order.append(field)
-
-    # iterate through all_fields
-    # if field in fields_in_use, add to list
-    # if anything left over in fields_in_use, add it at the end
-
-    # OR
-    # iterate through fields_in_use
-    # associate each item with 
-    df = df.reindex(columns=final_field_order)
+    # df = df.reindex(columns=final_field_order)
     print(df)
 
     return df
@@ -393,7 +441,10 @@ def write_file(df):
     pd_ExcelWriter.close()
 
 def run_script():
-    df = create_wb_dicts()
+    cl_args = create_args()
+    fields_in_use = process_args(cl_args)
+
+    df = create_df(fields_in_use)
     write_file(df)
 
 run_script()
