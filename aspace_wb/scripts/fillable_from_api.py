@@ -311,6 +311,10 @@ def get_record_info(record_id, wb_dict_template):
 
     collection_ref = wb_dict["field_collection_url"].split("/")[-1]
 
+    # for convenience, add a column linking to the actual archival object
+    #TODO: make sure this is deleted from final sheet
+    wb_dict["record_url"] = f"{collection_url_prefix}/repositories/2/archival_objects/{record_id}"
+
     wb_dict["field_collection2"], wb_dict["field_parent_collection_call_num"] = get_collection_name(collection_ref)
 
     wb_dict["field_access_terms"] = get_field_access_terms(record)
