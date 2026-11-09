@@ -408,6 +408,8 @@ def create_df(fields_in_use, AS_FILENAME):
     for key in records[0].keys():
         if key in all_descriptions:
             descriptions_dict[key] = all_descriptions[key]
+        elif key == "record_url":
+            descriptions_dict[key] = "Direct link to record in ArchivesSpace, for use in filling/checking sheet. Delete before submitting final sheet."
         else:
             descriptions_dict[key] = None
 
