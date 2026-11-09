@@ -67,9 +67,10 @@ aspace = ASpace()
 # HELPER FUNCTIONS
 
 def create_args():
-    #TODO: is book/single relevant here?
     '''
     Parse command line arguments
+        required: single or book
+        required: --AS name of .csv or .xlsx file with AS refs
         optional: --fields name of fields file to use
     '''
 
@@ -81,8 +82,6 @@ def create_args():
     FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
     cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
 
-    #TODO: possible to read in as either?
-    #TODO: find a way to skip over the description row? maybe ok to just skip over first row if as_ref column is blank?
     cl_parser.add_argument('--AS', required=True, type=str, help="Name (with .csv or .xlsx extension) of the spreadsheet including your ArchivesSpace refs")
 
     return cl_parser.parse_args()
@@ -218,7 +217,7 @@ def get_field_access_terms(record):
             elif "resources" in ancestor["ref"]:
                 parent_collection = aspace.resources(int(ancestor_id))
 
-                # method above unpredictably can return either a dict or a JSON object - convert to dict if the latter
+                # method above can unpredictably return either a dict or a JSON object - convert to dict if the latter
                 if not isinstance(parent_collection, dict):
                     # print("converting from json")
                     parent_collection = parent_collection.json()
@@ -296,8 +295,6 @@ def get_linked_agents(record, wb_dict):
 def get_record_info(record_id, wb_dict_template):
     record = aspace.repositories(2).archival_objects(record_id).json()
     wb_dict = wb_dict_template.copy()
-    # print(record)
-    # print(type(record))
 
     # TODO: should this be title instead? difference is that display_string includes a date at the end
     wb_dict["title"] = record["display_string"]
@@ -399,16 +396,9 @@ def create_df(fields_in_use, AS_FILENAME):
     else:
         print("WARNING: Invalid file extension in input file")
 
-    # INPUT_FILE = "as-refs.csv"
-    # input_path = os.path.join(c.METADATA_DIR, INPUT_FILE)
-
-    # print(records)
-
     # populate description for each field
     descriptions_dict = {}
     all_descriptions = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
-    # all_fields = c.WB_FIELDS_ALL
-    # print(all_fields)
 
     # iterate through one example dict to get a description for each field
     for key in records[0].keys():
@@ -420,20 +410,6 @@ def create_df(fields_in_use, AS_FILENAME):
     records.insert(0, descriptions_dict)
 
     df = pd.DataFrame(records)
-
-    # order by order in all_fields
-    # fields_in_df = df.columns.tolist()
-    # final_field_order = []
-
-    # for field in c.WB_FIELDS_ALL:
-    #     if field in fields_in_use:
-    #         final_field_order.append(field)
-
-    # for field in fields_in_use:
-    #     if field not in final_field_order:
-    #         final_field_order.append(field)
-
-    # df = df.reindex(columns=final_field_order)
     print(df)
 
     return df
@@ -459,7 +435,6 @@ def write_file(df, AS_FILENAME):
         header=True,
         index=False
     )
-    #TODO: version in aspace-wb-scripts centers and bolds header row. This doesn't despite using the same code copy/pasted. Not sure what's going on here
     pd_ExcelWriter_book = pd_ExcelWriter.book
     pd_ExcelWriter_sheet = pd_ExcelWriter.sheets["Workbench"]
     pd_header_format = pd_ExcelWriter_book.add_format(
