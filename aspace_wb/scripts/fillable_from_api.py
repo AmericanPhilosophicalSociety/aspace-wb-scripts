@@ -34,7 +34,7 @@ run process to create initial sheet from filesystem
 fill in aspace nodes to that sheet
 run process on that sheet to pull additional info from AS API
 
-offer a version where you pass a series/collection ID and it does this on all the nodes
+*offer a version where you pass a series/collection ID and it does this on all the nodes
 
 NEXT STEPS
 
@@ -72,6 +72,8 @@ def create_args():
 
     cl_parser = ArgumentParser()
 
+    cl_parser.add_argument('type', type=str, choices=('single', 'book'), help="Workbench upload type: 'book' (an object with multiple pages) or 'single' (a graphic, audio, or video object)") 
+
     FIELD_CHOICES = list(import_file(fields).glob('*.csv'))
     FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
     cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
@@ -80,19 +82,16 @@ def create_args():
 
 
 def process_args(cl_args):
-    # fields_in_use from 'fields'
-    # make into a list, and make FIELDS_TITLE for reference later in making our output file
+    # can be book or single - each one requires slightly different fields
+    WB_type = cl_args.type
+
     if cl_args.fields:
-        #TODO: allow book/single input
-        fields_in_use = process_fields("book", cl_args.fields)
+        fields_in_use = process_fields(WB_type, cl_args.fields)
     else:
         # give all fields if no --fields argument
         fields_in_use = c.WB_FIELDS_ALL
         
     print('... command line arguments parsed ...')
-
-    print("fields_in_use:")
-    print(fields_in_use)
 
     return fields_in_use
 
