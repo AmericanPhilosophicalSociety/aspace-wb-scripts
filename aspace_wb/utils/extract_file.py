@@ -70,13 +70,17 @@ def file_extension(filepath):
 
 def construct_output_filename(orig_name, extension, script):
     """
-    construct an appropriate name for files output by wb-fillable, wb-to-wb, or wb-create-dos
+    construct an appropriate name for files output by wb-fillable, wb-from-api, wb-to-wb, or wb-create-dos
     appends script name (e.g. _wb-fillable), plus a counter (e.g. _2) if this will cause an existing file to be overwritten
     """
     
     # if this is running on output from wb-fillable, strip that from the file name so we don't end up with a file named _wb-fillable_wb-to-wb
     if "_wb-fillable" in orig_name and orig_name != "_wb-fillable":
         orig_name = orig_name.replace("_wb-fillable", "")
+
+    # same logic for wb-from-api output
+    if "_wb-from-api" in orig_name and orig_name != "_wb-from-api":
+            orig_name = orig_name.replace("_wb-from-api", "")
         
     new_name = f"{orig_name}_{script}"
     filepath = os.path.join(c.METADATA_DIR, f"{new_name}{extension}")
