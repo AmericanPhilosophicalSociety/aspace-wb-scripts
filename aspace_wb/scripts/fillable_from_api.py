@@ -157,7 +157,7 @@ def get_date(record, wb_dict):
     wb_dict["field_edtf_date_created"] = field_edtf_date_created
     wb_dict["field_date_created_text"] = field_date_created_text
 
-def get_collection_id(record):
+def get_collection_url(record):
     ancestors = record["ancestors"]
 
     for ancestor in ancestors:
@@ -166,12 +166,10 @@ def get_collection_id(record):
             collection_url_suffix = ancestor["ref"]
             collection_url = f"{collection_url_prefix}{collection_url_suffix}"
 
-            collection_id = collection_url_suffix.split("/")[-1]
-
-            return [collection_id, collection_url]
+            return collection_url
 
     print("WARNING: Parent collection not found. Enter info manually.")
-    return [None, None]
+    return None
 
 def get_collection_name(collection_id):
     collection = aspace.resources(int(collection_id)).json()
@@ -312,9 +310,11 @@ def get_record_info(record_id, wb_dict_template):
     else:
         wb_dict["field_local_identifier"] = None
 
-    wb_dict["as_ref"], wb_dict["field_collection_url"] = get_collection_id(record)
+    wb_dict["field_collection_url"] = get_collection_url(record)
 
-    wb_dict["field_collection2"], wb_dict["field_parent_collection_call_num"] = get_collection_name(wb_dict["as_ref"])
+    collection_ref = wb_dict["field_collection_url"].split("/")[-1]
+
+    wb_dict["field_collection2"], wb_dict["field_parent_collection_call_num"] = get_collection_name(collection_ref)
 
     wb_dict["field_access_terms"] = get_field_access_terms(record)
 
