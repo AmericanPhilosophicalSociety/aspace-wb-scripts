@@ -288,12 +288,6 @@ def get_linked_agents(record, wb_dict):
     wb_dict["field_linked_agent_RELATOR"] = "|".join(relators)
     wb_dict["field_linked_agent_TYPE"] = "|".join(types)
 
-    # return {
-    #         "field_linked_agent_NAME": "|".join(names),
-    #         "field_linked_agent_RELATOR": "|".join(relators),
-    #         "field_linked_agent_TYPE": "|".join(types)
-    #     }
-
 
 def get_record_info(record_id, wb_dict_template):
     record = aspace.repositories(2).archival_objects(record_id).json()
@@ -457,11 +451,10 @@ def write_file(df):
     # close to write the file
     pd_ExcelWriter.close()
 
-def run_script():
+def run_script_api():
+    print("code is running")
     cl_args = create_args()
     fields_in_use = process_args(cl_args)
 
     df = create_df(fields_in_use)
     write_file(df)
-
-run_script()
