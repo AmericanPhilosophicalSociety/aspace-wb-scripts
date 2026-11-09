@@ -16,7 +16,7 @@ from aspace_wb.scripts.create_fillable import process_fields
 """
 TO RUN
 
-wb-from-api book --fields cnairbook_subjects
+wb-from-api book --fields cnairbook_subjects --AS as-refs.csv
 
 
 PROCESS
@@ -80,6 +80,10 @@ def create_args():
     FIELD_CHOICES = sorted([f.name.replace('.csv', '') for f in FIELD_CHOICES if f.is_file()])
     cl_parser.add_argument('--fields', type=str, choices=FIELD_CHOICES, help="Name of CSV file containing list of fields to include in your Workbench sheet (omitting .csv extension). Choose from options above")
 
+    #TODO: possible to read in as either?
+    #TODO: find a way to skip over the description row? maybe ok to just skip over first row if as_ref column is blank?
+    cl_parser.add_argument('--AS', required=True, type=str, help="Name (with .csv or .xlsx extension) of the spreadsheet including your ArchivesSpace refs")
+
     return cl_parser.parse_args()
 
 
@@ -92,10 +96,16 @@ def process_args(cl_args):
     else:
         # give all fields if no --fields argument
         fields_in_use = c.WB_FIELDS_ALL
+
+    AS_FILENAME = cl_args.AS
+    AS_file = os.path.join(c.METADATA_DIR, AS_FILENAME)
+    # confirm the file exists as stated
+    if not os.path.exists(AS_file):
+        raise FileNotFoundError(f"Spreadsheet '{AS_FILENAME}' not found in /{c.METADATA_DIR}. Check file name and location and try again.")
         
     print('... command line arguments parsed ...')
 
-    return fields_in_use
+    return fields_in_use, AS_file
 
 # create a dict representing one row, with a key for each field
 def create_one_row(fields_in_use):
@@ -341,34 +351,61 @@ def add_wb_fillable_data(row, new_record):
                 if not access_terms_already_filled:
                     new_record[field] = row[field]
 
-def create_df(fields_in_use):
+def process_row(row, records, wb_dict_template):
+    try:
+        new_record = get_record_info(row['as_ref'], wb_dict_template)
+
+        add_wb_fillable_data(row, new_record)
+
+        records.append(new_record)
+
+        return records
+    except KeyError:
+        print("'as_ref' column not found in sheet. Make sure your AS refs are in your sheet and try again.")
+    except Exception as e:
+        print(f"Something went wrong while processing row {row['as_ref']}: {e}")
+
+def create_df(fields_in_use, AS_file):
     records = []
     wb_dict_template = create_one_row(fields_in_use)
-    print(wb_dict_template)
 
-    INPUT_FILE = "as-refs.csv"
-    input_path = os.path.join(c.METADATA_DIR, INPUT_FILE)
+    # slightly different logic to read in CSV or AS refs OR .xlsx created by wb-fillable
+    if ".csv" in AS_file:
+        with open(AS_file, mode='r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
 
-    with open(input_path, mode='r', newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
+            for row in reader:
+                records = process_row(row, records, wb_dict_template)
+    elif ".xlsx" in AS_file:
+        input_df = pd.read_excel(AS_file)
+        input = input_df.to_dict(orient="records")
 
-        for row in reader:
-            try:
-                new_record = get_record_info(row['as_ref'], wb_dict_template)
+        is_first_row = True
+        for row in input:
+            # if this is a description row created by wb-fillable, skip it
+            # as a rough proxy, check if the value entered for "file" matches the description for that field
+            if is_first_row:
+                if "file" in row:
+                    if row["file"] == dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)["file"]:
+                        is_first_row = False
+                        continue
+            else:
+                records = process_row(row, records, wb_dict_template)
+                is_first_row = False
+            
+    else:
+        print("WARNING: Invalid file extension in input file")
 
-                add_wb_fillable_data(row, new_record)
-
-                records.append(new_record)
-            except Exception as e:
-                print(f"Something went wrong while processing row {row['as_ref']}: {e}")
+    # INPUT_FILE = "as-refs.csv"
+    # input_path = os.path.join(c.METADATA_DIR, INPUT_FILE)
 
     # print(records)
 
     # populate description for each field
     descriptions_dict = {}
     all_descriptions = dict(c.WB_FIELDS_ORDERED_WITH_DESCRIPTION)
-    all_fields = c.WB_FIELDS_ALL
-    print(all_fields)
+    # all_fields = c.WB_FIELDS_ALL
+    # print(all_fields)
 
     # iterate through one example dict to get a description for each field
     for key in records[0].keys():
@@ -457,7 +494,7 @@ def write_file(df):
 def run_script_api():
     print("code is running")
     cl_args = create_args()
-    fields_in_use = process_args(cl_args)
+    fields_in_use, AS_file = process_args(cl_args)
 
-    df = create_df(fields_in_use)
+    df = create_df(fields_in_use, AS_file)
     write_file(df)
