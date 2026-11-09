@@ -14,19 +14,10 @@ from aspace_wb.data import fields
 from aspace_wb.scripts.create_fillable import process_fields
 
 """
-TO DO
+TO RUN
 
-get rid of as_ref column, change to as_url?
+wb-from-api book --fields cnairbook_subjects
 
-try getting rid of ASnake dependency
-
-CURRENTLY USED IN CREATE_FILLABLE
-
-field_related_materials_note -> note/relatedmaterial/0/content [find an example with this]
-
-field_note -> odd, bioghist, accruals, dimensions, altformavail, phystech, physdesc, processinfo, separatedmaterial
-
-extent? [add in brackets for scanned page numbers?]
 
 PROCESS
 
@@ -34,14 +25,25 @@ run process to create initial sheet from filesystem
 fill in aspace nodes to that sheet
 run process on that sheet to pull additional info from AS API
 
-*offer a version where you pass a series/collection ID and it does this on all the nodes
 
 NEXT STEPS
 
-how does this work for subseries/subcollection?
+get rid of as_ref column, change to as_url?
 
-do version that gets all child nodes for a collection/series
-have this also sort by order in file system
+try getting rid of ASnake dependency
+
+check that I haven't broken create_fillable
+
+do a version where you pass a series/collection ID and it does this on all the nodes
+
+
+CURRENTLY USED IN CREATE_FILLABLE BUT NOT ACCOUNTED FOR HERE
+
+field_related_materials_note -> note/relatedmaterial/0/content [find an example with this]
+
+field_note -> odd, bioghist, accruals, dimensions, altformavail, phystech, physdesc, processinfo, separatedmaterial
+
+extent? [add in brackets for scanned page numbers?]
 """
 
 # presets - copy into aspace-wb-scripts presets
@@ -200,20 +202,18 @@ def get_field_access_terms(record):
     restrictions_bool = is_restricted(record)
 
     # if no record-level restrictions, check for restrictions in parents
-    #TODO: does this work for subseries?
-    #TODO: necessary to check top-level collection? are these ever restricted, and if so what would that look like?
     if not restrictions_bool:
         for ancestor in record["ancestors"]:
             ancestor_id = ancestor["ref"].split("/")[-1]
 
-            # search a collection (level: series, ref: archival_objects), subseries (level: collection, ref: archival_objects), or collection (level: collection, ref: resources)
+            # search a subcollection (level: series, ref: archival_objects), subseries (level: collection, ref: archival_objects), or collection (level: collection, ref: resources)
             if "archival_objects" in ancestor["ref"]:
                 parent_series = aspace.repositories(2).archival_objects(ancestor_id).json()
                 restrictions_bool = is_restricted(parent_series)
             elif "resources" in ancestor["ref"]:
                 parent_collection = aspace.resources(int(ancestor_id))
 
-                # method above unpredictable can return either a dict or a JSON object - convert to dict if the latter
+                # method above unpredictably can return either a dict or a JSON object - convert to dict if the latter
                 if not isinstance(parent_collection, dict):
                     # print("converting from json")
                     parent_collection = parent_collection.json()
@@ -346,7 +346,10 @@ def create_df(fields_in_use):
     wb_dict_template = create_one_row(fields_in_use)
     print(wb_dict_template)
 
-    with open('as-refs.csv', mode='r', newline='', encoding='utf-8') as f:
+    INPUT_FILE = "as-refs.csv"
+    input_path = os.path.join(c.METADATA_DIR, INPUT_FILE)
+
+    with open(input_path, mode='r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
 
         for row in reader:
@@ -401,11 +404,12 @@ def write_file(df):
     '''
     print('Creating output file ...')
 
+    #TODO: better file name
     FILE_NAME = "output.xlsx"
 
     # settings/logic copied from aspace-wb-scripts
     pd_ExcelWriter = pd.ExcelWriter(
-        FILE_NAME,
+        os.path.join(c.METADATA_DIR, FILE_NAME),
         engine="xlsxwriter"
     )
     df.to_excel(
