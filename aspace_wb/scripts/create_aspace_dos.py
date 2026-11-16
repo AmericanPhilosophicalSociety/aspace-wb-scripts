@@ -14,76 +14,91 @@ import aspace_wb.utils.extract_file as extract_file
 Parse command line arguments
     required, positional: nodes file (csv)
 '''
+def parse_args():
+    cl_parser = argparse.ArgumentParser()
+    cl_parser.add_argument('nodes_file', type=str, help="Name of your Workbench output CSV (with .csv extension)")
+    cl_args = cl_parser.parse_args()
+    NODES_FILE = cl_args.nodes_file
 
-cl_parser = argparse.ArgumentParser()
-cl_parser.add_argument('nodes_file', type=str, help="Name of your Workbench output CSV (with .csv extension)")
-cl_args = cl_parser.parse_args()
-NODES_FILE = cl_args.nodes_file
+    # check existence of file
+    if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
+        raise FileNotFoundError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
 
-# check existence of file
-if not os.path.exists(os.path.join(c.METADATA_DIR, NODES_FILE)):
-    raise FileNotFoundError(f"Workbench output CSV {str(NODES_FILE)} not found in folder {str(c.METADATA_DIR)}. Check file name and location and try again.")
+    return NODES_FILE
 
 '''
 Load the nodes
 '''
+def load_nodes(NODES_FILE):
+    print("Loading nodes ...")
 
-print("Loading nodes ...")
+    # load node file to a dictionary
 
-# load node file to a dictionary
+    nodes_pandas_DF = use_CSVs.CSV_to_pandas_dataframe(os.path.join(c.METADATA_DIR, NODES_FILE), header=True)
+    nodes_dict = nodes_pandas_DF.to_dict(orient="list")
+    nodes = nodes_dict['node_id']
 
-nodes_pandas_DF = use_CSVs.CSV_to_pandas_dataframe(os.path.join(c.METADATA_DIR, NODES_FILE), header=True)
-nodes_dict = nodes_pandas_DF.to_dict(orient="list")
-nodes = nodes_dict['node_id']
+    print('... nodes loaded. Creating derived fields ...')
 
-print('... nodes loaded. Creating derived fields ...')
+    return [nodes_dict, nodes]
+    
 
 '''
 Populate data
 '''
-digital_object_id = []
-digital_object_title = []
-digital_object_publish = []
-file_version_file_uri = []
-file_version_caption = []
-file_version_publish = []
+def populate_data(nodes, nodes_dict):
+    digital_object_id = []
+    digital_object_title = []
+    digital_object_publish = []
+    file_version_file_uri = []
+    file_version_caption = []
+    file_version_publish = []
 
-for node in nodes:
-    AS_DO_dict = convert_data.diglib_node_to_AS_DO(node)
-    digital_object_id.append(AS_DO_dict['digital_object_id'])
-    digital_object_title.append(AS_DO_dict['digital_object_title'])
-    digital_object_publish.append(AS_DO_dict['digital_object_publish'])
-    file_version_file_uri.append(AS_DO_dict['file_version_file_uri'])
-    file_version_caption.append(AS_DO_dict['file_version_caption'])
-    file_version_publish.append(AS_DO_dict['file_version_publish'])
+    for node in nodes:
+        AS_DO_dict = convert_data.diglib_node_to_AS_DO(node)
+        digital_object_id.append(AS_DO_dict['digital_object_id'])
+        digital_object_title.append(AS_DO_dict['digital_object_title'])
+        digital_object_publish.append(AS_DO_dict['digital_object_publish'])
+        file_version_file_uri.append(AS_DO_dict['file_version_file_uri'])
+        file_version_caption.append(AS_DO_dict['file_version_caption'])
+        file_version_publish.append(AS_DO_dict['file_version_publish'])
 
-# create output dictionary
-output_dict = {
-    'id': nodes_dict['id'],
-    'title': nodes_dict['title'],
-    'digital_object_id': digital_object_id,
-    'digital_object_title': nodes_dict['title'], # opting for title instead of id as title, reflecting guidance of late 2024. previously: digital_object_title
-    'digital_object_publish': digital_object_publish,
-    'file_version_file_uri': file_version_file_uri,
-    'file_version_caption': file_version_caption,
-    'file_version_publish': file_version_publish
-}
+    # create output dictionary
+    output_dict = {
+        'id': nodes_dict['id'],
+        'title': nodes_dict['title'],
+        'digital_object_id': digital_object_id,
+        'digital_object_title': nodes_dict['title'], # opting for title instead of id as title, reflecting guidance of late 2024. previously: digital_object_title
+        'digital_object_publish': digital_object_publish,
+        'file_version_file_uri': file_version_file_uri,
+        'file_version_caption': file_version_caption,
+        'file_version_publish': file_version_publish
+    }
 
-# added this for some clarity for when titles are identical
-if 'field_local_identifier' in nodes_dict:
-    output_dict['field_local_identifier'] = nodes_dict['field_local_identifier']
-if 'url_alias' in nodes_dict:
-    output_dict['url_alias'] = nodes_dict['url_alias']
+    # added this for some clarity for when titles are identical
+    if 'field_local_identifier' in nodes_dict:
+        output_dict['field_local_identifier'] = nodes_dict['field_local_identifier']
+    if 'url_alias' in nodes_dict:
+        output_dict['url_alias'] = nodes_dict['url_alias']
+
+    return output_dict
 
 '''
 Generate output xlsx
 '''
-output_pandas_DF = pandas.DataFrame(data=output_dict)
+def generate_output(output_dict, NODES_FILE):
+    output_pandas_DF = pandas.DataFrame(data=output_dict)
 
-# create output filename
-FILE_PREFIX = os.path.splitext(NODES_FILE)[0]
-FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-create-dos")
+    # create output filename
+    FILE_PREFIX = os.path.splitext(NODES_FILE)[0]
+    FILE_NAME = extract_file.construct_output_filename(FILE_PREFIX, ".xlsx", "wb-create-dos")
 
-output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, FILE_NAME), index=False)
+    output_pandas_DF.to_excel(os.path.join(c.METADATA_DIR, FILE_NAME), index=False)
 
-print(f'Done. Created file: {os.path.join(c.METADATA_DIR, FILE_NAME)}')
+    print(f'Done. Created file: {os.path.join(c.METADATA_DIR, FILE_NAME)}')
+
+def run_script():
+    NODES_FILE = parse_args()
+    nodes_dict, nodes = load_nodes(NODES_FILE)
+    output_dict = populate_data(nodes, nodes_dict)
+    generate_output(output_dict, NODES_FILE)
