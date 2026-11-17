@@ -9,6 +9,7 @@ from aspace_wb.scripts.create_aspace_dos import parse_args
 from aspace_wb.utils import convert_data
 from asnake.client import ASnakeClient
 from asnake.jsonmodel import JM
+import time
 
 def do_dicts_from_nodes(NODES_FILE):
     dos = []
@@ -33,27 +34,10 @@ def do_dicts_from_nodes(NODES_FILE):
             except KeyError:
                 print("Ensure as_ref column is present and try again.")
 
-    print(dos)
+    # print(dos)
     return dos
 
-def link_do_to_object(as_ref, client, response):
-    # Continuing from above, using the returned digital object URI
-    do_uri = response["uri"]  # e.g., "/repositories/2/digital_objects/45"
-    ao_uri = f"/repositories/2/archival_objects/{as_ref}"
-
-    # Fetch the existing archival object JSON
-    ao_json = client.get(ao_uri).json()
-
-    # Append the new digital object instance
-    ao_json["instances"].append(
-        {"instance_type": "digital_object", "digital_object": {"ref": do_uri}}
-    )
-
-    # Save the updated archival object
-    update_response = client.post(ao_uri, json=ao_json)
-    print("Link status:", update_response.status_code)
-
-def create_as_dos(dos):
+def set_up_client():
     # load environment and set variables
     load_dotenv()
 
@@ -65,9 +49,36 @@ def create_as_dos(dos):
                         username=username,
                         password=password)
     client.authorize()
+
     # client = ASnakeClient()
     # client.authorize()
 
+    return client
+
+def link_do_to_object(as_ref, client, response):
+    try:
+        # Continuing from above, using the returned digital object URI
+        do_uri = response["uri"]  # e.g., "/repositories/2/digital_objects/45"
+        ao_uri = f"/repositories/2/archival_objects/{as_ref}"
+
+        # Fetch the existing archival object JSON
+        ao_json = client.get(ao_uri).json()
+
+        # Append the new digital object instance
+        ao_json["instances"].append(
+            {"instance_type": "digital_object", "digital_object": {"ref": do_uri}}
+        )
+
+        # Save the updated archival object
+        update_response = client.post(ao_uri, json=ao_json)
+        print(f"Digital object linked to record: {update_response.uri}")
+        # print(update_response.status_code)
+
+        time.sleep(3)
+    except Exception as e:
+        print(f"WARNING - Digital object could not be linked to AS record {as_ref}. Do this manually.")
+
+def post_dos(dos, client):
     for do in dos:
         digital_object = JM.digital_object(
             title=do["digital_object_title"],
@@ -81,7 +92,7 @@ def create_as_dos(dos):
                 )
             ],
         )
-        print(digital_object)
+        # print(digital_object)
 
         response = client.post(
             f"/repositories/2/digital_objects", json=digital_object
@@ -91,18 +102,17 @@ def create_as_dos(dos):
             result = response.json()
             print(f"Created digital object, URI: {result['uri']}")
 
-            #TODO: test this when confirmed first part is working
+            time.sleep(3)
+
             link_do_to_object(do["as_ref"], client, result)
         else:
             print(f"Error {response.status_code}: {response.text}")
 
-        #TODO: get rid of this once code is confirmed working
-        break
-
 def run_script():
     NODES_FILE = parse_args()
     dos = do_dicts_from_nodes(NODES_FILE)
-    create_as_dos(dos)
+    client = set_up_client()
+    post_dos(dos, client)
 
 
     #TESTING - confirm that client is working and get an example record with associated digital object
