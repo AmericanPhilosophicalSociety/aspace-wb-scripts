@@ -1,6 +1,6 @@
 [project]
 name = "aspace-wb-scripts"
-version = "0.3.0"
+version = "0.3.1"
 description = "Scripts to aid American Philosophical Society (APS) staff in preparing CSV files for ingesting files into Islandora 8 using Workbench"
 readme = "README.md"
 license = {text = "MIT"}
@@ -28,36 +28,11 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "certifi==2024.12.14",
-    "charset-normalizer==3.4.1",
-    "colorama==0.4.6",
-    "DateTime==5.5",
-    "decorator==4.4.2",
-    "edtf-validate==2.0.0",
-    "et_xmlfile==2.0.0",
-    "idna==3.10",
-    "imageio==2.37.0",
-    "imageio-ffmpeg==0.6.0",
     "loc-authorities>=0.4.0",
-    "moviepy==1.0.3",
-    "mutagen==1.47.0",
-    "numpy==2.2.2",
-    "openpyxl==3.1.5",
-    "pandas==2.2.3",
-    "pillow==10.4.0",
-    "proglog==0.1.10",
-    "pyparsing==3.2.1",
-    "pypdf==6.8.0",
-    "python-dateutil==2.9.0.post0",
-    "python-dotenv==1.0.1",
-    "pytz==2024.2",
-    "requests==2.32.4",
-    "six==1.17.0",
-    "tqdm==4.67.1",
-    "tzdata==2025.1",
-    "urllib3==2.3.0",
-    "xlsxwriter>=3.2.9",
-    "zope.interface==7.2",
+    "openpyxl>=3.1.5",
+    "pandas>=3.1.1",
+    "pypdf>=7.1.0",
+    "xlsxwriter>=3.3.1",
 ]
 
 [project.urls]
