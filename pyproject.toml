@@ -28,7 +28,10 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "edtf-validate>=2.0.0",
     "loc-authorities>=0.4.0",
+    "moviepy>=2.2.1",
+    "mutagen>=1.48.1",
     "openpyxl>=3.1.5",
     "pandas>=3.1.1",
     "pypdf>=7.1.0",
