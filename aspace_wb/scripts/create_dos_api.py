@@ -3,6 +3,7 @@ Takes as input your Workbench output .csv with an added column for ArchivesSpace
 '''
 import os
 import csv
+from dotenv import load_dotenv
 import aspace_wb.utils.default_specs as c
 from aspace_wb.scripts.create_aspace_dos import parse_args
 from aspace_wb.utils import convert_data
@@ -53,8 +54,19 @@ def link_do_to_object(as_ref, client, response):
     print("Link status:", update_response.status_code)
 
 def create_as_dos(dos):
-    client = ASnakeClient()
+    # load environment and set variables
+    load_dotenv()
+
+    username = os.environ.get('API_WRITE_USERNAME')
+    password = os.environ.get('API_WRITE_PASSWORD')
+    base_url = os.environ.get('ASPACE_URL')
+
+    client = ASnakeClient(baseurl=base_url,
+                        username=username,
+                        password=password)
     client.authorize()
+    # client = ASnakeClient()
+    # client.authorize()
 
     for do in dos:
         digital_object = JM.digital_object(
@@ -80,7 +92,7 @@ def create_as_dos(dos):
             print(f"Created digital object, URI: {result['uri']}")
 
             #TODO: test this when confirmed first part is working
-            # link_do_to_object(do["as_ref"], client, result)
+            link_do_to_object(do["as_ref"], client, result)
         else:
             print(f"Error {response.status_code}: {response.text}")
 
@@ -96,6 +108,8 @@ def run_script():
     #TESTING - confirm that client is working and get an example record with associated digital object
     # as_ref = "861662"
     # ao_uri = f"/repositories/2/archival_objects/{as_ref}"
+
+    # ao_uri = "/repositories/2/digital_objects/134751"
     
     # client = ASnakeClient()
     # client.authorize()
